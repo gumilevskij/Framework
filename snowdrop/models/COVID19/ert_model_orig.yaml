@@ -1,0 +1,569 @@
+name: New Keynesian Model
+
+# This file solves and simulates the model developed by 
+# Eichenbaum M.S., Rebelo S., Trabandt M. (2020) “Epidemics in the Neoclassical and New Keynesian Models”.
+# NBER Working Paper 27430, http://www.nber.org/papers/w27430
+
+# Based on parameters, the code below nests the models with 
+# perfect competition (gam -> 1, xi = 0), imperfect competition with 
+# flexible prices (gam = 1.35, xi = 0) and imperfect competition with 
+# sticky prices (gam = 1.35, xi = 0.98 (weekly calibration)).
+# gam and xi are set in lines 56 and 60.
+
+# We solve the fully nonlinear model. Given the strong nonlinearities of the 
+# model due to the epidemic dynamics we use homotopy for a number of 
+# parameters, i.e. we increase parameter values stepwise until we impose
+# their final desired value. Homotopy calculations can take a while. 
+
+# Mathias Trabandt, mathias.trabandt@gmail.com
+
+symbols:
+
+  variables: [
+    # Endogenous variables of the actual (sticky price) economy
+    y,k,n,w,rk,x,c,s,i,r,ns,ni,nr,cs,ci,cr,tau,
+    lambtilde,lamtau,lami,lams,lamr,dd,pop,Rb,pie,mc,F,Kf,rr,
+    dcs,dns,dci,dni,dw,dlams,dlamtau,dlambtilde,dlami,dlamr,
+    dcr,dnr,drk,dF,dKf,pbreve,dpie,v,
+    # Endogenous variables of the flexible price economy
+    yF,kF,nF,wF,rkF,xF,cF,sF,iF,rF,nsF,niF,nrF,csF,ciF,crF,
+    tauF,lambtildeF,lamtauF,lamiF,lamsF,lamrF,ddF,popF,RbF,pieF,
+    mcF,FF,KfF,rrF,dcsF,dnsF,dciF,dniF,dwF,dlamsF,dlamtauF,
+    dlambtildeF,dlamiF,dlamrF,dcrF,dnrF,drkF,dFF,dKfF,pbreveF,dpieF,vF]  
+
+  shocks: [ei]
+  
+     
+  parameters:  [xi,rpi,rx,gam,pi1,pi2,pi3,pir,pid,betta,i_ini,d_ini,A,theta,alfa,
+                inc_target,n_target,delta,g_ss,eta,xi_flex,pie_ss,rr_ss,Rb_ss,
+                lockdown_policy,theta_lockdown,vaccination_policy,vaccination_rate]
+
+calibration:
+   i_ini: 1.e-3          # Initial seed of infection
+   d_ini: 0.e-5          # Initial number of deaths
+   
+   betta: 0.98**(1/52)   # Weekly household discount factor
+   pid: 7*0.002/14       # Weekly probability of dying
+   pir: 7*1/14-pid       # Weekly probability of recovering
+   delta: 0.06/52        # capital depreciation rate (weekly)
+   alfa: 2./3            # labor share
+
+   # Calibation targets for shares of pi-terms in T-function in SIR model
+   pi3_shr_target: 2/3   # share of T_0 jump due general infections
+   RplusD_target: 0.60   # total share of people infected and then either recovered or dead after epidemic
+  
+   share: 0.5            # 0.5 - supply and demand, 0 - supply only, 1 - demand only
+   ### Neo-classical Economy
+   gam: 1.35             #1.00001   # Steady state gross price markup   Keep in mind that
+                         # gam must be larger than unity. So, for the competitive 
+                         # economy, set gam arbitrarily close to unity, i.e. gam=1.00001.
+   xi: 0.98              # Calvo price stickiness in actual economy (weekly)
+   xi_flex: 0            # Calvo price stickiness in flexible price economy (weekly)
+   pi1_shr_target: (1-pi3_shr_target)*share     # share of T_0 jump due to consumption-based infections
+   pi2_shr_target: (1-pi3_shr_target)*(1-share) # share of T_0 jump due to work-based infections
+   
+   
+   # ### Neo-classical Economy
+   # gam: 1.35
+   # xi: 0.98
+   # pi1_shr_target: (1-pi3_shr_target)/2
+   # pi2_shr_target: (1-pi3_shr_target)/2
+   
+   # ### Competetive economy
+   # gam: 1.0
+   # xi: 0.98
+   # pi1_shr_target: (1-pi3_shr_target)/2
+   # pi2_shr_target: (1-pi3_shr_target)/2
+   
+   # ### Markup Supply Only
+   # gam: 1.35
+   # xi: 0
+   # pi1_shr_target: 0
+   # pi2_shr_target: 1-pi3_shr_target
+    
+   # ### Markup Demand Only
+   # gam: 1.35
+   # xi: 0
+   # pi2_shr_target: 0
+   # pi1_shr_target: 1-pi3_shr_target  
+   
+   # ### Markup Economy
+   # gam: 1.35
+   # xi: 0
+   # pi1_shr_target: (1-pi3_shr_target)/2
+   # pi2_shr_target: (1-pi3_shr_target)/2
+   
+   # ### Competetive Supply Only
+   # gam: 1.00001
+   # xi: 0
+   # pi1_shr_target: 0
+   # pi2_shr_target: 1-pi3_shr_target
+   
+   # ### Competetive Demand Only
+   # gam: 1.00001
+   # xi: 0
+   # pi2_shr_target: 0
+   # pi1_shr_target: 1-pi3_shr_target
+   
+   # ### Competetive Economy
+   # gam: 1.00001
+   # xi: 0
+   # pi1_shr_target: (1-pi3_shr_target)/2
+   # pi2_shr_target: (1-pi3_shr_target)/2
+   
+   rpi: 1.5              # Taylor rule coefficient inflation
+   rx: 0.5/52            # Taylor rule coefficient output gap    
+   n_target: 34.4 #28    # Calibration target for weekly hours
+   inc_target: 58000/52  # Calibration target for weekly income
+   eta: 0.19             # Calibration target for government cons to GDP ratio 
+   # pre-infection steady states
+   y_ss: inc_target 
+   n_ss: n_target 
+   mc_ss: 1/gam 
+   w_ss: mc_ss*alfa*y_ss/n_ss 
+   rk_ss: 1/betta-1+delta 
+   kn_ss: (1-alfa)*w_ss/alfa/rk_ss 
+   yk_ss: (y_ss/n_ss)/kn_ss 
+   A: (y_ss/n_ss)**alfa*yk_ss**(1-alfa) 
+   k_ss: (y_ss/A/n_ss**alfa)**(1/(1-alfa)) 
+   x_ss: delta*k_ss 
+   g_ss: eta*y_ss 
+   c_ss: (1-eta)*y_ss-x_ss
+   #ag g_ss: y_ss-c_ss-x_ss 
+   ns_ss: n_ss 
+   cs_ss: c_ss 
+   tau_ss: 0
+   s_ss: 1 
+   i_ss: 0 
+   r_ss: 0 
+   lambtilde_ss: 1/cs_ss 
+   ci_ss: cs_ss 
+   cr_ss: cs_ss 
+   theta: lambtilde_ss*w_ss/ns_ss 
+   ni_ss: lambtilde_ss*w_ss/theta 
+   nr_ss: ns_ss 
+   lams_ss: (log(cs_ss)-theta/2*ns_ss**2 + lambtilde_ss*(w_ss*ns_ss-cs_ss) ) / ( 1/betta-1 ) 
+   lamr_ss: (log(cr_ss)-theta/2*nr_ss**2 + lambtilde_ss*(w_ss*nr_ss-cr_ss) ) / ( 1/betta-1 ) 
+   lami_ss: (log(ci_ss)-theta/2*ni_ss**2 + lambtilde_ss*(w_ss*ni_ss-ci_ss) + pir*lamr_ss) / ( 1/betta-1+pir+pid ) 
+   lamtau_ss: lami_ss-lams_ss 
+   rr_ss: 1/betta 
+   dcs_ss: 1 
+   dns_ss: 1 
+   dci_ss: 1 
+   dni_ss: 1 
+   dw_ss: 1 
+   dlams_ss: 1 
+   dlamtau_ss: 1   
+   dlambtilde_ss: 1 
+   dlami_ss: 1 
+   dlamr_ss: 1 
+   dcr_ss: 1 
+   dnr_ss: 1 
+   drk_ss: 1 
+   Kf_ss: 1/(1-betta*xi)*gam*mc_ss*lambtilde_ss*y_ss 
+   F_ss: 1/(1-betta*xi)*lambtilde_ss*y_ss 
+   pie_ss: 1 
+   Rb_ss: rr_ss 
+   KfF_ss: 1/(1-betta*xi_flex)*gam*mc_ss*lambtilde_ss*y_ss 
+   FF_ss: 1/(1-betta*xi_flex)*lambtilde_ss*y_ss 
+   # Some useful command window output
+   cons_share: c_ss/y_ss
+   inv_share: x_ss/y_ss
+   gov_share: g_ss/y_ss
+   value_of_life: 1/(1-betta)*(log(c_ss)-theta/2*n_ss**2)*c_ss
+   ann_capoutputratio: k_ss/(52*y_ss)
+   thetaval: theta
+   Aval: A
+   # final numbers for pi1,pi2,pi3 and xi will be imposed below using homotopy
+   pi1: 2.e-7
+   pi2: 2.e-4
+   pi3: 0.2
+   pi1_final: pi1 
+   pi2_final: pi2 
+   pi3_final: pi3 
+   xi_final: xi 
+   # initial (pre-infection) steady state used in simulations 
+   y: y_ss   
+   k: k_ss 
+   n: n_ss 
+   w: w_ss 
+   rk: rk_ss 
+   x: x_ss 
+   c: c_ss 
+   s: 1 
+   i: 0   
+   r: 0   
+   v: 0 
+   ns : ns_ss 
+   ni: ni_ss   
+   nr: nr_ss   
+   cs: cs_ss 
+   ci: ci_ss 
+   cr: cr_ss 
+   tau: tau_ss 
+   lambtilde: lambtilde_ss 
+   lamtau: lamtau_ss 
+   lami: lami_ss 
+   lams: lams_ss 
+   lamr: lamr_ss 
+   dd: 0 
+   pop: 1 
+   dcs: dcs_ss 
+   dns: dns_ss 
+   dci: dci_ss 
+   dni: dni_ss 
+   dw: dw_ss 
+   dlams: dlams_ss 
+   dlamtau: dlamtau_ss 
+   dlambtilde: dlambtilde_ss 
+   dlami: dlami_ss 
+   dlamr: dlamr_ss   
+   dcr: dcr_ss 
+   dnr: dnr_ss 
+   drk: drk_ss 
+   rr: rr_ss 
+   Rb: Rb_ss   
+   pie: pie_ss   
+   mc: mc_ss   
+   F: F_ss   
+   Kf: Kf_ss   
+   dF: 1   
+   dKf: 1   
+   pbreve: 1   
+   dpie: 1 
+   yF: y_ss   
+   kF: k_ss 
+   nF: n_ss 
+   wF: w_ss 
+   rkF: rk_ss 
+   xF: x_ss 
+   cF: c_ss 
+   sF: 1
+   iF: 0  
+   rF: 0   
+   vF: 0
+   nsF: ns_ss 
+   niF: ni_ss   
+   nrF: nr_ss   
+   csF: cs_ss 
+   ciF: ci_ss 
+   crF: cr_ss 
+   tauF: tau_ss 
+   lambtildeF: lambtilde_ss 
+   lamtauF: lamtau_ss 
+   lamiF: lami_ss 
+   lamsF: lams_ss 
+   lamrF: lamr_ss 
+   ddF: 0 
+   popF: 1 
+   dcsF: dcs_ss 
+   dnsF: dns_ss 
+   dciF: dci_ss 
+   dniF: dni_ss 
+   dwF: dw_ss 
+   dlamsF: dlams_ss 
+   dlamtauF: dlamtau_ss 
+   dlambtildeF: dlambtilde_ss 
+   dlamiF: dlami_ss 
+   dlamrF: dlamr_ss   
+   dcrF: dcr_ss 
+   dnrF: dnr_ss 
+   drkF: drk_ss 
+   rrF: rr_ss 
+   RbF: Rb_ss   
+   pieF: pie_ss   
+   mcF: mc_ss 
+   FF: FF_ss   
+   KfF: KfF_ss 
+   dFF: 1   
+   dKfF: 1   
+   pbreveF: 1   
+   dpieF: 1 
+   # Lockdown
+   lockdown_policy: 0
+   theta_lockdown: 0.1
+   vaccination_policy: 0
+   vaccination_rate: 0.02
+
+
+equations:
+  # Keep in mind that Dynare wants state variables denoted with t-1 which differs 
+  # from the timing convention used in the manuscript where state variables 
+  # are denoted with time subscript t. All model equations have been implemented
+  # using the Dynare timing convention. 
+  # 
+  # Note that we use Dynare's time stacking (two point boundary value) algorithm to 
+  # solve the nonlinear model. The two points are the initial pre-infection steady state
+  # and the terminal steady state. Dynare solves for the model transition dynamics between 
+  # these two points that satisfy all nonlinear model equations. By default, Dynare 
+  # assumes that the terminal steady state is the same as the initial steady state which 
+  # is not true in our model. The economy will not return to the initial (pre-infection) 
+  # steady state after the epidemic has ended. Since the terminal steady state depends on 
+  # epidemic dynamics and policies, we dont know the terminal value of the new steady state.
+  # In other words the terminal steady state is an endogenous function of the transition 
+  # dynamics. Now, the model has many level variables dated t+1 which implies that Dynare will
+  # replace the value of these variables at the end of the simulation by their pre-infection steady
+  # state variables. We dont want this for the reason described above. So, we dont write 
+  # level variables dated t+1 but use a transformation of that variable. Specifically, 
+  # we replace model variables, say, X(+1) by X*dX(+1) and introduce the new variable dX=X/X(-1). 
+  # Note that when substituting dX(+1) back into X*dX(+1) we get the original model formulation, 
+  # i.e. X(+1). With this transformation, Dynare now replaces dX(+1) at the end of the simulation 
+  # with its pre-infection steady state which is correct since the growth rate of a variable 
+  # in the pre- and terminal steady states is the same.
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # / 
+  # equilibrium equations: actual (sticky price) economy  
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+  # Production 
+  - y=pbreve*A*k(-1)**(1-alfa)*n**alfa
+  
+  # Marginal cost
+  - mc=1/(A*alfa**alfa*(1-alfa)**(1-alfa))*w**alfa*rk**(1-alfa) 
+  
+  # Cost mininizing inputs
+  - w=mc*alfa*A*n**(alfa-1)*k(-1)**(1-alfa) 
+  
+  # Law of motion capital
+  - k=x+(1-delta)*k(-1) 
+  
+  # Aggregate resources
+  - y=c+x+g_ss 
+  
+  # Aggregate hours
+  - n = s(-1)*ns+i(-1)*ni+r(-1)*nr
+  
+  # Aggregate consumption
+  - c = s(-1)*cs+i(-1)*ci+r(-1)*cr
+  
+  # New infections
+  - tau = pi1*s(-1)*cs*i(-1)*ci + pi2*s(-1)*ns*i(-1)*ni + pi3*s(-1)*i(-1)*(1-theta_lockdown*lockdown_policy)**2
+  
+  # newly vaccinated
+  - v = vaccination_rate*vaccination_policy*s(-1)
+  
+  # Total susceptibles
+  - s = s(-1) - tau - v
+  
+  # Total infected
+  - i = i(-1)+tau-(pir+pid)*i(-1) + ei
+  
+  # Total recovered
+  - r = r(-1)+pir*i(-1) + v
+  
+  # Total deaths 
+  - dd = dd(-1)+pid*i(-1) 
+  
+  # Total population
+  - pop = pop(-1)-pid*i(-1) 
+  
+  # First order condition, consumption susceptibles
+  - 1/cs=lambtilde-lamtau*pi1*i(-1)*ci
+  
+  # First order condition, consumption infected
+  - 1/ci=lambtilde
+  
+  # First order condition, consumption recovered
+  - 1/cr=lambtilde
+  
+  # First order condition, hours susceptibles
+  - theta*ns=(lambtilde*w+lamtau*pi2*i(-1)*ni) *(1-theta_lockdown*lockdown_policy) 
+  
+  # First order condition, hours infected
+  - theta*ni=lambtilde*w  *(1-theta_lockdown*lockdown_policy)
+  
+  # First order condition, hours recovered
+  - theta*nr=lambtilde*w  *(1-theta_lockdown*lockdown_policy)
+  
+  # First order condition, capital
+  - lambtilde=betta*(rk*drk(+1)+(1-delta))*lambtilde*dlambtilde(+1) 
+  
+  # First order condition, new infected
+  - lami=lamtau+lams 
+  
+  # First order condition, susceptibles
+  - log(cs*dcs(+1)) - theta/2*(ns*dns(+1))**2 + lamtau*dlamtau(+1)*(pi1*cs*dcs(+1)*i*ci*dci(+1)+pi2*ns*dns(+1)*i*ni*dni(+1)+pi3*i) + lambtilde*dlambtilde(+1)*( w*dw(+1)*ns*dns(+1)-cs*dcs(+1) ) - lams/betta+lams*dlams(+1) 
+  
+  # First order condition, infected
+  - log(ci*dci(+1)) - theta/2*(ni*dni(+1))**2 + lambtilde*dlambtilde(+1)*( w*dw(+1)*ni*dni(+1)-ci*dci(+1) ) - lami/betta+lami*dlami(+1)*(1-pir-pid)+lamr*dlamr(+1)*pir 
+  
+  # First order condition, recovered
+  - log(cr*dcr(+1))-theta/2*(nr*dnr(+1))**2 + lambtilde*dlambtilde(+1)*( w*dw(+1)*nr*dnr(+1)-cr*dcr(+1) ) - lamr/betta+lamr*dlamr(+1) 
+  
+  # First order condition, bonds
+  - lambtilde=betta*Rb/(pie*dpie(+1))*lambtilde*dlambtilde(+1) 
+  
+  # Real interest rate
+  - rr=Rb/(pie*dpie(+1)) 
+  
+  # Nonlinear price setting 1
+  - Kf=gam*mc*lambtilde*y+betta*xi*(pie*dpie(+1))**(gam/(gam-1))*Kf*dKf(+1) 
+  
+  # Nonlinear price setting 2
+  - F=lambtilde*y+betta*xi*(pie*dpie(+1))**(1/(gam-1))*F*dF(+1) 
+  
+  # Nonlinear price setting 3
+  - Kf=F*( (1-xi*pie**(1/(gam-1)) ) / (1-xi) )**(-(gam-1)) 
+  
+  # Inverse price dispersion
+  - 1/pbreve=(1-xi)*( (1-xi*pie**(1/(gam-1)))/(1-xi) )**gam + xi*pie**(gam/(gam-1))/pbreve(-1) 
+  
+  # Taylor rule
+  - Rb=rr_ss+rpi*log(pie/pie_ss)+rx*log(y/yF) 
+  
+  # Auxilliary variables: gross growth rates of variables with non-zero 
+  # pre-infection steady states. These variables are needed to calculate
+  # numerically accurate simulations when the terminal steady state differs
+  # from the pre-infection steady state and if you do not know the terminal 
+  # steady state a priori since it depends on the epidemic dynamics.
+  - dF=F/F(-1) 
+  - dKf=Kf/Kf(-1)
+  - dpie=pie/pie(-1) 
+  - dcs=cs/cs(-1) 
+  - dns=ns/ns(-1) 
+  - dci=ci/ci(-1) 
+  - dni=ni/ni(-1) 
+  - dw=w/w(-1) 
+  - dlams=lams/lams(-1) 
+  - dlamtau=lamtau/lamtau(-1) 
+  - dlambtilde=lambtilde/lambtilde(-1) 
+  - dlami=lami/lami(-1) 
+  - dlamr=lamr/lamr(-1) 
+  - dcr=cr/cr(-1) 
+  - dnr=nr/nr(-1) 
+  - drk=rk/rk(-1) 
+  
+  
+  # # # # # # # # # # # # # # # # # # # # # # # #  
+  # equilibrium equations: flexible price economy
+  # # # # # # # # # # # # # # # # # # # # # # # #  
+  # Production
+  - yF=pbreveF*A*kF(-1)**(1-alfa)*nF**alfa 
+  
+  # Marginal cost
+  - mcF=1/(A*alfa**alfa*(1-alfa)**(1-alfa))*wF**alfa*rkF**(1-alfa) 
+  
+  # Cost minimizing inputs
+  - wF=mcF*alfa*A*nF**(alfa-1)*kF(-1)**(1-alfa) 
+  
+  # Law of motion for capital
+  - kF=xF+(1-delta)*kF(-1) 
+  
+  # Aggregate Resources
+  - yF=cF+xF+g_ss 
+  
+  # Aggregate hours
+  - nF=sF(-1)*nsF+iF(-1)*niF+rF(-1)*nrF
+  
+  # Aggregate consumption
+  - cF=sF(-1)*csF+iF(-1)*ciF+rF(-1)*crF
+  
+  # New infected
+  - tauF = pi1*sF(-1)*csF*iF(-1)*ciF + pi2*sF(-1)*nsF*iF(-1)*niF + pi3*sF(-1)*iF(-1)*(1-theta_lockdown*lockdown_policy)**2
+
+  # newly vaccinated
+  - vF = vaccination_rate*vaccination_policy*s(-1)
+  
+  # Total susceptibles
+  - sF = sF(-1)-tauF - vF
+  
+  # Total infected
+  - iF = iF(-1)+tauF-(pir+pid)*iF(-1) + ei
+  
+  # Total recovered
+  - rF = rF(-1)+pir*iF(-1) + vF
+  
+  # Total deaths 
+  - ddF = ddF(-1)+pid*iF(-1) 
+  
+  # Total population
+  - popF=popF(-1)-pid*iF(-1) 
+  
+  # First order condition, consumption susceptibles
+  - 1/csF=lambtildeF-lamtauF*pi1*iF(-1)*ciF
+  
+  # First order condition, consumption infected
+  - 1/ciF=lambtildeF
+  
+  # First order condition, consumption recovered
+  - 1/crF=lambtildeF
+  
+  # First order condition, hours susceptibles
+  - theta*nsF=(lambtildeF*wF+lamtauF*pi2*iF(-1)*niF)  *(1-theta_lockdown*lockdown_policy) 
+  
+  # First order condition, hours infected
+  - theta*niF=lambtildeF*wF  *(1-theta_lockdown*lockdown_policy)
+  
+  # First order condition, hours recovered
+  - theta*nrF=lambtildeF*wF  *(1-theta_lockdown*lockdown_policy)
+  
+  # First order condition, capital
+  - lambtildeF=betta*(rkF*drkF(+1)+(1-delta))*lambtildeF*dlambtildeF(+1) 
+  
+  # First order condition, new infected
+  - lamiF=lamtauF+lamsF 
+  
+  # First order condition, susceptibles
+  - log(csF*dcsF(+1)) - theta/2*(nsF*dnsF(+1))**2 + lamtauF*dlamtauF(+1)*(pi1*csF*dcsF(+1)*iF*ciF*dciF(+1)+pi2*nsF*dnsF(+1)*iF*niF*dniF(+1)+pi3*iF) + lambtildeF*dlambtildeF(+1)*( wF*dwF(+1)*nsF*dnsF(+1)-csF*dcsF(+1) ) -lamsF/betta+lamsF*dlamsF(+1) 
+  
+  # First order condition, infected
+  - log(ciF*dciF(+1)) - theta/2*(niF*dniF(+1))**2 + lambtildeF*dlambtildeF(+1)*( wF*dwF(+1)*niF*dniF(+1)-ciF*dciF(+1) ) - lamiF/betta + lamiF*dlamiF(+1)*(1-pir-pid) + lamrF*dlamrF(+1)*pir 
+  
+  # First order condition, recovered
+  - log(crF*dcrF(+1)) - theta/2*(nrF*dnrF(+1))**2 + lambtildeF*dlambtildeF(+1)*( wF*dwF(+1)*nrF*dnrF(+1)-crF*dcrF(+1) ) - lamrF/betta + lamrF*dlamrF(+1) 
+  
+  # First order condition, bonds
+  - lambtildeF=betta*RbF/(pieF*dpieF(+1))*lambtildeF*dlambtildeF(+1) 
+  
+  # Real interest rate
+  - rrF=RbF/(pieF*dpieF(+1)) 
+  
+  # Nonlinear price setting 1
+  - KfF=gam*mcF*lambtildeF*yF+betta*xi_flex*(pieF*dpieF(+1))**(gam/(gam-1))*KfF*dKfF(+1) 
+  
+  # Nonlinear price setting 2
+  - FF=lambtildeF*yF+betta*xi_flex*(pieF*dpieF(+1))**(1/(gam-1))*FF*dFF(+1) 
+  
+  # Nonlinear price setting 3
+  - KfF=FF*( (1-xi_flex*pieF**(1/(gam-1)) ) / (1-xi_flex) )**(-(gam-1)) 
+  
+  # Inverse price dispersion
+  - 1/pbreveF=(1-xi_flex)*( (1-xi_flex*pieF**(1/(gam-1)))/(1-xi_flex) )**gam + xi_flex*pieF**(gam/(gam-1))/pbreveF(-1) 
+  
+  # Taylor rule
+  - RbF=Rb_ss+rpi*log(pieF/pie_ss)+rx*log(yF/yF) 
+  
+  # Auxilliary variables: gross growth rates of variables with non-zero 
+  # pre-infection steady states. These variables are needed to calculate
+  # numerically accurate simulations when the terminal steady state differs
+  # from the pre-infection steady state and if you do not know the terminal 
+  # steady state a priori since it depends on the epidemic dynamics.
+  - dFF=FF/FF(-1) 
+  - dKfF=KfF/KfF(-1) 
+  - dpieF=pieF/pieF(-1) 
+  - dcsF=csF/csF(-1) 
+  - dnsF=nsF/nsF(-1) 
+  - dciF=ciF/ciF(-1) 
+  - dniF=niF/niF(-1) 
+  - dwF=wF/wF(-1) 
+  - dlamsF=lamsF/lamsF(-1) 
+  - dlamtauF=lamtauF/lamtauF(-1) 
+  - dlambtildeF=lambtildeF/lambtildeF(-1) 
+  - dlamiF=lamiF/lamiF(-1) 
+  - dlamrF=lamrF/lamrF(-1) 
+  - dcrF=crF/crF(-1) 
+  - dnrF=nrF/nrF(-1) 
+  - drkF=rkF/rkF(-1) 
+
+
+# measurement_equations: 
+#   - OBS_i = i + RES_OBS_i
+    
+    
+options:
+    # range: [[2020,4,1],[2021,12,31]]
+    frequency: 3 # Weekly
+    T : 700
+    periods: [26] # number of weeks = 2 quarter
+    shock_values: [i_ini,d_ini]
+    
+

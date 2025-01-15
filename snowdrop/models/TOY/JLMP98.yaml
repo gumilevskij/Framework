@@ -1,0 +1,67 @@
+name:  Monetary policy model example 
+# For details, please see https://link.springer.com/article/10.1057/imfsp.2008.11
+
+symbols:
+   variables: [PDOT,RR,RS,Y]
+   exogenous: [exo]
+   shocks: [ey,err,ers,epdot]
+   parameters: [g,p_pdot1,p_pdot2,p_pdot3,p_rs1,p_y1,p_y2,p_y3]
+
+equations:
+      - PDOT = p_pdot1*PDOT(+1) + (1-p_pdot1)*PDOT(-1) + p_pdot2*(g^2/(g-Y) - g) + p_pdot3*(g^2/(g-Y(-1)) - g) + epdot
+      - RR = RS - p_pdot1*PDOT(+1) - (1-p_pdot1)*PDOT(-1) + err
+      - RS = p_rs1*PDOT + Y + ers + exo 
+      - Y = p_y1*Y(-1) - p_y2*RR - p_y3*RR(-1) + ey
+
+calibration:
+    # parameters
+    g: 0.049
+    p_pdot1: 0.414
+    # User can set time varying parameters.  The last value will be used for the rest of array
+    #p_pdot1: [0.4,0.5,0.6,0.7] 
+    p_pdot2 : 0.196
+    p_pdot3: 0.276
+    p_rs1: 3
+    p_y1: 0.304
+    p_y2: 0.098
+    p_y3: 0.315
+    # initial values
+    PDOT: 0
+    RR: 0
+    RS: 0
+    Y: 0
+    X: 1
+    Z: 1
+    R: 1
+    std: 0.02
+    
+    # exogenous variables
+    #ers: [0,0,0,0,0.01,0]
+    #file: [../../data/exog.csv]
+
+    
+# steady_state:    
+#     PDOT: 0.0
+#     RR: 0.0
+#     RS: 0.0
+#     Y: 0.0
+    
+labels:
+   PDOT: "Inflation"
+   PDOT(-1): "Lag of Inflation"
+   PDOT(+1): "Lead of Inflation"
+   RR:  "Real Interest Rate"
+   RR(-1): "Lag of Real Interest Rate"
+   RS:  "Monetary Policy Rate"
+   Y:   "Output Gap"
+   Y(-1): "Lag of Output Gap"
+   ey:  "Production Shock"
+   err:  "Real Interest Rate Shock"
+   ers:  "Monetary Policy Shock"
+   epdot:  "Inflation Shock"
+   exo: "Exogenous Process"
+   
+options:
+    T : 14
+    periods: [1]
+    shock_values: [std]

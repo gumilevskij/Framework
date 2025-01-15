@@ -1,0 +1,45 @@
+name: Transportation expenses minimization model
+
+sets:
+   plants  i: [Seattle, SanDiego]
+   markets j: [NewYork, Chicago, Topeka, Dallas]
+   
+symbols:
+   variables:  [x(i)(j)]
+   parameters: [f, a(i), b(j), d(i)(j), cost(i)(j)]
+       
+equations:
+    - Supply(i): sum(j, x(i)(j))
+    - Demand(j): sum(i, x(i)(j))
+
+calibration:
+    f: 90
+    a(i): [350, 600]
+    b(j): [325, 300, 100, 200]
+    x(i)(j): [[0,0,0,0],[0,0,0,0]]
+    d(i)(j): [[2.5, 1.7, 1.8, 3.0], 
+              [2.5, 1.8, 1.4, 2.0]]
+    cost(i)(j): f*d(i)(j)/1000 # Transport cost in 1000s of dollars per case
+   
+objective_function: 
+   - sum(i;j, cost(i)(j)*x(i)(j)) # Total shipment cost
+
+constraints:
+   - Supply(i) .lt. a(i)
+   - Supply(i) .ge. 0
+   - Demand(j) .gt. b(j)
+   - x(i)(j)   .ge. 0
+
+labels:
+    x: Shipment quantities in cases
+    f: Freight in dollars per case per thousand miles
+    
+Solver: 'SLSQP'   # 'SLSQP' #'trust-constr' 
+Method: 'Minimize'
+    
+
+
+   
+
+   
+   

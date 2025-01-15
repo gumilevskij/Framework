@@ -1,0 +1,56 @@
+name: Three regions economy
+
+symbols:
+   variables: [Y_WORLD,PDOT_WORLD]  
+   sets:
+      countries: [US,EU,JP]
+   shocks: [e]
+   
+equations:
+   - Y_WORLD = 0.5*Y_US+0.4*Y_EU+0.1*Y_JP
+   - PDOT_WORLD = 0.5*PDOT_US+0.4*PDOT_EU+0.1*PDOT_JP
+   - Inflation:
+       set: countries
+       index: c
+       endo: PDOT_{c}
+       eq: PDOT_{c} = p_pdot1*PDOT_{c}(+1) + (1-p_pdot1)*PDOT_{c}(-1) + p_pdot2*(g^2/(g-Y_{c}) - g) + p_pdot3*(g^2/(g-Y_{c}(-1)) - g)
+       eq_ss: PDOT_{c} = 0
+   - Real_Interest_Rate:
+       set: countries
+       index: c
+       endo: RR_{c}
+       eq: RR_{c} = RS_{c} - p_pdot1*PDOT_{c}(+1) - (1-p_pdot1)*PDOT_{c}(-1)
+       eq_ss: RR_{c} = 0      
+   - Short_Term_Interest_Rate:
+       set: countries
+       index: c
+       endo: RS_{c}
+       eq: RS_{c} = p_rs1*PDOT_{c} + Y_{c}
+       eq_ss: RS_{c} = 0 
+   - Output_Gap:
+       set: countries
+       index: c
+       endo: Y_{c}
+       eq: Y_{c} = p_y1*Y_{c}(-1) - p_y2*RR_{c} - p_y3*RR_{c}(-1) + e
+       eq_ss: Y_{c} = 0 
+
+parameters:
+   parameters: [g,p_pdot1,p_pdot2,p_pdot3,p_rs1,p_y1,p_y2,p_y3]
+   #file: [params.yaml]
+   
+
+calibration: 
+   # shocks
+   e: 0.0    
+   # parameters and initial values
+   file: [files/calibration.yaml,files/initial_values.yaml]
+
+options:
+   T : 14
+   periods: [2]
+   shock_values: [0.02]
+
+   
+
+   
+   

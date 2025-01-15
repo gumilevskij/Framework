@@ -1,0 +1,432 @@
+name: Smets and Wouters Model.
+ 
+#   This file provides replication files for 
+#   Smets, Frank and Wouters, Rafael (2007): "Shocks and Frictions in US Business Cycles: A Bayesian
+#   DSGE Approach", American Economic Review, 97(3), 586-606, that are compatible with Dynare 4.5 onwards
+#  
+#   To replicate the full results, you have to get back to the original replication files available at
+#   https:#www.aeaweb.org/articles.php?doi=10.1257/aer.97.3.586 and include the respective estimation commands and mode-files.
+#  
+#   Notes:
+#    - The consumption Euler equation in the paper, equation (2), premultiplies the risk premium process \varepsilon_t**b,
+#        denoted by b in this code, by the coefficient c_3. In the code this prefactor is omitted by setting the 
+#        coefficient to 1. As a consequence, b in this code actually is b:=c_3 #  \varepsilon_t**b. As a consequence, in 
+#        the arbitrage equation for the value of capital in the paper, equation (4), the term 1 #  \varepsilon_t**b
+#        is replaced by 1/c_3 #  b, which is equal to \varepsilon_t**b given the above redefinition. This rescaling also explains why the 
+#        standard deviation of the risk premium shock in the AR(1)-process for b has a different standard deviation than reported
+#        in the paper. However, the results are unaffected by this scaling factor (except for the fact that the posterior distribution
+#        reported in the paper cannot be directly translated to the present mod-file due to parameter correlation in the posterior.  
+#    - As pointed out in Del Negro/Schorfheide (2012): "Notes on New-Keynesian Models"
+#        in the code implementation of equation (8) for both the flex price and the sticky price/wage economy, 
+#        there is a (1+cbetabar #  cgamma) missing in the i_2 in front of q_t (denoted qs in the code). 
+#        Equation (8) in the paper reads:  
+#            (1-(1-delta)/gamma) #  (1+beta #  gamma**(1-sigma)) #  gamma**2 #  varphi
+#        which translates to the code snippet:
+#            (1-(1-ctou)/cgamma)*(1+cbetabar*cgamma)*cgamma**2*csadjcost
+#        But the code implements
+#            (1-(1-ctou)/cgamma)*cgamma**2*csadjcost
+#        which corresponds to an equation reading
+#            (1-(1-delta)/gamma)*gamma**2*varphi
+#    - Chib/Ramamurthy (2010): "Tailored randomized block MCMC methods with application to DSGE models", Journal of Econometrics, 155, pp. 19-38
+#        have pointed out that the mode reported in the original Smets/Wouters (2007) paper is not actually the mode. \bar \pi (constepinf) is estimated lower
+#        while \bar \l (constelab) is higher.
+#    - Note that at the prior mean, [cmap,crhopinf] and [cmaw,crhow] are pairwise collinear. Thus, running identification at the prior
+#        mean will return a warning. But this is only a local issue. These parameters are only indistinguishable at the prior mean, but not 
+#        at different points.
+#    - In the prior Table 1A in the paper, the 
+#            - habit parameter $\lambda$ is erroneously labeled h
+#            - the fixed cost parameter $\phi_p$ is labeled $\Phi$ 
+#    - Table 1B claims that $\rho_{ga}$ follows a beta prior with B(0.5,0.2**2), but the code shows that it actually
+#        follows a normal distribution with N(0.5,0.25**2)
+#  
+#   This file was originally written by Frank Smets and Rafeal Wouters and has been updated by Johannes Pfeifer. 
+ 
+
+symbols:
+    
+   variables: [ewma,epinfma,zcapf,rkf,kf,pkf,cf,invef,
+               yf,labf,wf,rrf,mc,zcap,rk,k,pk,c,inve,y,lab,pinf,w,r,a,b,g,qs,ms,spinf,sw,kpf,kp,
+               dy,dc,dinve,dw]
+   # Observables taken out to match eq to endo vars in the simulated "lockdown" version here: dy dc dinve robs pinfobs dwEC N URlog
+    
+   shocks: [ea,eb,eg,eqs,em,epinf,ew]
+    
+   parameters: [curvw,cgy,curvp,constebeta,cmaw,cmap,calfa,czcap,csadjcost,ctou,
+                csigma,chabb,cfc,cindw,cprobw,cindp,cprobp,csigl,clandaw,crpi,crdy,
+                cry,crr,crhoa,crhoas,crhob,crhog,crhols,crhoqs,crhoms,crhopinf,
+                crhow,cg,cbetabar,cgamma,crk,ccy,ciy,crkky,cikbar,cwhlc]
+                
+                
+   measurement_variables :  [OBS_dy,OBS_dc,OBS_dinve,OBS_dw,OBS_pinf,OBS_r,OBS_lab]
+   
+   measurement_shocks :     [RES_OBS_dy,RES_OBS_dc,RES_OBS_dinve,RES_OBS_dw,RES_OBS_pinf,RES_OBS_r,RES_OBS_lab]
+   
+   measurement_parameters:  [ctrend,conster,constepinf,constelab]
+   
+   
+# Variables labels            
+labels:
+
+   # Shocks
+   ea:          "Productivity shock"
+   eb:          "Risk premium shock"
+   eg:          "Spending shock"
+   eqs:         "Investment-specific technology shock"
+   em:          "Monetary policy shock"
+   epinf:       "Price markup shock"  
+   ew:          "Wage markup shock" 
+   
+   # Variables
+   labobs:      "Log hours worked"
+   robs:        "Federal funds rate" 
+   pinfobs:     "Inflation" 
+   dy:          "Output growth rate" 
+   dc:          "Consumption growth rate" 
+   dinve:       "Investment growth rate" 
+   dw:          "Wage growth rate" 
+   ewma:        "Auxiliary wage markup moving average variable"  
+   epinfma:     "Auxiliary price markup moving average variable"  
+   zcapf:       "Capital utilization rate flex price economy" 
+   rkf:         "Rental rate of capital flex price economy" 
+   kf:          "Capital services flex price economy" 
+   pkf:         "Real value of existing capital stock flex price economy"  
+   cf:          "Consumption flex price economy" 
+   invef:       "Investment flex price economy" 
+   yf:          "Output flex price economy" 
+   labf:        "Hours worked flex price economy" 
+   wf:          "Real wage flex price economy" 
+   rrf:         "Real interest rate flex price economy"
+   mc:          "Gross price markup" 
+   zcap:        "Capital utilization rate" 
+   rk:          "Rental rate of capital" 
+   k:           "Capital services" 
+   pk:          "Real value of existing capital stock" 
+   c:           "Consumption"
+   inve:        "Investment"
+   y:           "Output"
+   lab:         "Hours worked"
+   pinf:        "Inflation"
+   w:           "Real wage"
+   r:           "Nominal interest rate"
+   a:           "Productivity process"
+   b:           "Scaled risk premium shock"
+   g:           "Exogenous spending"
+   qs:          "Investment-specific technology"
+   ms:          "Monetary policy shock process" 
+   spinf:       "Price markup shock process"
+   sw:          "Wage markup shock process"
+   kpf:         "Capital stock flex price economy" 
+   kp:          "Capital stock"  
+   cgy:         "Feedback technology on exogenous spending" 
+    
+   # Parameters
+   curvp:       "Curvature Kimball aggregator prices"  
+   constelab:   "Steady state hours"  
+   constepinf:  "Steady state inflation rate"  
+   constebeta:  "Time preference rate in percent"  
+   cmaw:        "Coefficient on MA term wage markup"  
+   cmap:        "Coefficient on MA term price markup"  
+   calfa:       "Capital share"  
+   czcap:       "Capacity utilization cost"  
+   csadjcost:   "Investment adjustment cost"  
+   ctou:        "Depreciation rate"  
+   csigma:      "Risk aversion"  
+   chabb:       "External habit degree"  
+   cfc:         "Fixed cost share"  
+   cindw:       "Indexation to past wages"  
+   cprobw:      "Calvo parameter wages"   
+   cindp:       "Indexation to past prices"  
+   cprobp:      "Calvo parameter prices"   
+   csigl:       "Frisch elasticity"   
+   clandaw:     "Gross markup wages"   
+   crpi:        "Taylor rule inflation feedback" 
+   crdy:        "Taylor rule output growth feedback" 
+   cry:         "Taylor rule output level feedback" 
+   crr:         "interest rate persistence"  
+   crhoa:       "Persistence productivity shock"  
+   crhob:       "Persistence risk premium shock"  
+   crhog:       "Persistence spending shock"  
+   crhoqs:      "Persistence risk premium shock"  
+   crhoms:      "Persistence monetary policy shock"  
+   crhopinf:    "Persistence price markup shock"  
+   crhow:       "Persistence wage markup shock"  
+   ctrend:      "Net growth rate in percent"  
+   cg:          "Steady state exogenous spending share"
+
+calibration:
+    # fixed parameters
+    ctou:       0.025
+    clandaw:    1.5
+    cg:         0.18
+    curvp:      10
+    curvw:      10
+    
+    # Initial values
+    labf :    0
+    lamf :    0
+    ewma :    0
+    epinfma:  0
+    zcapf :   0
+    rkf :     0
+    kf :      0
+    pkf :     0
+    cf :      0
+    invef :   0
+    yf :      0
+    wf :      0
+    rrf :     0
+    mc :      0
+    zcap :    0
+    rk :      0
+    k :       0
+    pk :      0
+    c :       0
+    inve :    0
+    y :       0
+    lab :     0
+    pinf :    0
+    w :       0
+    r :       0
+    a :       0
+    b :       0
+    g :       0
+    qs :      0
+    ms :      0
+    spinf :   0
+    sw :      0
+    kpf :     0
+    kp :      0
+    winf :    0
+    ygap :    0
+    
+    # estimated parameters initialisation
+    calfa:      0.24
+    cbeta:      0.9995
+    csigma:     1.5
+    cfc:        1.5
+    cgy:        0.51
+    
+    csadjcost: 6.0144
+    chabb:     0.6361    
+    cprobw:    0.8087
+    csigl:     1.9423
+    cprobp:    0.6
+    cindw:     0.3243
+    cindp:     0.47
+    czcap:     0.2696
+    crpi:      1.488
+    crr:       0.8762
+    cry:       0.0593
+    crdy:      0.2347
+    
+    crhoa:     0.9977
+    crhob:     0.5799
+    crhog:     0.9957
+    crhols:    0.9928
+    crhoqs:    0.7165
+    crhoas:    1 
+    crhoms:    0
+    crhopinf:  0
+    crhow:     0
+    cmap :     0
+    cmaw  :    0
+    constelab: 0
+    
+    # Added by JP to provide full calibration of model before estimation
+    constepinf: 0.7
+    constebeta: 0.7420
+    ctrend: 0.3982
+    
+    # Steady state
+    dy: ctrend
+    dc: ctrend
+    dinve: ctrend
+    dw: ctrend
+    pinfobs :  constepinf
+    robs :  (((1+constepinf/100)/((1/(1+constebeta/100))*(1+ctrend/100)**(-csigma)))-1)*100
+    labobs :  constelab
+    
+    cbetabar: cbeta*cgamma**(-csigma)       #growth-adjusted discount factor in Euler equation
+    cgamma:   1+ctrend/100                  #gross growth rate
+    crk:      (cbeta**(-1))*(cgamma**csigma) - (1-ctou) #R**k_{*}: steady state rental rate
+    ccy:      1-cg-cik*cky                  #consumption-output ratio
+    ciy:      cik*cky                       #investment-output ratio
+    crkky:    crk*cky                       #z_y=R_{*}**k*k_y
+    cikbar:   (1-(1-ctou)/cgamma)           #(1-k_1) in equation LOM capital, equation (8)
+    conster:  (cr-1)*100                    #steady state federal funds rate ($\bar r$)
+    
+    cik:      (1-(1-ctou)/cgamma)*cgamma    #i_k: investment-capital ratio
+    cr:       cpie/(cbeta*cgamma**(-csigma))  #steady state gross real interest rate
+    cpie:     1+constepinf/100              #gross inflation rate
+    cky:      cfc*(clk)**(calfa-1)          #k_y: steady state output ratio
+    clk:      ((1-calfa)/calfa)*(crk/cw)    #labor to capital ratio
+    cw:       (calfa**calfa*(1-calfa)**(1-calfa)/(clandap*crk**calfa))**(1/(1-calfa))      #steady state real wage
+    clandap:  cfc                           #fixed cost share/gross price markup
+    cwhlc:    (1/clandaw)*(1-calfa)/calfa*crk*cky/ccy #W**{h}_{*}*L_{*}/C_{*} used in c_2 in equation (2)
+
+    #cbeta:    1/(1+constebeta/100)    #discount factor
+    #cw:       (calfa**calfa*(1-calfa)**(1-calfa)/(clandap*((cbeta**(-1))*(cgamma**csigma) - (1-ctou))**calfa))**(1/(1-calfa))
+    
+    
+equations:
+    ### Flexible economy
+
+      # FOC labor with mpl expressed as function of rk and w, flex price economy
+      - 0*(1-calfa)*a + 1*a =  calfa*rkf+(1-calfa)*(wf)  
+      # FOC capacity utilization, flex price economy
+      - zcapf =  (1/(czcap/(1-czcap)))* rkf  
+      # Firm FOC capital, flex price economy
+      - rkf =  (wf)+labf-kf 
+      # Definition capital services, flex price economy
+      - kf =  kpf(-1)+zcapf 
+      # Investment Euler Equation, flex price economy
+      - invef = (1/(1+cbetabar*cgamma))* (  invef(-1) + cbetabar*cgamma*invef(1)+(1/(cgamma**2*csadjcost))*pkf ) +qs 
+      # Arbitrage equation value of capital, flex price economy
+      - pkf = -rrf-0*b+(1/((1-chabb/cgamma)/(csigma*(1+chabb/cgamma))))*b +(crk/(crk+(1-ctou)))*rkf(1) +  ((1-ctou)/(crk+(1-ctou)))*pkf(1) 
+      # Consumption Euler Equation, flex price economy
+      - cf = (chabb/cgamma)/(1+chabb/cgamma)*cf(-1) + (1/(1+chabb/cgamma))*cf(+1) +((csigma-1)*cwhlc/(csigma*(1+chabb/cgamma)))*(labf-labf(+1)) - (1-chabb/cgamma)/(csigma*(1+chabb/cgamma))*(rrf+0*b) + b 
+      # Aggregate Resource Constraint, flex price economy
+      - yf = ccy*cf+ciy*invef+g  +  crkky*zcapf 
+      # Aggregate Production Function, flex price economy
+      - yf = cfc*( calfa*kf+(1-calfa)*labf +a )
+      # Wage equation, flex price economy
+      - wf = csigl*labf     +(1/(1-chabb/cgamma))*cf - (chabb/cgamma)/(1-chabb/cgamma)*cf(-1) 
+      # Law of motion for capital, flex price economy (see header notes)             
+      - kpf =  (1-cikbar)*kpf(-1)+(cikbar)*invef + (cikbar)*(cgamma**2*csadjcost)*qs 
+
+    ### Sticky price - wage economy
+    
+      # FOC labor with mpl expressed as function of rk and w, SW Equation (9)
+      - mc =  calfa*rk+(1-calfa)*(w) - 1*a - 0*(1-calfa)*a 
+      # FOC capacity utilization, SW Equation (7)
+      - zcap =  (1/(czcap/(1-czcap)))* rk 
+      # Firm FOC capital, SW Equation (11)
+      - rk =  w+lab-k 
+      # Definition capital services, SW Equation (6)
+      - k =  kp(-1)+zcap 
+      # Investment Euler Equation, SW Equation (3)
+      - inve = (1/(1+cbetabar*cgamma))* (inve(-1) + cbetabar*cgamma*inve(1)+(1/(cgamma**2*csadjcost))*pk ) +qs 
+      # Arbitrage equation value of capital, SW Equation (4)
+      - pk = -r+pinf(1)-0*b 
+            + (1/((1-chabb/cgamma)/(csigma*(1+chabb/cgamma))))*b 
+            + (crk/(crk+(1-ctou)))*rk(1) 
+            + ((1-ctou)/(crk+(1-ctou)))*pk(1) 
+      # Consumption Euler Equation, SW Equation (2)
+      - c = (chabb/cgamma)/(1+chabb/cgamma)*c(-1) 
+            + (1/(1+chabb/cgamma))*c(+1) 
+            +((csigma-1)*cwhlc/(csigma*(1+chabb/cgamma)))*(lab-lab(+1)) 
+            - (1-chabb/cgamma)/(csigma*(1+chabb/cgamma))*(r-pinf(+1) + 0*b) +b 
+      # Aggregate Resource Constraint, SW Equation (1)
+      - y = ccy*c+ciy*inve+g  +  1*crkky*zcap 
+      # Aggregate Production Function, SW Equation (5)
+      - y = cfc*( calfa*k+(1-calfa)*lab +a )
+      # New Keynesian Phillips Curve, SW Equation (10)
+      - pinf =  (1/(1+cbetabar*cgamma*cindp)) * ( cbetabar*cgamma*pinf(1) +cindp*pinf(-1) 
+           +((1-cprobp)*(1-cbetabar*cgamma*cprobp)/cprobp)/((cfc-1)*curvp+1)*(mc)  )  + spinf  
+      # Wage Phillips Curve, SW Equation (13), with (12) plugged for mu_w
+      - w =  (1/(1+cbetabar*cgamma))*w(-1)
+           +(cbetabar*cgamma/(1+cbetabar*cgamma))*w(1)
+           +(cindw/(1+cbetabar*cgamma))*pinf(-1)
+           -(1+cbetabar*cgamma*cindw)/(1+cbetabar*cgamma)*pinf
+           +(cbetabar*cgamma)/(1+cbetabar*cgamma)*pinf(1)
+           +(1-cprobw)*(1-cbetabar*cgamma*cprobw)/((1+cbetabar*cgamma)*cprobw)*(1/((clandaw-1)*curvw+1))*
+           (csigl*lab + (1/(1-chabb/cgamma))*c - ((chabb/cgamma)/(1-chabb/cgamma))*c(-1) -w) 
+           + 1*sw 
+      # Taylor rule, SW Equation (14)
+      - r =  crpi*(1-crr)*pinf
+           +cry*(1-crr)*(y-yf)     
+           +crdy*(y-yf-y(-1)+yf(-1))
+           +crr*r(-1)
+           +ms  
+      # Law of motion for productivity             
+      - a = crhoa*a(-1)  + ea
+      # Law of motion for risk premium             
+      -  b = crhob*b(-1) + eb
+      # Law of motion for spending process             
+      - g = crhog*(g(-1)) + eg + cgy*ea
+      # Law of motion for investment specific technology shock process             
+      - qs = crhoqs*qs(-1) + eqs
+      # Law of motion for monetary policy shock process             
+      - ms = crhoms*ms(-1) + em
+      # Law of motion for price markup shock process             
+      - spinf = crhopinf*spinf(-1) + epinfma - cmap*epinfma(-1)
+      - epinfma=epinf
+      # Law of motion for wage markup shock process             
+      - sw = crhow*sw(-1) + ewma - cmaw*ewma(-1) 
+      - ewma=ew 
+      # Law of motion for capital, SW Equation (8) (see header notes)             
+      - kp =  (1-cikbar)*kp(-1)+cikbar*inve + cikbar*cgamma**2*csadjcost*qs 
+      
+      # Definitions  
+      - dy=y-y(-1)            
+      - dc=c-c(-1)            
+      - dinve=inve-inve(-1)            
+      - dw=w-w(-1)        
+
+measurement_equations:
+    # Observation equation output             
+    - OBS_dy=dy+ctrend
+    # Observation equation consumption             
+    - OBS_dc=dc+ctrend
+    # Observation equation investment             
+    - OBS_dinve=dinve+ctrend
+    # Observation equation real wage             
+    - OBS_dw=dw+ctrend
+    # Observation equation inflation             
+    - OBS_pinf = pinf + constepinf
+    # Observation equation interest rate             
+    - OBS_r = r + conster
+    # Observation equation hours worked             
+    - OBS_lab = lab + constelab
+
+
+estimated_parameters:  
+    # PARAM NAME, LB, UB, PRIOR_SHAPE, PRIOR_P1, PRIOR_P2, PRIOR_P3, PRIOR_P4, JSCALE
+    # PRIOR_SHAPE: beta_pdf, gamma_pdf, normal_pdf, inv_gamma_pdf
+
+    - ea,         0.01,3,inv_gamma_pdf,0.1,2
+    - eb,          0.025,5,inv_gamma_pdf,0.1,2
+    - eg,         0.01,3,inv_gamma_pdf,0.1,2
+    - eqs,        0.01,3,inv_gamma_pdf,0.1,2
+    - em,         0.01,3,inv_gamma_pdf,0.1,2
+    - epinf,      0.01,3,inv_gamma_pdf,0.1,2
+    - ew,         0.01,3,inv_gamma_pdf,0.1,2
+    - crhoa,      0.01,.9999,beta_pdf,0.5,0.20
+    - crhob,      0.01,.9999,beta_pdf,0.5,0.20
+    - crhog,      0.01,.9999,beta_pdf,0.5,0.20
+    - crhoqs,     0.01,.9999,beta_pdf,0.5,0.20
+    - crhoms,     0.01,.9999,BETA_PD.5,0.20
+    - crhopinf,   0.01,.9999,beta_pdf,0.5,0.20
+    - crhow,      0.001,.9999,beta_pdf,0.5,0.20
+    - cmap,       0.01,.9999,beta_pdf,0.5,0.2
+    - cmaw,       0.01,.9999,beta_pdf,0.5,0.2
+    - csadjcost,  2,15,normal_pdf,4,1.5
+    - csigma,     0.25,3,normal_pdf,1.50,0.375
+    - chabb,      0.001,0.99,beta_pdf,0.7,0.1
+    - cprobw,     0.3,0.95,beta_pdf,0.5,0.1
+    - csigl,      0.25,10,normal_pdf,2,0.75
+    - cprobp,     0.5,0.95,beta_pdf,0.5,0.10
+    - cindw,      0.01,0.99,beta_pdf,0.5,0.15
+    - cindp,      0.01,0.99,beta_pdf,0.5,0.15
+    - czcap,      0.01,1,beta_pdf,0.5,0.15
+    - cfc,        0,3,normal_pdf,1.25,0.125
+    - crpi,       1.0,3,normal_pdf,1.5,0.25
+    - crr,        0.5,0.975,beta_pdf,0.75,0.10
+    - cry,        0.001,0.5,normal_pdf,0.125,0.05
+    - crdy,       0.001,0.5,normal_pdf,0.125,0.05
+    # - constepinf, 0.1,2.0,gamma_pdf,0.625,0.1 #20
+    - constebeta, 0.01,2.0,gamma_pdf,0.25,0.1 #0.20
+    # - constelab, -10.0,10.0,normal_pdf,0.0,2.0
+    - ctrend,     0.1,0.8,normal_pdf,0.4,0.10
+    - cgy,        0.01,2.0,normal_pdf,0.5,0.25
+    - calf,        0.01,1.0,normal_pdf,0.3,0.05
+
+
+options:
+   T : 22
+   periods: [1]
+   shock_values: [[1,0,0,0,0,0,0]]
+   
+   range : ["2000,1,1","2024,1,1"]
+   filter_range : ["2000,1,1","2020,1,1"]
+   frequency: 1 # Quarterly frequency
