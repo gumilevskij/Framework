@@ -1,0 +1,109 @@
+snowdrop.src.dignad package
+===========================
+
+Submodules
+----------
+
+snowdrop.src.dignad.alignment module
+------------------------------------
+
+.. automodule:: snowdrop.src.dignad.alignment
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.donor module
+--------------------------------
+
+.. automodule:: snowdrop.src.dignad.donor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.donors1 module
+----------------------------------
+
+.. automodule:: snowdrop.src.dignad.donors1
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.driver module
+---------------------------------
+
+.. automodule:: snowdrop.src.dignad.driver
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.initialize module
+-------------------------------------
+
+.. automodule:: snowdrop.src.dignad.initialize
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.natdisasters module
+---------------------------------------
+
+.. automodule:: snowdrop.src.dignad.natdisasters
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.plots module
+--------------------------------
+
+.. automodule:: snowdrop.src.dignad.plots
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.realism module
+----------------------------------
+
+.. automodule:: snowdrop.src.dignad.realism
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.save2Excel module
+-------------------------------------
+
+.. automodule:: snowdrop.src.dignad.save2Excel
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.saveResults module
+--------------------------------------
+
+.. automodule:: snowdrop.src.dignad.saveResults
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.simulate module
+-----------------------------------
+
+.. automodule:: snowdrop.src.dignad.simulate
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+snowdrop.src.dignad.util module
+-------------------------------
+
+.. automodule:: snowdrop.src.dignad.util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: snowdrop.src.dignad
+   :members:
+   :undoc-members:
+   :show-inheritance:

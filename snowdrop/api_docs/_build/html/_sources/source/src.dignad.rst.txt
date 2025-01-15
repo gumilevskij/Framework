@@ -1,0 +1,109 @@
+src.dignad package
+==================
+
+Submodules
+----------
+
+src.dignad.alignment module
+---------------------------
+
+.. automodule:: src.dignad.alignment
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.donor module
+-----------------------
+
+.. automodule:: src.dignad.donor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.donors1 module
+-------------------------
+
+.. automodule:: src.dignad.donors1
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.driver module
+------------------------
+
+.. automodule:: src.dignad.driver
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.initialize module
+----------------------------
+
+.. automodule:: src.dignad.initialize
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.natdisasters module
+------------------------------
+
+.. automodule:: src.dignad.natdisasters
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.plots module
+-----------------------
+
+.. automodule:: src.dignad.plots
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.realism module
+-------------------------
+
+.. automodule:: src.dignad.realism
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.save2Excel module
+----------------------------
+
+.. automodule:: src.dignad.save2Excel
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.saveResults module
+-----------------------------
+
+.. automodule:: src.dignad.saveResults
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.simulate module
+--------------------------
+
+.. automodule:: src.dignad.simulate
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.dignad.util module
+----------------------
+
+.. automodule:: src.dignad.util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: src.dignad
+   :members:
+   :undoc-members:
+   :show-inheritance:
