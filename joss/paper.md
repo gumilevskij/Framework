@@ -1,5 +1,5 @@
 ---
-title 'Snowdrop:  Python Package for DSGE modeling'
+title 'Snowdrop:  Python Package for DSGE Modeling'
 
  tags:
   - Python
