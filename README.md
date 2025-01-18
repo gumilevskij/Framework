@@ -1,6 +1,6 @@
-# Python Framework for DSGE models
+# Python Framework for DSGE Models
  
-## authors: Alexei Goumilevski and James Otterson
+## Authors: Alexei Goumilevski and James Otterson
  
 ## What it is:
 This Framework aims to help economists to ease development and run 
