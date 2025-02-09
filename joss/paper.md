@@ -104,7 +104,6 @@ For example, the following specify a simple growth model with lagged variables.
 ```
 
 ### Imposing shocks
-```yaml
     # Create model object
     from snowdrop.src import driver
     model = driver.importModel(model_file_path)
@@ -115,10 +114,8 @@ For example, the following specify a simple growth model with lagged variables.
     decomp = ['PDOT','RR','RS','Y']
     # Run simulations
     y, dates = driver.run(model=model, decomp_variables=decomp, Plot=True)
-```
 
 ### Anticipated, unanticipated shocks, and judgmental ajustments
-```yaml
     from snowdrop.src.driver import run
     ## Combination of soft and hard tunes:
     # Set shock for gap of output to 1% at period 3
@@ -132,7 +129,6 @@ For example, the following specify a simple growth model with lagged variables.
     model.swap(m, shocks_names)
     # Run simulations
     y, dates = driver.run(model)
-```
 
 # Status
 
