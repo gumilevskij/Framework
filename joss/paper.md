@@ -1,3 +1,24 @@
+---
+title 'Snowdrop: Python Package for DSGE Modeling'
+tags:
+  - Python
+  - DSGE
+  - Macroeconomic Modeling
+authors:
+  - name: Alexei Goumilevski
+    orcid: 0009-0004-5574-854X
+    corresponding: true
+    affiliation: 1
+  - name: James Otterson
+    orcid: 0000-0001-8003-1648
+    affiliation: 1
+affiliations:
+  - name: International Monetary Fund
+    index: 1
+date: 29 January 2025
+bibliography: paper.bib
+---
+
 # Summary
 
 At its core, `Snowdrop` is a robust and versatile Python package designed for the
