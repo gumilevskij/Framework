@@ -1,9 +1,9 @@
 ---
 title 'Snowdrop: Python Package for DSGE Modeling'
 tags:
-   - Python
-   - DSGE
-   - Macroeconomic Modeling
+  - Python
+  - DSGE
+  - Macroeconomic Modeling
 authors:
   - name: Alexei Goumilevski
     orcid: 0009-0004-5574-854X
@@ -19,7 +19,6 @@ affiliations:
 date: 18 January 2025
 bibliography: paper.bib
 ---
-
 # Summary
 
 At its core, `Snowdrop` is a robust and versatile Python package designed for the
@@ -77,7 +76,7 @@ way to run a model involves the following steps:
 
 For example, the following specify a simple growth model with lagged variables.
 
-### Monetary policy model file
+## Monetary policy model file
 
 ```yaml
     name:  Monetary policy model example
@@ -103,8 +102,9 @@ For example, the following specify a simple growth model with lagged variables.
        shock_values: [std]
 ```
 
-### Imposing shocks
-```
+## Imposing shocks
+
+```text
     # Create model object
     from snowdrop.src import driver
     model = driver.importModel(model_file_path)
@@ -117,13 +117,14 @@ For example, the following specify a simple growth model with lagged variables.
     y, dates = driver.run(model=model, decomp_variables=decomp, Plot=True)
 ```
 
-### Anticipated, unanticipated shocks, and judgmental ajustments
-```
+## Anticipated, unanticipated shocks, and judgmental ajustments
+
+```text
     from snowdrop.src.driver import run
-    # Combination of soft and hard tunes:
-	# Set shock for gap of output to 1% at period 3
+    # Set shock for gap of output to 1% at period 3
     d = {"SHK_L_GDP_GAP": [(3,1)]}
     model.setShocks(d)
+    model.anticipate = True
     # Impose judgments
     date_range = pandas.date_range(start, end, freq="QS")
     m = {"L_GDP_GAP": pandas.Series([-1.0, -1.0, -1.0], date_range)}
