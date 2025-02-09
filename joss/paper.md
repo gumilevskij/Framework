@@ -1,7 +1,7 @@
 ---
 
 title 'Snowdrop: Python Package for DSGE Modeling'
- tags:
+tags:
    - Python
    - DSGE
    - Macroeconomic Modeling
