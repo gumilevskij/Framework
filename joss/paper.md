@@ -42,7 +42,7 @@ anticipated future outcomes in the present, necessitating the combined use of
 specialized techniques that are not readily availabel even in the extensive list
 of Python's scientific modeling packages [@fernandez2021estimating]. Currently, the two
 primary DSGE modeling toolboxes, [DYNARE](https://www.dynare.org/) and
-[IRIS](https://iris.igpmn.org/), [@DynareUserGuide], [@IrisUserGuide] are comprehensive toolsets
+[IRIS](https://iris.igpmn.org/) are comprehensive toolsets
 that offer an user-friendly infrastructure with support to all stages of model development.
 These, and similar, applications, however, are either commercial, or rely on
 commercial software to run, and hence require expensive licensing costs. There
