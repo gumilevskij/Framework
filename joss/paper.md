@@ -13,7 +13,7 @@ expectations hypothesis, which is a critical need for many *DSGE* models.
 
 # Statement of need
 
-*DSGE* models are a mainstay class of models employed by Central Banks around the
+DSGE models are a mainstay class of models employed by Central Banks around the
 world, informing key country monetary policy decisions [@botman2007dsge], [@smets2010dsge],
 [@del2013frbny], [@yagihashi2020dsge].  These models capture
 the dynamic evolution of economic variables influenced by agents who respond to
