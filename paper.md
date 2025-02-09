@@ -18,7 +18,7 @@ affiliations:
   - name: International Monetary Fund
     index: 1
 date: 14 January 2025
-bibliography: paper.bib
+
 ---
 
 
@@ -38,28 +38,14 @@ expectations hypothesis, which is a critical need for many *DSGE* models.
 # Statement of need
 
 *DSGE* models are a mainstay class of models employed by Central Banks around the
-world, informing key country monetary policy decisions [@botman2007dsge], [@smets2010dsge], 
-[@del2013frbny], [@yagihashi2020dsge].  These models capture
-the dynamic evolution of economic variables influenced by agents who respond to
-anticipated future outcomes in the present, necessitating the combined use of
-specialized techniques that are not readily availabel even in the extensive list
-of Python's scientific modeling packages [@fernandez2021estimating]. Currently, the two 
-primary DSGE modeling toolboxes, [DYNARE](https://www.dynare.org/) and
-[IRIS](https://iris.igpmn.org/), [@DynareUserGuide], [@IrisUserGuide] are comprehensive toolsets 
-that offer an user-friendly infrastructure with support to all stages of model development.
-These, and similar, applications, however, are either commercial, or rely on
-commercial software to run, and hence require expensive licensing costs. There
-is no integrated software package to our knowledge that is both flexible to
-handle a wide class of models with all required software to run the models
-available for free under the *GNU General Public Licensing* agreements. This
-Framework, built entirely on Python, is intended to fill that void.
+world, informing key country monetary policy decisions.
 
 ## Highlights
 
  - `Snowdrop` is a Python package that only uses open source libraries listed in the pypi repository.
  - This package is platform neutral and can be run on Windows, Linux, Unix, and Mac machines.
  - `Snowdrop` models can be written in user-friendly *YAML* format, pure Python scripts, or in a combination of both.
- - Non-linear equations are solved iteratively via Newton's method. `Snowdrop` implements the *ABLR* stacked matrices and *LBJ* [@Juillard:1998] forward-backward substitution method to solve such systems.  Linear models are solved with *Binder Pesaran's* method, *Anderson and More's* method and two generalized *Schur's* method that reproduce calculations employed in *Dynare* and *Iris*.
+ - Non-linear equations are solved iteratively via Newton's method. `Snowdrop` implements the *ABLR* stacked matrices and *LBJ*  forward-backward substitution method to solve such systems.  Linear models are solved with *Binder Pesaran's* method, *Anderson and More's* method and two generalized *Schur's* method that reproduce calculations employed in *Dynare* and *Iris*.
  - Several desirable computational techniques for *DSGE* models are implemented in `Snowdrop`, including: 
     - Non-linear models can be run with time dependents parameters
     - Goodness of fit of model data can be checked via the *Bayesian* approach to the maximization of likelihood functions.
@@ -132,12 +118,9 @@ For example, the following specify a simple growth model with lagged variables.
 
 # Status
 
-This toolkit provides users with an integrated Framework to input their models, import data, perform the  desired
-computational tasks (solve, simulate,  calibrate or estimate) and obtain well formatted post process output in the form
-of tables, graphs etc. [@Goumilevski:2021]. It has been applied for several cases including study of macroeconomic effects of monetary policy, estimation of Peter's Ireland model [@Ireland:2004], and forecast of economic effects of COVID-19 virus, to name a few.  Figure below illustrates forecast of inflation, nominal and real interest rates, and output gap to output shock of 2% imposed at period 1 and revision of monetary policy rate of 3% imposed at period 4. 
 
 
-Another example illstrates economic effects of pandemic. We used Eichenbaum-Rebelo-Trabandt (*ERT*) model [@Eichenbaum:2020] which embeds epidemiological concepts into *New Keynesian* modelling framework. We assumed that there two strains of pathogens and emplyed Suspected-Infected-Recovered (*SIR*) epideomiological model.  These epideomiological equations were plugged in into *ERT* model consisting of sixty-four equations of macroeconomic variables of sticky and flexible price economies. The macroeconomic variables of these two economies were linked thru Taylor rule equation for policy interest rate. Model is highly non-linear and is solved by using a homotopy method where parameters are adjusted step-by-step.  We assumed that the government containment measures were more lenient during the second strain of virus compared to the first one.  Figures 2 and 3 illustrate forecast of virus transmission and deviations of macroeconomic variables from their steady state.
+Another example illstrates economic effects of pandemic. We used Eichenbaum-Rebelo-Trabandt (*ERT*) model  which embeds epidemiological concepts into *New Keynesian* modelling framework. We assumed that there two strains of pathogens and emplyed Suspected-Infected-Recovered (*SIR*) epideomiological model.  These epideomiological equations were plugged in into *ERT* model consisting of sixty-four equations of macroeconomic variables of sticky and flexible price economies. The macroeconomic variables of these two economies were linked thru Taylor rule equation for policy interest rate. Model is highly non-linear and is solved by using a homotopy method where parameters are adjusted step-by-step.  We assumed that the government containment measures were more lenient during the second strain of virus compared to the first one.  Figures 2 and 3 illustrate forecast of virus transmission and deviations of macroeconomic variables from their steady state.
 
 
 # Acknowledgements
@@ -145,7 +128,9 @@ Another example illstrates economic effects of pandemic. We used Eichenbaum-Rebe
    Authors would like to thank Doug Laxton for initiating this project, Farias Aquiles for his guidance and support,
    and Kadir Tanyeri for his valuable comments.
 
-# References
+
+
+
 
 
 
