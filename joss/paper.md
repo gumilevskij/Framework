@@ -19,6 +19,7 @@ affiliations:
 date: 18 January 2025
 bibliography: paper.bib
 ---
+
 # Summary
 
 At its core, `Snowdrop` is a robust and versatile Python package designed for the
@@ -103,24 +104,35 @@ For example, the following specify a simple growth model with lagged variables.
 ```
 
 ### Imposing shocks
-
+```
+    # Create model object
     from snowdrop.src import driver
     model = driver.importModel(model_file_path)
+    # Set shocks
     model.options["periods"] = [1]
     model.options["shock_values"] = [0.02]
+    # Define list of variables for which decomposition plots are produced
     decomp = ['PDOT','RR','RS','Y']
+    # Run forecast
     y, dates = driver.run(model=model, decomp_variables=decomp, Plot=True)
+```
 
 ### Anticipated, unanticipated shocks, and judgmental ajustments
-
+```
     from snowdrop.src.driver import run
+    # Combination of soft and hard tunes:
+	# Set shock for gap of output to 1% at period 3
     d = {"SHK_L_GDP_GAP": [(3,1)]}
     model.setShocks(d)
+    # Impose judgments
     date_range = pandas.date_range(start, end, freq="QS")
     m = {"L_GDP_GAP": pandas.Series([-1.0, -1.0, -1.0], date_range)}
     shocks_names  = ["SHK_L_GDP_GAP"]
+    # Endogenize shock and exogenize output gap endogenous variable
     model.swap(m, shocks_names)
+    # Run simulations
     y, dates = driver.run(model)
+```
 
 # Status
 
