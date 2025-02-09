@@ -40,18 +40,7 @@ expectations hypothesis, which is a critical need for many *DSGE* models.
 *DSGE* models are a mainstay class of models employed by Central Banks around the
 world, informing key country monetary policy decisions.
 
-## Highlights
 
- - `Snowdrop` is a Python package that only uses open source libraries listed in the pypi repository.
- - This package is platform neutral and can be run on Windows, Linux, Unix, and Mac machines.
- - `Snowdrop` models can be written in user-friendly *YAML* format, pure Python scripts, or in a combination of both.
- - Non-linear equations are solved iteratively via Newton's method. `Snowdrop` implements the *ABLR* stacked matrices and *LBJ*  forward-backward substitution method to solve such systems.  Linear models are solved with *Binder Pesaran's* method, *Anderson and More's* method and two generalized *Schur's* method that reproduce calculations employed in *Dynare* and *Iris*.
- - Several desirable computational techniques for *DSGE* models are implemented in `Snowdrop`, including: 
-    - Non-linear models can be run with time dependents parameters
-    - Goodness of fit of model data can be checked via the *Bayesian* approach to the maximization of likelihood functions.
-    - Model parameters can be sampled via the *Markov Chain Monte Carlo* affine invariant ensemble sampler algorithm of Jonathan Goodman and an adaptive Metropolis-Hasting’s algorithms of Paul Miles. The former algorithm is useful for sampling badly scaled distributions of parameters. The later algorithm employs adaptive Metropolis
-   methods that incorporate delayed rejection to stimulate samples’ states mixing.
- - Finally, `Snowdrop` streamlines the model production process by aiding users with the plotting and model reporting and storage process.
 
 # Examples of model files and python code
 
@@ -77,7 +66,6 @@ Another example illstrates economic effects of pandemic. We used Eichenbaum-Rebe
    Authors would like to thank Doug Laxton for initiating this project, Farias Aquiles for his guidance and support,
    and Kadir Tanyeri for his valuable comments.
 
-# References
 
 
 
