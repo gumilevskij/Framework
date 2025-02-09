@@ -18,6 +18,7 @@ affiliations:
   - name: International Monetary Fund
     index: 1
 date: 14 January 2025
+bibliography: paper.bib
 
 ---
 
