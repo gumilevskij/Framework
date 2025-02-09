@@ -16,6 +16,7 @@ affiliations:
   - name: International Monetary Fund
     index: 1
 date: 29 January 2025
+bibliography: paper.bib
 ---
 
 # Summary
@@ -34,4 +35,18 @@ expectations hypothesis, which is a critical need for many *DSGE* models.
 # Statement of need
 
 *DSGE* models are a mainstay class of models employed by Central Banks around the
-world, informing key country monetary policy decisions.
+world, informing key country monetary policy decisions [@botman2007dsge], [@smets2010dsge],
+[@del2013frbny], [@yagihashi2020dsge].  These models capture
+the dynamic evolution of economic variables influenced by agents who respond to
+anticipated future outcomes in the present, necessitating the combined use of
+specialized techniques that are not readily availabel even in the extensive list
+of Python's scientific modeling packages [@fernandez2021estimating]. Currently, the two
+primary DSGE modeling toolboxes, [DYNARE](https://www.dynare.org/) and
+[IRIS](https://iris.igpmn.org/), [@DynareUserGuide], [@IrisUserGuide] are comprehensive toolsets
+that offer an user-friendly infrastructure with support to all stages of model development.
+These, and similar, applications, however, are either commercial, or rely on
+commercial software to run, and hence require expensive licensing costs. There
+is no integrated software package to our knowledge that is both flexible to
+handle a wide class of models with all required software to run the models
+available for free under the *GNU General Public Licensing* agreements. This
+Framework, built entirely on Python, is intended to fill that void.
