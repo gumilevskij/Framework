@@ -1,5 +1,4 @@
 ---
-
 title 'Snowdrop: Python Package for DSGE Modeling'
 tags:
    - Python
@@ -17,11 +16,9 @@ authors:
 affiliations:
   - name: International Monetary Fund
     index: 1
-date: 14 January 2025
+date: 18 January 2025
 bibliography: paper.bib
 ---
-
-
 # Summary
 
 At its core, `Snowdrop` is a robust and versatile Python package designed for the
@@ -33,19 +30,19 @@ researchers with essential tools to address the fundamental requirements of
 these models, encompassing estimation, simulation, and forecasting processes.
 In particular, the package employs robust and efficient solution techniques to
 solve both linear and nonlinear perfect foresight models based on the rational
-expectations hypothesis, which is a critical need for many *DSGE* models. 
+expectations hypothesis, which is a critical need for many *DSGE* models.
 
 # Statement of need
 
 *DSGE* models are a mainstay class of models employed by Central Banks around the
-world, informing key country monetary policy decisions [@botman2007dsge], [@smets2010dsge], 
+world, informing key country monetary policy decisions [@botman2007dsge], [@smets2010dsge],
 [@del2013frbny], [@yagihashi2020dsge].  These models capture
 the dynamic evolution of economic variables influenced by agents who respond to
 anticipated future outcomes in the present, necessitating the combined use of
 specialized techniques that are not readily availabel even in the extensive list
-of Python's scientific modeling packages [@fernandez2021estimating]. Currently, the two 
+of Python's scientific modeling packages [@fernandez2021estimating]. Currently, the two
 primary DSGE modeling toolboxes, [DYNARE](https://www.dynare.org/) and
-[IRIS](https://iris.igpmn.org/), [@DynareUserGuide], [@IrisUserGuide] are comprehensive toolsets 
+[IRIS](https://iris.igpmn.org/), [@DynareUserGuide], [@IrisUserGuide] are comprehensive toolsets
 that offer an user-friendly infrastructure with support to all stages of model development.
 These, and similar, applications, however, are either commercial, or rely on
 commercial software to run, and hence require expensive licensing costs. There
@@ -56,29 +53,31 @@ Framework, built entirely on Python, is intended to fill that void.
 
 ## Highlights
 
- - `Snowdrop` is a Python package that only uses open source libraries listed in the pypi repository.
- - This package is platform neutral and can be run on Windows, Linux, Unix, and Mac machines.
- - `Snowdrop` models can be written in user-friendly *YAML* format, pure Python scripts, or in a combination of both.
- - Non-linear equations are solved iteratively via Newton's method. `Snowdrop` implements the *ABLR* stacked matrices and *LBJ* [@Juillard:1998] forward-backward substitution method to solve such systems.  Linear models are solved with *Binder Pesaran's* method, *Anderson and More's* method and two generalized *Schur's* method that reproduce calculations employed in *Dynare* and *Iris*.
- - Several desirable computational techniques for *DSGE* models are implemented in `Snowdrop`, including: 
-    - Non-linear models can be run with time dependents parameters
-    - Goodness of fit of model data can be checked via the *Bayesian* approach to the maximization of likelihood functions.
-    - Model parameters can be sampled via the *Markov Chain Monte Carlo* affine invariant ensemble sampler algorithm of Jonathan Goodman and an adaptive Metropolis-Hasting’s algorithms of Paul Miles. The former algorithm is useful for sampling badly scaled distributions of parameters. The later algorithm employs adaptive Metropolis
-   methods that incorporate delayed rejection to stimulate samples’ states mixing.
- - Finally, `Snowdrop` streamlines the model production process by aiding users with the plotting and model reporting and storage process.
+- `Snowdrop` is a Python package that only uses open source libraries listed in the pypi repository.
+- This package is platform neutral and can be run on Windows, Linux, Unix, and Mac machines.
+- `Snowdrop` models can be written in user-friendly *YAML* format, pure Python scripts, or in a combination of both.
+- Non-linear equations are solved iteratively via Newton's method. `Snowdrop` implements the *ABLR* stacked matrices and *LBJ* [@Juillard:1998] forward-backward substitution method to solve such systems.  Linear models are solved with *Binder Pesaran's* method, *Anderson and More's* method and two generalized *Schur's* method that reproduce calculations employed in *Dynare* and *Iris*.
+- Several desirable computational techniques for *DSGE* models are implemented in `Snowdrop`, including:
+  - Non-linear models can be run with time dependents parameters
+  - Goodness of fit of model data can be checked via the *Bayesian* approach to the maximization of likelihood functions.
+  - Model parameters can be sampled via the *Markov Chain Monte Carlo* affine invariant ensemble sampler algorithm of Jonathan Goodman and an adaptive Metropolis-Hasting’s algorithms of Paul Miles. The former algorithm is useful for sampling badly scaled distributions of parameters. The later algorithm employs adaptive Metropolis
+    methods that incorporate delayed rejection to stimulate samples’ states mixing.
+- Finally, `Snowdrop` streamlines the model production process by aiding users with the plotting and model reporting and storage process.
 
 # Examples of model files and python code
 
 The simplest way to write a `Snowdrop` model, is by specifing it via an *YAML* file
-in a manner that is familiar to *DYNARE* and *IRIS* users. Overall, the quickest 
-way to run a model involves the following steps: 
-   1. Create or modify existing *YAML model file* in models folder.
-   2. Open *src/tests/test_toy_models.py* file and set *fname* to the name of this model file.
-   3. Run the python script to get the desired simulations.
+in a manner that is familiar to *DYNARE* and *IRIS* users. Overall, the quickest
+way to run a model involves the following steps:
 
-For example, the following specify a simple growth model with lagged variables. 
+1. Create or modify existing *YAML model file* in models folder.
+2. Open *src/tests/test_toy_models.py* file and set *fname* to the name of this model file.
+3. Run the python script to get the desired simulations.
+
+For example, the following specify a simple growth model with lagged variables.
 
 ### Monetary policy model file
+
 ```yaml
     name:  Monetary policy model example
     symbols:
@@ -104,47 +103,37 @@ For example, the following specify a simple growth model with lagged variables.
 ```
 
 ### Imposing shocks
-    # Create model object
+
     from snowdrop.src import driver
     model = driver.importModel(model_file_path)
-    # Set shocks
     model.options["periods"] = [1]
     model.options["shock_values"] = [0.02]
-    # Define list of variables for which decomposition plots are produced
     decomp = ['PDOT','RR','RS','Y']
-    # Run simulations
     y, dates = driver.run(model=model, decomp_variables=decomp, Plot=True)
 
 ### Anticipated, unanticipated shocks, and judgmental ajustments
+
     from snowdrop.src.driver import run
-    ## Combination of soft and hard tunes:
-    # Set shock for gap of output to 1% at period 3
     d = {"SHK_L_GDP_GAP": [(3,1)]}
     model.setShocks(d)
-    # Impose judgments
     date_range = pandas.date_range(start, end, freq="QS")
     m = {"L_GDP_GAP": pandas.Series([-1.0, -1.0, -1.0], date_range)}
     shocks_names  = ["SHK_L_GDP_GAP"]
-    # Endogenize shock and exogenize output gap endogenous variable
     model.swap(m, shocks_names)
-    # Run simulations
     y, dates = driver.run(model)
 
 # Status
 
 This toolkit provides users with an integrated Framework to input their models, import data, perform the  desired
 computational tasks (solve, simulate,  calibrate or estimate) and obtain well formatted post process output in the form
-of tables, graphs etc. [@Goumilevski:2021]. It has been applied for several cases including study of macroeconomic effects of monetary policy, estimation of Peter's Ireland model [@Ireland:2004], and forecast of economic effects of COVID-19 virus, to name a few.  Figure below illustrates forecast of inflation, nominal and real interest rates, and output gap to output shock of 2% imposed at period 1 and revision of monetary policy rate of 3% imposed at period 4. 
+of tables, graphs etc. [@Goumilevski:2021]. It has been applied for several cases including study of macroeconomic effects of monetary policy, estimation of Peter's Ireland model [@Ireland:2004], and forecast of economic effects of COVID-19 virus, to name a few.  Figure below illustrates forecast of inflation, nominal and real interest rates, and output gap to output shock of 2% imposed at period 1 and revision of monetary policy rate of 3% imposed at period 4.
 
 ![Monetary Policy Example\label{fig:1}](Decomposition.png)
 
-
 Another example illstrates economic effects of pandemic. We used Eichenbaum-Rebelo-Trabandt (*ERT*) model [@Eichenbaum:2020] which embeds epidemiological concepts into *New Keynesian* modelling framework. We assumed that there two strains of pathogens and emplyed Suspected-Infected-Recovered (*SIR*) epideomiological model.  These epideomiological equations were plugged in into *ERT* model consisting of sixty-four equations of macroeconomic variables of sticky and flexible price economies. The macroeconomic variables of these two economies were linked thru Taylor rule equation for policy interest rate. Model is highly non-linear and is solved by using a homotopy method where parameters are adjusted step-by-step.  We assumed that the government containment measures were more lenient during the second strain of virus compared to the first one.  Figures 2 and 3 illustrate forecast of virus transmission and deviations of macroeconomic variables from their steady state.
 
-![Epidemic Forecast\label{fig:2}](Virus.png) 
+![Epidemic Forecast\label{fig:2}](Virus.png)
 ![Forecast of Macroeconomic Variables\label{fig:3}](Economy.png)
-
-
 
 # Acknowledgements
 
@@ -152,7 +141,3 @@ Another example illstrates economic effects of pandemic. We used Eichenbaum-Rebe
    and Kadir Tanyeri for his valuable comments.
 
 # References
-
-
-
-
