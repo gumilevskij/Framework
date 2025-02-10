@@ -25,7 +25,7 @@ def in_sample(Plot=False,save=True):
     """In sample forecast of endogenous variables given user judgements."""
     path_to_dir = os.path.abspath(os.path.join(working_dir,"graphs"))
     fname = 'model.yaml'
-    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/ICD/MPAF/'+fname))
+    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/MPAF/'+fname))
     # Create model
     model = importModel(file_path,Solver="Klein")
     model.anticipate = True
