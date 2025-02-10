@@ -3,7 +3,7 @@
 Created on Thursday May 7, 2020
 @author: Alexei Goumilevski
 
-Reproduces results of  https://www.edx.org/ Monetary Policy Analysis and Forecasting course.
+Reproduces results of  https://www.edx.org Monetary Policy Analysis and Forecasting course.
 """
 
 import os
