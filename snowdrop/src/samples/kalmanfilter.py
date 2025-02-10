@@ -44,7 +44,7 @@ def kalmanfilter(Plot=False,save=True):
     
     # Instantiate model  
     fname = 'model.yaml'
-    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/ICD/MPAF',fname))
+    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/MPAF',fname))
     # Create model object
     model = importModel(fname=file_path, Solver="Klein", Filter="Durbin_Koopman",
                         Smoother="Durbin_Koopman", Prior="Equilibrium", measurement_file_path=meas, use_cache=False)
