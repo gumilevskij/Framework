@@ -23,7 +23,7 @@ def modelproperties(Plot=False,save=True):
     Simulates a set of basic shocks. 
     """
     fname = 'model.yaml'
-    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/ICD/MPAF/'+fname))
+    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/MPAF/'+fname))
 
     # Create model
     model = importModel(file_path,Solver="Klein")
