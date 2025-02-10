@@ -4,7 +4,7 @@ Created on Tue Apr 23 14:12:20 2019
 
 @author: Alexei Goumilevski
 
- Reproduces results of  https://www.edx.org/ Monetary Policy Analysis and Forecasting course.
+ Reproduces results of  https://www.edx.org/Monetary Policy Analysis and Forecasting course.
 """
 import os
 import pandas as pd
