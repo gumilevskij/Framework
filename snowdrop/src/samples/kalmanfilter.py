@@ -2,7 +2,7 @@
 """
 Created on Wed May 6, 2020
 @author: Alexei Goumilevski
-Reproduces results of https://www.edx.org/Monetary Policy Analysis and Forecasting course.
+Reproduces results of https://www.edx.org Monetary Policy Analysis and Forecasting course.
 
 
 Please note that for time series variables the following rule applies for varible leads and lags:
