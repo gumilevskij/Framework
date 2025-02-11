@@ -61,7 +61,75 @@ Framework, built entirely on Python, is intended to fill that void.
   - Model parameters can be sampled via the *Markov Chain Monte Carlo* affine invariant ensemble sampler algorithm of Jonathan Goodman and an adaptive Metropolis-Hasting’s algorithms of Paul Miles. The former algorithm is useful for sampling badly scaled distributions of parameters. The later algorithm employs adaptive Metropolis
     methods that incorporate delayed rejection to stimulate samples’ states mixing.
 - Finally, `Snowdrop` streamlines the model production process by aiding users with the plotting and model reporting and storage process.
-  
+
+
+# Examples of model files and python code
+
+The simplest way to write a `Snowdrop` model, is by specifing it via an *YAML* file
+in a manner that is familiar to *DYNARE* and *IRIS* users. Overall, the quickest
+way to run a model involves the following steps:
+
+1. Create or modify existing *YAML model file* in models folder.
+2. Open *src/tests/test_toy_models.py* file and set *fname* to the name of this model file.
+3. Run the python script to get the desired simulations.
+
+For example, the following specify a simple growth model with lagged variables.
+
+## Monetary policy model file
+
+```yaml
+    name:  Monetary policy model example
+    symbols:
+      variables: [PDOT,RR,RS,Y]
+      exogenous: [ers]
+      shocks: [ey]
+      parameters: [g,p_d1,p_d2,p_d3,p_rs1,p_y1,p_y2,p_y3]
+      equations:
+       - PDOT=p_dot1*PDOT(+1)+(1-p_d1)*PDOT(-1)+p_d2*(g^2/(g-Y)-g)+p_d3*(g^2/(g-Y(-1))-g)
+       - RR=RS-p_d1*PDOT(+1)-(1-p_d1)*PDOT(-1)
+       - RS=p_rs1*PDOT+Y+ers
+       - Y=p_y1*Y(-1)-p_y2*RR-p_y3*RR(-1)+ey
+      calibration:
+       #Parameters
+       g: 0.049
+       #Set time varying parameters; the last value will be used for the rest of this array
+       p_d1: 0.414 #[0.4,0.5,0.6]
+       std: 0.02
+    options:
+       T: 14
+       periods: [1]
+       shock_values: [std]
+```
+
+## Imposing shocks
+
+    # Create model object
+    from snowdrop.src import driver
+    model = driver.importModel(model_file_path)
+    # Set shocks
+    model.options["periods"] = [1]
+    model.options["shock_values"] = [0.02]
+    # Define list of variables for which decomposition plots are produced
+    decomp = ['PDOT','RR','RS','Y']
+    # Run forecast
+    y, dates = driver.run(model=model, decomp_variables=decomp, Plot=True)
+
+## Anticipated, unanticipated shocks, and judgmental ajustments
+
+    from snowdrop.src.driver import run
+    # Set shock for gap of output to 1% at period 3
+    d = {"SHK_L_GDP_GAP": [(3,1)]}
+    model.setShocks(d)
+    model.anticipate = True
+    # Impose judgments
+    date_range = pandas.date_range(start, end, freq="QS")
+    m = {"L_GDP_GAP": pandas.Series([-1.0, -1.0, -1.0], date_range)}
+    shocks_names  = ["SHK_L_GDP_GAP"]
+    # Endogenize shock and exogenize output gap endogenous variable
+    model.swap(m, shocks_names)
+    # Run simulations
+    y, dates = driver.run(model)
+    
 # Acknowledgements
 
 Authors would like to thank Doug Laxton for initiating this project, Farias Aquiles for his guidance and support,
