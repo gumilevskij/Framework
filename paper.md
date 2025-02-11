@@ -83,17 +83,17 @@ For example, the following specify a simple growth model with lagged variables.
       variables: [PDOT,RR,RS,Y]
       exogenous: [ers]
       shocks: [ey]
-      parameters: [g,p_d1,p_d2,p_d3,p_rs1,p_y1,p_y2,p_y3]
+      parameters: [g,p1,p2,p3,p4,p4,p5,p6]
       equations:
-       - PDOT=p_dot1*PDOT(+1)+(1-p_d1)*PDOT(-1)+p_d2*(g^2/(g-Y)-g)+p_d3*(g^2/(g-Y(-1))-g)
-       - RR=RS-p_d1*PDOT(+1)-(1-p_d1)*PDOT(-1)
-       - RS=p_rs1*PDOT+Y+ers
-       - Y=p_y1*Y(-1)-p_y2*RR-p_y3*RR(-1)+ey
+       - PDOT=p1*PDOT(+1)+(1-p1)*PDOT(-1)+p2*(g^2/(g-Y)-g)+p3*(g^2/(g-Y(-1))-g)
+       - RR=RS-p1*PDOT(+1)-(1-p1)*PDOT(-1)
+       - RS=p4*PDOT+Y+ers
+       - Y=p5*Y(-1)-p6*RR-p7*RR(-1)+ey
       calibration:
        #Parameters
        g: 0.049
        #Set time varying parameters; the last value will be used for the rest of this array
-       p_d1: 0.414 #[0.4,0.5,0.6]
+       p1: 0.414 #[0.4,0.5,0.6]
        std: 0.02
     options:
        T: 14
