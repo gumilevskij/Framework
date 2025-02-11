@@ -83,7 +83,7 @@ For example, the following specify a simple growth model with lagged variables.
       variables: [PDOT,RR,RS,Y]
       exogenous: [ers]
       shocks: [ey]
-      parameters: [g,p1,p2,p3,p4,p4,p5,p6]
+      parameters: [g,p1,p2,p3,p4,p5,p6,p7]
       equations:
        - PDOT=p1*PDOT(+1)+(1-p1)*PDOT(-1)+p2*(g^2/(g-Y)-g)+p3*(g^2/(g-Y(-1))-g)
        - RR=RS-p1*PDOT(+1)-(1-p1)*PDOT(-1)
