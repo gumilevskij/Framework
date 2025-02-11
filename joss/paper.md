@@ -65,7 +65,6 @@ Framework, built entirely on Python, is intended to fill that void.
 The simplest way to write a `Snowdrop` model, is by specifing it via an *YAML* file
 in a manner that is familiar to *DYNARE* and *IRIS* users. Overall, the quickest
 way to run a model involves the following steps:
-
 1. Create or modify existing *YAML model file* in models folder.
 2. Open *src/tests/test_toy_models.py* file and set *fname* to the name of this model file.
 3. Run the python script to get the desired simulations.
