@@ -16,7 +16,7 @@ available for free under the GNU General Public Licensing agreements. This
 Framework, built entirely on Python, is intended to fill that void.
 
 
-# Status
+# Summary
 
 This toolkit provides users with an integrated Framework to input their models, import data, perform the  desired
 computational tasks (solve, simulate,  calibrate or estimate) and obtain well formatted post process output in the form
@@ -26,4 +26,5 @@ of tables, graphs etc.. It has been applied for several cases including study of
 
    Authors would like to thank Doug Laxton for initiating this project, Farias Aquiles for his guidance and support,
    and Kadir Tanyeri for his valuable comments.
-
+   
+# References
