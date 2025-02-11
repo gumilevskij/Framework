@@ -129,7 +129,22 @@ For example, the following specify a simple growth model with lagged variables.
     model.swap(m, shocks_names)
     # Run simulations
     y, dates = driver.run(model)
-    
+
+
+# Status
+
+This toolkit provides users with an integrated Framework to input their models, import data, perform the  desired
+computational tasks (solve, simulate,  calibrate or estimate) and obtain well formatted post process output in the form
+of tables, graphs etc. [@Goumilevski]. It has been applied for several cases including study of macroeconomic effects of monetary policy, estimation of Peter's Ireland model [@Ireland], and forecast of economic effects of COVID-19 virus, to name a few.  Figure below illustrates forecast of inflation, nominal and real interest rates, and output gap to output shock of 2% imposed at period 1 and revision of monetary policy rate of 3% imposed at period 4.
+
+![Monetary Policy Example\label{fig:1}](Decomposition.png)
+
+Another example illstrates economic effects of pandemic. We used Eichenbaum-Rebelo-Trabandt (*ERT*) model [@Eichenbaum] which embeds epidemiological concepts into *New Keynesian* modelling framework. We assumed that there two strains of pathogens and emplyed Suspected-Infected-Recovered (*SIR*) epideomiological model.  These epideomiological equations were plugged in into *ERT* model consisting of sixty-four equations of macroeconomic variables of sticky and flexible price economies. The macroeconomic variables of these two economies were linked thru Taylor rule equation for policy interest rate. Model is highly non-linear and is solved by using a homotopy method where parameters are adjusted step-by-step.  We assumed that the government containment measures were more lenient during the second strain of virus compared to the first one.  Figures 2 and 3 illustrate forecast of virus transmission and deviations of macroeconomic variables from their steady state.
+
+![Epidemic Forecast\label{fig:2}](Virus.png)
+
+![Forecast of Macroeconomic Variables\label{fig:3}](Economy.png)
+
 # Acknowledgements
 
 Authors would like to thank Doug Laxton for initiating this project, Farias Aquiles for his guidance and support,
