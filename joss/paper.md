@@ -1,16 +1,3 @@
-# Summary
-
-At its core, `Snowdrop` is a robust and versatile Python package designed for the
-analysis of macroeconomic *Dynamic Stochastic General Equilibrium* (*DSGE*) models.
-In its entirety, this package offers an extensive framework for the study of various related
-economic models, including *New Keynesian* models, *Real Business Cycle* models, *Gap*
-models, and *Overlapping Generations* models. `Snowdrop` equips
-researchers with essential tools to address the fundamental requirements of
-these models, encompassing estimation, simulation, and forecasting processes.
-In particular, the package employs robust and efficient solution techniques to
-solve both linear and nonlinear perfect foresight models based on the rational
-expectations hypothesis, which is a critical need for many *DSGE* models.
-
 # Statement of need
 
 DSGE models are a mainstay class of models employed by Central Banks around the
