@@ -33,7 +33,7 @@ expectations hypothesis, which is a critical need for many *DSGE* models.
 
 # Statement of need
 
-DSGE models are a mainstay class of models employed by Central Banks around the
+*DSGE* models are a mainstay class of models employed by Central Banks around the
 world, informing key country monetary policy decisions [@botman], [@smets],
 [@del], [@yagihashi].  These models capture the dynamic evolution of economic variables influenced 
 by agents who respond to anticipated future outcomes in the present, necessitating the combined 
@@ -73,7 +73,7 @@ way to run a model involves the following steps:
 2. Open *src/tests/test_toy_models.py* file and set *fname* to the name of this model file.
 3. Run the python script to get the desired simulations.
 
-For example, the following specify a simple growth model with lagged variables.
+For example, the following specify a simple monetary policy model with lagged variables.
 
 ## Monetary policy model file
 
@@ -150,7 +150,7 @@ Another example illstrates economic effects of pandemic. We used Eichenbaum-Rebe
 
 # Acknowledgements
 
-Authors would like to thank Doug Laxton for initiating this project, Farias Aquiles for his guidance and support,
+Authors would like to thank Douglas Laxton for initiating this project, Farias Aquiles for his guidance and support,
 and Kadir Tanyeri for his valuable comments.
 
 # References
