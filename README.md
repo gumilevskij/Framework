@@ -6,7 +6,7 @@
 This Framework aims to help economists to ease development and run 
 of Dynamic Stochastic General Equilibrium (DSGE) models in Python environment.
 
-## Installation
+## Installation:
 This package is available at PyPi repository and can be installed via pip installer:
 
 pip install pysnowdrop
