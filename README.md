@@ -4,23 +4,24 @@
  
 ## What it is:
 This Framework aims to help economists to ease development and run 
-of DSGE models in Python environment.
+of Dynamic Stochastic General Equilibrium (DSGE) models in Python environment.
 
 ## Installation
 This package is available at PyPi repository and can be installed via pip installer:
+
 pip install pysnowdrop
  
  ## How to run:
  - Create or modify existing YAML model file in examples/models folder.
  - Open src/tests/test.py file and set *fname* to the name of this model file.
- - Run simulations by double-clicking on run batch file located under Framework folder.
+ - Run simulations in Spyder IDE by double-clicking on run button or run python script in a command prompt.
 
 ## Content:
  - Sample model file (see `<snowdrop/models/Toy/JLMP98.yaml>`)
  - Documentation (see `<snowdrop/docs/UserGuide.pdf>`)
 
 ## Highlights:
-- Framework is written in Python language and uses only Python libraries that are available by installing Anaconda distribution in Software Center
+- Framework is written in Python language and uses only Python libraries that are available by installing Anaconda distribution.
 - Framework is versatile to parse model  files written in a human readable YAML format, Sirius XML format and to parse simple IRIS and DYNARE model files.
 - Prototype model files are created for non-linear and linear perfect-foresight models.
 - It can be run as a batch process, in a Jupyter notebook, or in a Spyder interactive development environment (Scientific Python Development environment).
