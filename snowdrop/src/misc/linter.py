@@ -12,6 +12,7 @@ from snowdrop.src.misc.termcolor import colored
 from snowdrop.src.misc.termcolor import cprint
 
 known_symbol_types = recipes['symbols']
+version = ry.__version__
 
 class ModelException(Exception):
     """Model exception class."""
@@ -456,7 +457,10 @@ def lint(txt, source='<string>', format='human'):
     """
     # raise ModelException if it doesn't work correctly
     try:
-        data = ry.load(txt, ry.RoundTripLoader)
+        if version >= '0.17':
+            data = ry.YAML(typ='rt').load(txt)
+        else:
+            data = ry.load(txt, ry.RoundTripLoader)
     except Exception as e:
         cprint(e,'red')
         return []  # should return parse error
@@ -502,4 +506,3 @@ def lint(txt, source='<string>', format='human'):
         return output
     else:
         raise ModelException("Unkown format {}.".format(format))
-
