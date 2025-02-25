@@ -8,6 +8,8 @@ from snowdrop.src.preprocessor.util import IfThen, IfThenElse, Positive, Negativ
 #from snowdrop.src.preprocessor.util import PNORM
 from snowdrop.src.preprocessor import objects
 
+version = yaml.__version__
+
 functions = {
     'abs':        abs,
     'log':        math.log,
@@ -39,7 +41,10 @@ class LanguageElement(dict):
     @classmethod
     def constructor(cls, loader, node):
         """Constructor."""
-        value = loader.construct_mapping(node)
+        if version >= '0.17':
+            value = loader.construct_mapping(node,maptyp='rt',deep=True)
+        else:
+            value = loader.construct_mapping(node)
         return cls(**value)
 
     def check(self):
@@ -68,7 +73,7 @@ class LanguageElement(dict):
         c = str.join(", ", ["{}={}".format(k, v) for k, v in self.items()])
         return "{}({})".format(n, c)
 
-    
+
 class Domain(LanguageElement):
     """Domain class."""
     baseclass = objects.Domain
@@ -109,9 +114,9 @@ class Cartesian(LanguageElement):
     """Cartesian grid class."""
     baseclass = objects.Cartesian
 
-minilang = [Normal,MvNormal,LogNormal,Beta,Binomial,Gamma,Logistic,Uniform,Domain,Cartesian]
+minilang = [MvNormal,Normal,LogNormal,Beta,Binomial,Gamma,Logistic,Uniform,Domain,Cartesian]
 
-types=[]
+types = []
 for c in minilang:
     t = c.__name__
     types.append(t)
@@ -122,15 +127,18 @@ if __name__ == '__main__':
     
     for C in minilang:
          k = C.__name__
-         name = '!{}'.format(k)
+         name = f'!{k}'
          yaml.add_constructor(name, C.constructor)
  
     txt = """
     distribution: !MvNormal
-        Sigma: [[0.3]]
-        mu: [0.1]
+       mean: [0.1]
+       cov:  [[0.3]]
     """
-    data = yaml.load(txt, Loader=yaml.Loader)
+    if version >= '0.17':
+        data = yaml.YAML().load(txt)
+    else:
+        data = yaml.load(txt, Loader=yaml.Loader)
     dis = data['distribution']
     print(dis)
       
@@ -139,7 +147,10 @@ if __name__ == '__main__':
     #     mean: 0.0
     #     scale: 0.1
     # """
-    # data = yaml.load(txt, Loader=yaml.Loader)
+    # if version >= '0.17':
+    #    data = yaml.YAML(typ='safe').load(txt)
+    # else:
+    #    data = yaml.load(txt, Loader=yaml.Loader)
     # dis = data['distribution']
     # print(dis)
 
@@ -152,8 +163,10 @@ if __name__ == '__main__':
     # b: [y,20]
     # orders: [50,50]
     # """
-
-    # data = yaml.load(txt, Loader=yaml.Loader)
+    # if version >= '0.17':
+    #    data = yaml.YAML(typ='safe').load(txt)
+    # else:
+    #    data = yaml.load(txt, Loader=yaml.Loader)
     # grid = data['grid']
 
     # d = dict(x=20, y=30, sig_z=0.001)
