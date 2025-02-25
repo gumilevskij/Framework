@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 from snowdrop.src.misc.termcolor import cprint
 import ruamel.yaml as yaml
+version = yaml.__version__
 
 
 def read_file_or_url(url,labels={},conditions={}):
@@ -558,12 +559,16 @@ def loadYaml(path,txt):
  
     for C in minilang:
         k = C.__name__
-        yaml.add_constructor('!{}'.format(k), C.constructor)
+        name = f'!{k}'
+        yaml.add_constructor(name, C.constructor)
  
     txt = txt.replace('^', '**')
     
     # Load equations comments
-    data = yaml.load(txt, Loader=yaml.RoundTripLoader)
+    if version >= '0.17':
+        data = yaml.YAML(typ='rt').load(txt)
+    else:
+        data = yaml.load(txt, Loader=yaml.RoundTripLoader)
     eqs  = data['equations']
     comments = []
     if bool(eqs):
@@ -573,8 +578,13 @@ def loadYaml(path,txt):
                 comment = comment_token[0].value.replace("\\n","")
                 if bool(comment.strip()):
                     comments.append(comment)
+                else:
+                    comments.append(' ')
     
-    data = yaml.load(txt, Loader=yaml.Loader)
+    if version >= '0.17':
+        data = yaml.YAML(typ='safe').load(txt)
+    else:
+        data = yaml.load(txt, Loader=yaml.Loader)
     
     # Symbols section
     symbols = data['symbols']
@@ -594,7 +604,10 @@ def loadYaml(path,txt):
         if os.path.exists(path + '\\' + file):
             t,labels = read_file_or_url(path + '\\' + file) 
             t = t.replace('^', '**')
-            sect = yaml.load(t, Loader=yaml.Loader)
+            if version >= '0.17':
+                sect = yaml.YAML(typ='safe').load(t)
+            else:
+                sect = yaml.load(t, Loader=yaml.Loader)
             equations = sect['equations']
             new_f_eqs,new_f_eqs_ss,new_f_variables,new_comments,new_eqs_files,ind,bFormat  = buildEquations(sets=sets,equations=equations.copy(),variables=endo1,comments=comments)
             new_eqs += new_f_eqs
@@ -699,7 +712,10 @@ def loadFile(path,calibration={},names=[],bShocks=False):
     
     if ext.lower() == ".yaml":
         txt,labels = read_file_or_url(path)
-        data = yaml.load(txt, Loader=yaml.Loader)
+        if version >= '0.17':
+            data = yaml.YAML(typ='safe').load(txt)
+        else:
+            data = yaml.load(txt, Loader=yaml.Loader)
         for k in data:
             v = data[k]
             if not bool(names):
@@ -907,7 +923,10 @@ def getCalibration(fpath,names=None):
     m = {'log':log, 'exp':exp, 'sin':sin, 'cos':cos, 'tan':tan, 'sqrt':sqrt}
     
     txt,labels = read_file_or_url(fpath)
-    data = yaml.load(txt, Loader=yaml.Loader)
+    if version >= '0.17':
+        data = yaml.YAML(typ='safe').load(txt)
+    else:
+        data = yaml.load(txt, Loader=yaml.Loader)
     data = data["calibration"]
     
     cal = dict(); d = dict()
