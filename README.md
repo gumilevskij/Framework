@@ -9,7 +9,7 @@ of Dynamic Stochastic General Equilibrium (DSGE) models in Python environment.
 ## Installation:
 This package is available at PyPi repository and can be installed via pip installer:
 
-pip install pysnowdrop -upgrade
+pip install pysnowdrop -- upgrade
  
  ## How to run:
  - Create or modify existing YAML model file in examples/models folder.
