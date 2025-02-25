@@ -6,7 +6,7 @@ Utility module.
 import os
 import sys
 import pandas as pd
-import datetime as dt
+#import datetime as dt
 import numpy as np
 import ruamel.yaml as yaml
 from dataclasses import dataclass
@@ -15,6 +15,7 @@ from snowdrop.src.misc.termcolor import cprint
 fpath = os.path.dirname(os.path.abspath(__file__))
 working_dir = os.path.abspath(os.path.join(os.path.abspath(fpath + "../..")))
 
+version = yaml.__version__
 eqs_labels = []
 
 @dataclass
@@ -541,7 +542,10 @@ def importModel(fpath):
     with open(fpath,  encoding='utf8') as f:
         txt = f.read()
         txt = txt.replace('^', '**')
-        data = yaml.load(txt, Loader=yaml.Loader)
+        if version >= '0.17':
+            data = yaml.YAML(typ='safe').load(txt)
+        else:
+            data = yaml.load(txt, Loader=yaml.Loader)
         # Model name
         name = data.get('name','Model')
         # Model equations to solve
