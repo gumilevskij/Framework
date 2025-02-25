@@ -8,6 +8,7 @@ Ideas :
 
 import os, sys
 import ruamel.yaml as yaml 
+version = yaml.__version__
 
 if getattr(sys, 'frozen', False):
     # we are running in a |PyInstaller| bundle
@@ -18,4 +19,8 @@ else:
 DATA_PATH = os.path.join(DIR_PATH, "recipes.yaml")
 
 with open(DATA_PATH) as f:
-  recipes = yaml.load(f, Loader=yaml.Loader)
+  
+  if version >= '0.17':
+      recipes = yaml.YAML(typ='safe').load(f)
+  else:
+      recipes = yaml.load(f, Loader=yaml.Loader)
