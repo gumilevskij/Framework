@@ -122,7 +122,7 @@ def makedata(Plot=False,save=False):
     
     
     ### Read model file
-    fmodel = os.path.abspath(os.path.join(working_dir,"snowdrop/models/ICD/MPAF/model.yaml")) 
+    fmodel = os.path.abspath(os.path.join(working_dir,"snowdrop/models/MPAF/model.yaml")) 
      
     txt,_ = read_file_or_url(fmodel)
     data = yaml.load(txt, yaml.RoundTripLoader)
