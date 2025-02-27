@@ -457,7 +457,7 @@ def lint(txt, source='<string>', format='human'):
     """
     # raise ModelException if it doesn't work correctly
     try:
-        if version >= '0.17':
+        if version >= '0.18':
             data = ry.YAML(typ='rt').load(txt)
         else:
             data = ry.load(txt, ry.RoundTripLoader)
