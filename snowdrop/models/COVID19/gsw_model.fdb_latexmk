@@ -1,0 +1,20 @@
+# Fdb version 3
+["pdflatex"] 1740457954 "/home/marina/work/snowdrop/models/COVID19/gsw_model.tex" "gsw_model.pdf" "gsw_model" 1740457954
+  "/etc/texmf/web2c/texmf.cnf" 1665322210 475 c0e671620eb5563b2130f56340a5fde8 ""
+  "/home/marina/work/snowdrop/models/COVID19/gsw_model.tex" 1740457954 10542 f6e6e8bc0f92430680b6f9b1bafdec26 ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecrm1000.tfm" 1136768653 3584 adb004a0c8e7c46ee66cad73671f37b4 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/article.cls" 1580683321 20023 e427dd9e17e239bf926ef3aab67fe35e ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/fontenc.sty" 1581632200 4947 0c2888dd88121ae675fc6e82213623ba ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/inputenc.sty" 1580683321 5050 8933a39ad74377accd18991c5eb90c58 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo" 1580683321 8446 9874cccac5fee462272c582807dbbf56 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/textcomp.sty" 1581112666 2821 2c0928feafd5527387e29a1af774d030 ""
+  "/usr/share/texlive/texmf-dist/web2c/texmf.cnf" 1581979058 38841 ce3692aa899bb693b90b87eaa5d4d84e ""
+  "/usr/share/texmf/tex/latex/lm/lmodern.sty" 1256929440 1606 c17281c7cff2bbd7ff0173e1433487ec ""
+  "/usr/share/texmf/web2c/texmf.cnf" 1581979058 38841 ce3692aa899bb693b90b87eaa5d4d84e ""
+  "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1740457943 4791332 dccb3110221d6621b5281fc2ed4d381a ""
+  "gsw_model.aux" 1740457954 8 a94a2480d3289e625eea47cd1b285758 ""
+  "gsw_model.tex" 1740457954 10542 f6e6e8bc0f92430680b6f9b1bafdec26 ""
+  "lastpage.sty" 0 -1 0 ""
+  (generated)
+  "gsw_model.pdf"
+  "gsw_model.log"

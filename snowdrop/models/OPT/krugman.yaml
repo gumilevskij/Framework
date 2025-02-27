@@ -1,0 +1,118 @@
+name: Krugman Trade Equilibrium with Iceberg Costs
+# Edward J. Balistreri, Colorado School of Mines (ebalistr@mines.edu)
+# Thomas F. Rutherford, ETH Zurich (tom@mpsge.org).
+# March 2011
+
+sets:
+   regions r:   [R1, R2, R3]
+   goods k:     [G1]
+   regions alias s: r
+   
+symbols:
+   variables:  [Q(k)(r),P(k)(r),N(k)(r),QF(k)(r)(s),PF(k)(r)(s),c(k)(r),Y(k)(r)]
+   parameters: [sig,eta,mu,Q0(k)(r),P0(k)(r),N0(k)(r),qf0(k)(r)(s),pf0(k)(r)(s),
+                c0(k)(r),Y0(k)(r),tau(k)(r)(s),vx0(k)(r)(s),fc(k)(r)]
+
+equations:
+# Eq.1 Aggregate demand
+ - DEM(k)(r):     Q(k)(r) - Q0(k)(r) * (P0(k)(r) / P(k)(r))**eta
+
+# Eq.2 Dixit-Stiglitz price index
+ - DS(k)(s):      sum(r,N(k)(r)*PF(k)(r)(s)**(1-sig))**(1/(1-sig)) - P(k)(s)
+
+# Eq.3 Free entry
+ - FE(k)(r):      c(k)(r)*fc(k)(r) - sum(s,PF(k)(r)(s)*QF(k)(r)(s)/sig) 
+
+# Eq.4 Firm demand
+ - DEMF(k)(r)(s): QF(k)(r)(s) - Q(k)(s)*(P(k)(s)/PF(k)(r)(s))**sig
+
+# Eq.5 Optimal firm pricing
+ - MKUP(k)(r)(s): tau(k)(r)(s)*c(k)(r) - (1-1/sig)*PF(k)(r)(s)
+
+# Eq.6 Market clearance    
+ - MKT(k)(r):     Y(k)(r) - N(k)(r)*(fc(k)(r) + sum(s, tau(k)(r)(s)*QF(k)(r)(s)))**sig
+
+# Eq.7 Input supply (output)
+ - SUP(k)(r):     Y0(k)(r) * (c(k)(r)/c0(k)(r)) ** mu - Y(k)(r)
+
+
+calibration:
+    # Parameters
+    sig           : 5
+    eta           : 1.5
+    mu            : 0.5
+    vx0(k)(r)(s)  : 1
+    vx0(k)(r)(r)  : 3
+    P0(k)(r)      : 1
+    c0(k)(r)      : 1
+    N0(k)(r)      : 1
+    fc(k)(r)      : sum(s, vx0(k)(s)(r)) / (sig*N0(k)(r)*c0(k)(r))
+    Q0(k)(r)      : sum(s, vx0(k)(s)(r)) / P0(k)(r)
+    Y0(k)(r)      : sum(s, vx0(k)(s)(r)) / c0(k)(r)
+    pf0(k)(r)(s)  : (vx0(k)(s)(r)/(N0(k)(r)*Q0(k)(s)))**(1/(1-sig))
+    qf0(k)(r)(s)  : Q0(k)(s)*pf0(k)(r)(s)**(-sig)
+    tau(k)(r)(s)  : (1-1/sig) * pf0(k)(r)(s) / c0(k)(r) 
+    # Variables
+    Q(k)(r)       : Q0(k)(r)
+    P(k)(r)       : P0(k)(r)
+    N(k)(r)       : N0(k)(r)
+    QF(k)(r)(s)   : qf0(k)(r)(s)
+    PF(k)(r)(s)   : pf0(k)(r)(s)
+    c(k)(r)       : c0(k)(r)
+    Y(k)(r)       : Y0(k)(r)
+      
+constraints:
+   # Positive Variables
+   - Q(k)(r) .ge. 0
+   - P(k)(r) .ge. 0
+   - N(k)(r) .ge. 0
+   - QF(k)(r)(s) .ge. 0
+   - PF(k,r,s) .ge. 0
+   - c(k)(r) .ge. 0
+   - Y(k)(r) .ge. 0
+   # Positive LHS of equations    
+   - DEM(k)(r) .ge. 0
+   - DS(k)(s) .ge. 0
+   - FE(k)(r) .ge. 0
+   - DEMF(k)(r)(s) .ge. 0
+   - MKUP(k)(r)(s) .ge. 0
+   - MKT(k)(r) .ge. 0
+   - SUP(k)(r) .ge. 0
+
+labels:
+    # Variables
+    Q:    Composite Quantity
+    P:    Composite Price Index   
+    N:    Number of firms (varieties)
+    QF:   Average firm-level quantity
+    PF:   Average firm-level pricing (gross)
+    tau:  Iceberg transport cost factor
+    c:    Composite input price (marginal cost)
+    Y:    Composite input supply (output)
+    # Parameters
+    sig:  Elasticity of substitution
+    eta:  Demand elasticity
+    mu:   Supply elasticity
+    Q0:   Benchmark aggregate quantity
+    P0:   Benchmark price index
+    N0:   Benchmark number of firms
+    qf0:  Benchmark firm-level quantity
+    pf0:  Benchmark firm-level pricing (gross of tau)
+    c0:   Benchmark input cost
+    Y0:   Benchmark input supply
+    fc:   Fixed costs
+    vx0:  Arbitrary benchmark export values
+    zeta: Bilateral preference weights
+    # Equations
+    DEM:  Aggregate demand
+    DS:   Dixit-Stiglitz price index
+    FE:   Free entry
+    DEMF: Firm demand
+    MKUP: Optimal firm pricing
+    MKT:  Input market clearance
+    SUP:  Input supply (output)
+    
+Model: [DEM.Q,DS.N,FE.QF,DEMF.P,MKUP.PF,MKT.c,SUP.Y]
+Solver: 'MCP'   # 'MCP','PATH', 'CONSTRAINED_OPTIMIZATION','ROOT'
+
+    

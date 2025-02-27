@@ -1,0 +1,38 @@
+# parameters
+g: 0.049
+p_pdot1: 0.414
+p_pdot2 : 0.196
+p_pdot3: 0.276
+p_rs1: 3.000
+p_y1: 0.304
+p_y2: 0.098
+p_y3: 0.315
+
+# initial values
+Y_WORLD: 0
+PDOT_WORLD: 0
+# initial values for US
+PDOT_US: 1.0
+RR_US: 0.0
+RS_US: 0.0
+Y_US: 0.0
+# initial values for EU    
+PDOT_EU: 0.2
+RR_EU: 0.0
+RS_EU: 0.0
+Y_EU: 0.0
+# initial values for JP    
+PDOT_JP: 0.0
+RR_JP: 0.0
+RS_JP: 0.0
+Y_JP: 0.0
+# initial values for RC    
+PDOT_RC: 3.0
+RR_RC: 0.0
+RS_RC: 0.0
+Y_RC: 0.0
+# initial values for EA    
+PDOT_EA: 1.0
+RR_EA: 0.0
+RS_EA: 0.0
+Y_EA: 0.0

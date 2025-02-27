@@ -1,0 +1,144 @@
+name: Melitz Trade Equilibrium model with Iceberg Costs
+      # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.701.8908&rep=rep1&type=pdf
+
+sets:
+   regions r:   [R1, R2, R3]
+   countries s: r # Alias r of s
+   goods h:     [G1]
+   
+symbols:
+   variables:  [Q(h)(r), P(h)(r), M(h)(r), c(h)(r), Y(h)(r), 
+                N(h)(r)(s), QF(h)(r)(s), PF(h)(r)(s), PHI(h)(r)(s)]
+   parameters: [sig, eta, mu, a, b, Q0(h)(r), P0(h)(r), M0(h)(r), N0(h)(r)(s), QF0(h)(r)(s), PF0(h)(r)(s), 
+                PHI0(h)(r)(s), c0(h)(r), Y0(h)(r), fc(h)(r)(s), delt_fs(h)(r), tau(h)(r)(s), vx0(h)(r)(s)]
+
+equations:
+# Eq.1 Aggregate demand
+    - DEM(h)(r):     Q(h)(r) - Q0(h)(r) * (P0(h)(r) / P(h)(r))**eta
+
+# Eq.2 Dixit-Stiglitz price index
+    - DS(h)(s):      sum(r, N(h)(r)(s) * PF(h)(r)(s) ** (1-sig)) ** (1/(1-sig)) - P(h)(s)
+
+# Eq.3 Free entry
+    - FE(h)(r):      c(h)(r) * delt_fs(h)(r) - sum(s, ( N(h)(r)(s) / M(h)(r) ) * PF(h)(r)(s) * QF(h)(r)(s) * (sig-1)/(a*sig))
+
+# Eq.4 Input market clearance    
+    - MKT(h)(r):     Y(h)(r) - ( delt_fs(h)(r) * M(h)(r) + sum(s, N(h)(r)(s) * ( fc(h)(r)(s) + tau(h)(r)(s) * QF(h)(r)(s) / PHI(h)(r)(s) )) )
+
+# Eq.5 Input supply (output)
+    - SUP(h)(r):     Y0(h)(r) * (c(h)(r)/c0(h)(r)) ** mu - Y(h)(r)
+
+# Eq.6 Firm demand
+    - DEMF(h)(r)(s): QF(h)(r)(s) -  Q(h)(s) * (P(h)(s) / PF(h)(r)(s)) ** sig
+
+# Eq.7 Optimal firm pricing
+    - MKUP(h)(r)(s): tau(h)(r)(s) * c(h)(r) / PHI(h)(r)(s) - (1-1/sig) * PF(h)(r)(s)
+
+# Eq.8 Zero cutoff profits
+    - ZCP(h)(r)(s):  c(h)(r) * fc(h)(r)(s) - ( PF(h)(r)(s) * QF(h)(r)(s) * (a+1-sig) ) / (a*sig)
+
+# Eq.9 Pareto Productivity
+    - PAR(h)(r)(s):  PHI(h)(r)(s) - b * (a/(a+1-sig)) ** (1/(sig-1)) * (N(h)(r)(s) / M(h)(r)) ** (-1/a)
+
+calibration:
+    # Parameters
+    sig           : 3.8
+    eta           : 2
+    mu            : 0.5
+    a             : 4.6
+    b             : 0.5
+    c0(h)(r)      : 1
+    vx0(h)(r)(s)  : 1
+    vx0(h)(r)(r)  : 3
+    Y0(h)(r)      : sum(s, vx0(h)(r)(s)) / c0(h)(r)
+    M0(h)(r)      : 10
+    N0(h)(r)(s)   : (vx0(h)(r)(s) / vx0(h)(r)(r))**2 * N0(h)(r)(r)
+    N0(h)(r)(r)   : 9
+    # Calibrate the sunk cost based on free entry
+    delt_fs(h)(r) : Y0(h)(r) / M0(h)(r) * (sig-1)/(a*sig)
+    # Calibrate the fixed cost based on zero cutoff profit
+    fc(h)(r)(s)   : vx0(h)(r)(s) / (N0(h)(r)(s) * c0(h)(r)) * (a+1-sig)/(a*sig)
+    P0(h)(r)      : 1
+    Q0(h)(r)      : sum(s, vx0(h)(s)(r)) / P0(h)(r)
+    PF0(h)(r)(s)  : (vx0(h)(r)(s) / (N0(h)(r)(s) * Q0(h)(s))) ** (1/(1-sig))
+    QF0(h)(r)(s)  : Q0(h)(s) * PF0(h)(r)(s) ** (-sig)
+    PHI0(h)(r)(s) : b * (a/(a+1-sig))**(1/(sig-1)) * (N0(h)(r)(s) / M0(h)(r)) ** (-1/a)
+    tau(h)(r)(s)  : (1-1/sig) * PF0(h)(r)(s) * PHI0(h)(r)(s) / c0(h)(r) 
+    # Variables
+    Q(h)(r)       : Q0(h)(r)
+    P(h)(r)       : P0(h)(r)
+    M(h)(r)       : M0(h)(r)
+    N(h)(r)(s)    : N0(h)(r)(s)
+    QF(h)(r)(s)   : QF0(h)(r)(s)
+    PF(h)(r)(s)   : PF0(h)(r)(s)
+    PHI(h)(r)(s)  : PHI0(h)(r)(s)
+    c(h)(r)       : c0(h)(r)
+    Y(h)(r)       : Y0(h)(r)
+      
+constraints:
+   # Positive Variables
+   - Q(h)(r) .ge. 0
+   - P(h)(r) .ge. 0
+   - M(h)(r) .ge. 0
+   - N(h)(r)(s) .ge. 0
+   - QF(h)(r)(s) .ge. 0
+   - PF(h)(r)(s) .ge. 0
+   - PHI(h)(r)(s) .ge. 0
+   - c(h)(r) .ge. 0
+   - Y(h)(r) .ge. 0
+   # Positive LHS of equations    
+   - DEM(h)(r) .ge. 0
+   - DS(h)(s) .ge. 0
+   - DEMF(h)(r)(s) .ge. 0
+   - MKUP(h)(r)(s) .ge. 0
+   - FE(h)(r) .ge. 0
+   - ZCP(h)(r)(s) .ge. 0
+   - PAR(h)(r)(s) .ge. 0
+   - MKT(h)(r) .ge. 0
+   - SUP(h)(r) .ge. 0
+
+labels:
+    # Variables
+    Q:    Composite Quantity
+    P:    Composite Price Index
+    M:    Number of Entered firms
+    N:    Number of Operating firms (varieties)
+    QF:   Avg Firm output in s-market
+    PF:   Avg Firm (gross) pricing in s-market
+    PHI:  Avg Firm productivity
+    c:    Composite input price (marginal cost)
+    Y:    Composite input supply (output)
+    # Parameters
+    sig:  Elasticity of substitution
+    eta:  Demand elasticity
+    mu:   Supply elasticity
+    a:    Pareto shape parameter
+    b:    Pareto lower support
+    Q0:   Benchmark aggregate quantity
+    P0:   Benchmark price index
+    M0:   Benchmark number of entered firms
+    N0:   Benchmark number of operating firms
+    QF0:  Benchmark avg firm-level quantity
+    PF0:  Benchmark avg firm-level pricing (gross)
+    PHI0: Benchmark avg productivity
+    c0:   Benchmark input cost
+    Y0:   Benchmark input supply
+    fc:   Benchmark fixed costs
+    delt_fs: Annualized sunk cost
+    tau:  Iceberg transport cost factor
+    vx0:  Arbitrary benchmark export values
+    # Equations
+    DEM:  Aggregate demand
+    DS:   Dixit-Stiglitz price index
+    FE:   Free entry
+    ZCP:  Zero cutoff profits
+    DEMF: Firm demand
+    MKUP: Optimal firm pricing
+    PAR:  Pareto Productivity
+    MKT:  Input market clearance
+    SUP:  Input supply (output)
+    
+Model: [DEM.P,DS.Q,FE.M,ZCP.N,DEMF.PF,MKUP.QF,PAR.PHI,MKT.c,SUP.Y]
+Solver: 'MCP'   # 'MCP','PATH', 'CONSTRAINED_OPTIMIZATION', 'ROOT'
+
+    

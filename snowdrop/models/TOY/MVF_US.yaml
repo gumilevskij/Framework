@@ -1,0 +1,182 @@
+name: Multivariate Filter of Potential Output for US Economy
+
+#Definitions:
+#   Transition_variables
+#   ---------------------
+#   GDP (log) : LGDP
+#   Potential GDP (log) : LGDP_BAR
+#   Output gap : Y
+#   Growth rate of potential output : DLGDP
+#   Inflation : PIE
+#   Model consistent inflation expectation : PIE_BAR
+#   Model consistent growth expectation : GROWTH_E
+#   Growth : GROWTH
+#   Potential Growth : GROWTH_BAR
+#   Unemployment rate : UNR
+#   NAIRU : UNR_BAR
+#   Unemployment gap : UNR_GAP
+#   Growth rate of NAIRU : G_UNR_BAR
+#
+#   measurement_variables:
+#   ---------------------
+#   GDP level (100*log) :	LGDP  
+#   Inflation :	PIE
+#   GDP Growth :	GROWTH    
+#   Unemployment Rate :	UNR
+
+#   Transition_shocks:
+#   -----------------
+#   Shock to level of potential output : RES_LGDP_BAR
+#   Shock to growth rate of potential output : RES_G
+#   Shock to output gap : RES_Y
+#   Shock to inflation : RES_PIE
+#   Shock to unemployment gap : RES_UNR_GAP
+#   Shock to NAIRU : RES_UNR_BAR
+#   Shock to growth rate of NAIRU : RES_G_UNR_BAR
+
+symbols: 
+
+   variables : [LGDP, LGDP_BAR, DLGDP, Y, PIE, GROWTH,
+                UNR, GROWTH_BAR, PIE_BAR, GROWTH_E,
+                UNR_BAR, UNR_GAP, G_UNR_BAR]
+
+   measurement_variables : [OBS_LGDP, OBS_PIE, OBS_GROWTH, OBS_UNR]
+
+   shocks : [RES_LGDP_BAR, RES_DLGDP, RES_Y, RES_PIE, RES_UNR_GAP, RES_UNR_BAR, RES_G_UNR_BAR]
+   
+   measurement_shocks : [RES_OBS_LGDP,RES_OBS_PIE,RES_OBS_GROWTH,RES_OBS_UNR]
+   
+   parameters : [beta, lmbda, phi, theta, growth_ss, 
+                 tau1, tau2, tau3, tau4, unr_ss]
+                 
+equations: 
+      # Transition equations 
+      #Eq.1 Potential output definition    
+      - LGDP = LGDP_BAR + Y
+      #Eq.2 Stochastic process for potential output level 
+      - LGDP_BAR = LGDP_BAR(-1) + DLGDP + RES_LGDP_BAR
+      #Eq.3 Stochastic process for growth rate of potential
+      - DLGDP = (1-theta)*DLGDP(-1) + theta*growth_ss + RES_DLGDP
+      #Eq.4 Stochastic process for output gap
+      - Y = phi*Y(-1) + RES_Y
+      #Eq.5 Philips curve
+      - PIE = lmbda*PIE(+1) + (1-lmbda)*PIE(-1) + beta*Y + RES_PIE
+      #Eq.6 Growth definition 
+      - GROWTH = LGDP - LGDP(-1)
+      #Eq.7 Potential growth definition
+      - GROWTH_BAR = LGDP_BAR - LGDP_BAR(-1)
+      #Eq.8 NAIRU definition
+      - UNR_BAR = UNR + UNR_GAP
+      #Eq.9 Dynamic Okun's law
+      - UNR_GAP =  tau2*UNR_GAP(-1) + tau1*Y + RES_UNR_GAP
+      #Eq.10 Stochastic process for NAIRU
+      - UNR_BAR =  (1-tau4)*UNR_BAR(-1) + G_UNR_BAR + tau4*unr_ss + RES_UNR_BAR
+      #Eq.11 Stochastic process for the change in NAIRU
+      - G_UNR_BAR = (1-tau3)*G_UNR_BAR(-1) + RES_G_UNR_BAR
+      #Eq.12 One-year ahead model consistent inflation expectations (reporting variable)
+      - PIE_BAR = PIE(+1)
+      #Eq.13 One-year ahead model consistent growth expectations (reporting variable)
+      - GROWTH_E = GROWTH(+1)
+      
+
+measurement_equations: 
+    - OBS_LGDP = LGDP + RES_OBS_LGDP
+    - OBS_PIE = PIE + RES_OBS_PIE
+    - OBS_GROWTH = GROWTH + RES_OBS_GROWTH
+    - OBS_UNR = UNR + RES_OBS_UNR
+
+calibration:
+   # parameters:
+    beta: 0.25
+    lmbda: 0.25
+    phi: 0.75
+    theta: 0.1
+    growth_ss: 0 #3.5
+    tau1: 0.3
+    tau2: 0.3
+    tau3: 0.1
+    tau4: 0.1
+    unr_ss: 5.0
+
+    # initial values and starting values for endogenous variables:
+    LGDP: 880
+    LGDP_BAR: LGDP
+    PIE: 9.0
+    PIE_BAR: PIE
+    Y: 0
+    LGDP2: 880
+    DLGDP: 2.0
+    UNR: 7.2
+    UNR_BAR: UNR 
+    UNR_GAP: -0.2
+    G_UNR_BAR: 0
+    GROWTH: DLGDP
+    GROWTH_E: DLGDP
+    GROWTH_BAR: DLGDP
+
+    # Standard deviation of shocks:
+    std_RES_LGDP_BAR: 0.1
+    std_RES_DLGDP: 0.1
+    std_RES_Y: 0.1
+    std_RES_PIE: 0.1
+    std_RES_UNR_GAP: 0.1
+    std_RES_UNR_BAR: 0.1
+    std_RES_G_UNR_BAR: 0.1
+
+    # Standard deviations of measurement variables:
+    # Any standard deviation that is not listed below is treated as zero.
+    std_RES_OBS_LGDP : 1.0
+    std_RES_OBS_PIE : 1.0
+    std_RES_OBS_GROWTH: 1.0
+    std_RES_OBS_UNR : 1.0
+   
+
+estimated_parameters:
+    # Please choose one of the following distributions: 
+    # normal_pdf,lognormal_pdf,beta_pdf,gamma_pdf,t_pdf,weibull_pdf,inv_gamma_pdf,inv_weibull_pdf,wishart_pdf,inv_wishart_pdf    
+    # PARAM NAME, INITVAL, LB, UB, PRIOR_SHAPE, PRIOR_P1, PRIOR_P2, PRIOR_P3, PRIOR_P4, PRIOR_P5
+    # The first parameter is the parameter name, the second is the initial value, the third and 
+    # the fourth are the lower and the upper bounds, the fifth is the prior shape, 
+    # the sixth to tenth are prior parameters (mean, standard deviation, shape, etc...).
+    - beta,  0.25, 0, 10,  normal_pdf,  0.25, 0.01
+    - lmbda, 0.25, 0, 1.,  normal_pdf,  0.25, 0.01
+    - phi,   0.75, 0, 1.,  normal_pdf,  0.75, 0.01
+    - theta, 0.1,  0, 0.5, normal_pdf,  0.1, 0.01
+    
+
+labels:
+   DLGDP: "GDP Growth"
+   DLGDP(+1): "Lead of GDP Growth"
+   DLGDP(-1): "Lag of GDP Growth"
+   GROWTH: "Growth of Output"
+   GROWTH_BAR: "Trend of Output Growth"
+   GROWTH_E: "Expectation of Output Growth"
+   LGDP: "Log of Output"
+   LGDP_BAR: "Log of Potential Output"
+   PIE: "Inflation Rate"
+   PIE(+1): "Lead of Inflation"
+   PIE(-1): "Lag of Inflation"
+   PIE_BAR: "Trend of Inflation Rate"
+   UNR: "Unemployment Rate"
+   UNR_BAR: "Trend of Unemployment Rate"
+   UNR_GAP: "Unemployment Gap"
+   UNR_GAP(-1): "Lag of Unemployment Gap"
+   G_UNR_BAR: "Trend of Unemployment Growth"
+   Y: "Output Gap"
+   Y(-1): "Lag of Output Gap"
+   RES_DLGDP: "Shock to GDP Growth"
+   RES_PIE: "Shock to inflation"
+   RES_UNR_GAP: "Shock to Unemployment Gap"
+   RES_Y: "Shock to Output Gap"
+   
+   
+options:
+    # Please use this format to set simulation and filter range:
+    #range : [[1980,1,1],[2017,1,1]]
+    #filter_range : [[1980,1,1],[2017,1,1]]
+    # Or the format below:
+    range : ["1979,1,1","2017,1,1"]
+    filter_range : ["1980,1,1","2017,1,1"]
+    frequency: 0 #yearly
+
+       

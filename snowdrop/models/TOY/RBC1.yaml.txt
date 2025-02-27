@@ -1,0 +1,38 @@
+name:  Simple Real Business Cycle Model
+
+symbols:
+   variables: [Y,C,K,r,A]
+   shocks: [ea,ey]
+   parameters: [beta,delta,gamma,rho,a]
+
+equations:
+   - 1/C = 1/C(1) * beta * (1 + r)               
+   - Y = C + K - (1-delta) * K(-1)
+   - Y = K(-1)^gamma * A^(1-gamma) + ey
+   - gamma*Y(1)/K = r + delta
+   - log(A) = rho*log(A(-1)) + (1-rho)*log(a) + ea
+
+calibration:
+      # parameters
+      beta : 0.99
+      gamma : 0.50
+      delta : 0.03
+      rho : 0.80
+      a : 0.1
+      # initial values
+      C : 0.8
+      K : 15.0
+      Y : 1.2
+      r : 0.01
+      A : a      
+      ea : 0   
+      ey : 0
+      std : 0.05
+      cov : 0.0001
+    
+options:
+    T : 51    
+    Npaths : 10
+    distribution: !MvNormal
+        mean: [-0.05,0.05]
+        cov: [[std^2, cov],[cov, std^2]]

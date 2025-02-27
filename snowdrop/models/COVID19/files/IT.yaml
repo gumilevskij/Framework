@@ -1,0 +1,18 @@
+   calfa :  0.12  #  0.24  AM200404 <=> In all calibration below, I replaced the value in the GSW code, 0.24, with the estimated mean value in their Table 1 
+   csadjcost :  5.40   #  6.0144 
+   chabb :  0.82   #  0.6361    
+   cprobw :  0.67   #  0.8087 
+   csigl:  1.85   #  1.9423 
+   ceta:    5 
+   cprobp:  0.84   #  0.6 
+   cindw:  0.43   #  0.3243 
+   cindp:  0.45   #  0.47 
+   czcap:  0.63   #  0.2696 
+   crpi:  1.38   #  1.488 
+   crr:  0.93   #  0.8762 
+   cry:  0.12   #  0.0593 
+   crdy:  0.05   #  0.2347 
+   crhoa:  0.57   #  0.999 
+   crhob:  0.89   #  0.5799 
+   crhog:  0.85   #  0.9957 
+   crhoqs:  0.22   #  0.7165 
