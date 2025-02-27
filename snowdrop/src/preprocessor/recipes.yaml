@@ -1,0 +1,11 @@
+symbols: ['variables', 'log_variables', 'shocks', 'parameters', 'exogenous', 'endogenous', 'measurement_variables', 'measurement_shocks', 'measurement_parameters']
+
+specs:
+    eqs:
+        - ['variables',1,'y_p1']
+        - ['variables',0,'y']
+        - ['variables',-1,'y_m1']
+        - ['measurement_variables',0,'meas']
+        - ['shocks', 0, 'e']
+        - ['measurement_shocks',0,'m']
+        - ['parameters',0,'p']
