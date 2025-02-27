@@ -13,7 +13,7 @@ pip install pysnowdrop --upgrade
  
  ## How to run:
  - Create or modify existing YAML model file in examples/models folder.
- - Open src/tests/test.py file and set *fname* to the name of this model file.
+ - Open src/tests/test_toy_models.py file and set *fname* to the name of this model file.
  - Run simulations in Spyder IDE by double-clicking on run button or run python script in a command prompt.
 
 ## Content:
