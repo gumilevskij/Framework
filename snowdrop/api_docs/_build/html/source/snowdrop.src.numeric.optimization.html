@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.numeric.optimization package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.numeric.sa package" href="snowdrop.src.numeric.sa.html" />
+    <link rel="prev" title="snowdrop.src.numeric.grids package" href="snowdrop.src.numeric.grids.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-numeric-optimization-package">
+<h1>snowdrop.src.numeric.optimization package<a class="headerlink" href="#snowdrop-src-numeric-optimization-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.numeric.optimization.optimize">
+<span id="snowdrop-src-numeric-optimization-optimize-module"></span><h2>snowdrop.src.numeric.optimization.optimize module<a class="headerlink" href="#module-snowdrop.src.numeric.optimization.optimize" title="Link to this heading">¶</a></h2>
+<p>Generic optimization module.</p>
+<p>&#64;author: A.Goumilevski</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.optimize.Data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.optimize.</span></span><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">success</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fun</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nfev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/optimize.html#Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.optimize.Data" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.optimize.Data.fun">
+<span class="sig-name descname"><span class="pre">fun</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#snowdrop.src.numeric.optimization.optimize.Data.fun" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.optimize.Data.message">
+<span class="sig-name descname"><span class="pre">message</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#snowdrop.src.numeric.optimization.optimize.Data.message" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.optimize.Data.nfev">
+<span class="sig-name descname"><span class="pre">nfev</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#snowdrop.src.numeric.optimization.optimize.Data.nfev" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.optimize.Data.success">
+<span class="sig-name descname"><span class="pre">success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#snowdrop.src.numeric.optimization.optimize.Data.success" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.optimize.Data.x">
+<span class="sig-name descname"><span class="pre">x</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#snowdrop.src.numeric.optimization.optimize.Data.x" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.optimize.run">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.optimize.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/optimize.html#run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.optimize.run" title="Link to this definition">¶</a></dt>
+<dd><p>Call main driver program.</p>
+<p>Runs model simulations.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param fpath<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path to model file.</p>
+</dd>
+<dt class="field-even">type fpath<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param fout<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path to output excel file.</p>
+</dd>
+<dt class="field-even">type fout<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param Output<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If True save results in excel file.</p>
+</dd>
+<dt class="field-even">type Output<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">param plot_variables<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Plot variables.</p>
+</dd>
+<dt class="field-even">type plot_variables<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param model_info<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If True creates a pdf/latex model file.</p>
+</dd>
+<dt class="field-even">type model_info<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optimization results.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.optimize.solver">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.optimize.</span></span><span class="sig-name descname"><span class="pre">solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/optimize.html#solver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.optimize.solver" title="Link to this definition">¶</a></dt>
+<dd><p>Find solution of linear constraint optimization problem.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param model<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model object.</p>
+</dd>
+<dt class="field-even">type model<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>solution of optimization problem.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.optimization.test">
+<span id="snowdrop-src-numeric-optimization-test-module"></span><h2>snowdrop.src.numeric.optimization.test module<a class="headerlink" href="#module-snowdrop.src.numeric.optimization.test" title="Link to this heading">¶</a></h2>
+<p>Created on Mon Apr 18 00:09:58 2022</p>
+<p>&#64;author: A.Goumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.test.fun">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.test.</span></span><span class="sig-name descname"><span class="pre">fun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/test.html#fun"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.test.fun" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.test.func">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.test.</span></span><span class="sig-name descname"><span class="pre">func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/test.html#func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.test.func" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.test.jacob">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.test.</span></span><span class="sig-name descname"><span class="pre">jacob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/test.html#jacob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.test.jacob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.test.jacobian">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.test.</span></span><span class="sig-name descname"><span class="pre">jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/test.html#jacobian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.test.jacobian" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.test.map_func">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.test.</span></span><span class="sig-name descname"><span class="pre">map_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/test.html#map_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.test.map_func" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.test.map_func_der">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.test.</span></span><span class="sig-name descname"><span class="pre">map_func_der</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/test.html#map_func_der"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.test.map_func_der" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.test.path_func">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.test.</span></span><span class="sig-name descname"><span class="pre">path_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/test.html#path_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.test.path_func" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.test.path_jacob">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.test.</span></span><span class="sig-name descname"><span class="pre">path_jacob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/test.html#path_jacob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.test.path_jacob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.optimization.util">
+<span id="snowdrop-src-numeric-optimization-util-module"></span><h2>snowdrop.src.numeric.optimization.util module<a class="headerlink" href="#module-snowdrop.src.numeric.optimization.util" title="Link to this heading">¶</a></h2>
+<p>Generic optimization module.
+Developed to replicate GAMS PATH Solver.
+&#64;author: A.Goumilevski</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.Data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">success</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fun</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nfev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.Data" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.Data.fun">
+<span class="sig-name descname"><span class="pre">fun</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.Data.fun" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.Data.nfev">
+<span class="sig-name descname"><span class="pre">nfev</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.Data.nfev" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.Data.success">
+<span class="sig-name descname"><span class="pre">success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.Data.success" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.Data.x">
+<span class="sig-name descname"><span class="pre">x</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.Data.x" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.expand">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">expand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objFunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#expand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.expand" title="Link to this definition">¶</a></dt>
+<dd><p>Expands expression.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param sets<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of categories.</p>
+</dd>
+<dt class="field-even">type sets<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict.</p>
+</dd>
+<dt class="field-odd">param indices<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of indeces.</p>
+</dd>
+<dt class="field-even">type indices<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param expr<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Object.</p>
+</dd>
+<dt class="field-even">type expr<span class="colon">:</span></dt>
+<dd class="field-even"><p>list or dict.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>objFunc: True if expanding expression for objective function.</p>
+</dd>
+<dt class="field-even">type objFunc<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Expanded expression.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.expand_list">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">expand_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objFunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#expand_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.expand_list" title="Link to this definition">¶</a></dt>
+<dd><p>Iterates thru a list of indices and categories, 
+substitutes an index of a variable name with a corresponding category, 
+and builds a list of new variables.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param sets<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of categories.</p>
+</dd>
+<dt class="field-even">type sets<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict.</p>
+</dd>
+<dt class="field-odd">param indices<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of indeces.</p>
+</dd>
+<dt class="field-even">type indices<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param arr<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of indeces.</p>
+</dd>
+<dt class="field-even">type arr<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>objFunc: True if expanding expression for objective function.</p>
+</dd>
+<dt class="field-even">type objFunc<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">param loop<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if expanding expression for objective function.</p>
+</dd>
+<dt class="field-even">type loop<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.expand_loop">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">expand_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">categories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#expand_loop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.expand_loop" title="Link to this definition">¶</a></dt>
+<dd><p>Iterates thru a list of indices and categories, 
+substitutes an index in a variable name with a corresponding category, 
+and builds a list of new variables.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param categories<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Categories.</p>
+</dd>
+<dt class="field-even">type categories<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param sub<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sub-string to replace.</p>
+</dd>
+<dt class="field-even">type sub<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param expr<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Text.</p>
+</dd>
+<dt class="field-even">type expr<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Text representation of sum operation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.expand_map">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">expand_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#expand_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.expand_map" title="Link to this definition">¶</a></dt>
+<dd><p>Iterates thru a list of indices and categories, 
+substitutes an index in a variable name with a corresponding category, 
+and builds a list of new variables.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param sets<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of categories.</p>
+</dd>
+<dt class="field-even">type sets<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict.</p>
+</dd>
+<dt class="field-odd">param indices<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of indeces.</p>
+</dd>
+<dt class="field-even">type indices<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param m<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Map.</p>
+</dd>
+<dt class="field-even">type m<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.expand_minmax">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">expand_minmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#expand_minmax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.expand_minmax" title="Link to this definition">¶</a></dt>
+<dd><p>Iterates thru a list of indices and categories, 
+substitutes an index in a variable name with a corresponding category, 
+and builds a list of new variables.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param b<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if minimum and False if maximum.</p>
+</dd>
+<dt class="field-even">type b<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">param sets<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of categories.</p>
+</dd>
+<dt class="field-even">type sets<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict.</p>
+</dd>
+<dt class="field-odd">param indices<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of indeces.</p>
+</dd>
+<dt class="field-even">type indices<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param txt<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Text.</p>
+</dd>
+<dt class="field-even">type txt<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Text representation of min/max operation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.expand_obj_func_sum">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">expand_obj_func_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">categories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#expand_obj_func_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.expand_obj_func_sum" title="Link to this definition">¶</a></dt>
+<dd><p>Iterates thru a list of indices and categories, 
+substitutes an index in a variable name with a corresponding category, 
+and builds a list of new variables.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param categories<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Categories.</p>
+</dd>
+<dt class="field-even">type categories<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param sub<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sub-string to replace.</p>
+</dd>
+<dt class="field-even">type sub<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param expr<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Text.</p>
+</dd>
+<dt class="field-even">type expr<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Text representation of sum operation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.expand_prod">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">expand_prod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#expand_prod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.expand_prod" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.expand_sum">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">expand_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#expand_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.expand_sum" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.expand_sum_or_prod">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">expand_sum_or_prod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#expand_sum_or_prod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.expand_sum_or_prod" title="Link to this definition">¶</a></dt>
+<dd><p>Iterates thru a list of indices and categories,  
+substitutes an index in a variable name with a corresponding category,  
+and builds a list of new variables.</p>
+<dl class="simple">
+<dt>Parameters: </dt><dd><dl class="field-list simple">
+<dt class="field-odd">param sets<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of categories.</p>
+</dd>
+<dt class="field-even">type sets<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict.</p>
+</dd>
+<dt class="field-odd">param indices<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of indeces.</p>
+</dd>
+<dt class="field-even">type indices<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param txt<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Text.</p>
+</dd>
+<dt class="field-even">type txt<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param symb<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Symbol “+” or “*”.</p>
+</dd>
+<dt class="field-even">type txt<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Text representation of summation or product operation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.fix">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">fix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eqs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_eqs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#fix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.fix" title="Link to this definition">¶</a></dt>
+<dd><p>Get equations, label of equations and complemtarity conditions.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param eqs<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Equations.</p>
+</dd>
+<dt class="field-even">type eqs<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param model_eqs<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model equations to solve.</p>
+</dd>
+<dt class="field-even">type model_eqs<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of equations and complemtarity conditions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.getConstraints">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">getConstraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eqLabels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacobian</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#getConstraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.getConstraints" title="Link to this definition">¶</a></dt>
+<dd><p>Build linear constraints.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.getIndex">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">getIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#getIndex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.getIndex" title="Link to this definition">¶</a></dt>
+<dd><p>Find the first matching occurance of open bracket.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param e<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Expression.</p>
+</dd>
+<dt class="field-even">type e<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param ind<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Starting index.</p>
+</dd>
+<dt class="field-even">type ind<span class="colon">:</span></dt>
+<dd class="field-even"><p>int.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Index of the matching open bracket.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.getLabels">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">getLabels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#getLabels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.getLabels" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.getLimits">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">getLimits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cal</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#getLimits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.getLimits" title="Link to this definition">¶</a></dt>
+<dd><p>Find variables upper and lower limits.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.importModel">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">importModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fpath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#importModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.importModel" title="Link to this definition">¶</a></dt>
+<dd><p>Parse a model file and create a model object.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param fpath<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path to model file.</p>
+</dd>
+<dt class="field-even">type fpath<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.loadLibrary">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">loadLibrary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#loadLibrary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.loadLibrary" title="Link to this definition">¶</a></dt>
+<dd><p>Simple example of loading and using the system C library from Python.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.plot">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">par</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">par_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xLabel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yLabel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">6)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot bar graphs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.print_path_solution_status">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">print_path_solution_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#print_path_solution_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.print_path_solution_status" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.optimization.util.replace_all">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.optimization.util.</span></span><span class="sig-name descname"><span class="pre">replace_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/optimization/util.html#replace_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.optimization.util.replace_all" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.optimization">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.numeric.optimization" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+  <li><a href="snowdrop.src.numeric.html">snowdrop.src.numeric package</a><ul>
+      <li>Previous: <a href="snowdrop.src.numeric.grids.html" title="previous chapter">snowdrop.src.numeric.grids package</a></li>
+      <li>Next: <a href="snowdrop.src.numeric.sa.html" title="next chapter">snowdrop.src.numeric.sa package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.numeric.optimization.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

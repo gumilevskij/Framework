@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>src.numeric package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="src-numeric-package">
+<h1>src.numeric package<a class="headerlink" href="#src-numeric-package" title="Link to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="src.numeric.bayes.html">src.numeric.bayes package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.bayes.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.bayes.html#src-numeric-bayes-mcmc-module">src.numeric.bayes.mcmc module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.bayes.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.numeric.dp.html">src.numeric.dp package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#src-numeric-dp-bellman-module">src.numeric.dp.bellman module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#src-numeric-dp-collard-module">src.numeric.dp.collard module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#src-numeric-dp-discrete-module">src.numeric.dp.discrete module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#src-numeric-dp-grids-module">src.numeric.dp.grids module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#src-numeric-dp-hjb-module">src.numeric.dp.hjb module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#src-numeric-dp-olg-module">src.numeric.dp.olg module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#src-numeric-dp-tauchen-module">src.numeric.dp.tauchen module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#src-numeric-dp-test-module">src.numeric.dp.test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#src-numeric-dp-util-module">src.numeric.dp.util module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.dp.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.numeric.estimation.html">src.numeric.estimation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.estimation.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.estimation.html#src-numeric-estimation-estimate-module">src.numeric.estimation.estimate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.estimation.html#src-numeric-estimation-test-grad-module">src.numeric.estimation.test_grad module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.estimation.html#src-numeric-estimation-test-mle-module">src.numeric.estimation.test_mle module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.estimation.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.numeric.filters.html">src.numeric.filters package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.filters.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.filters.html#src-numeric-filters-diffuse-module">src.numeric.filters.diffuse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.filters.html#src-numeric-filters-filter-module">src.numeric.filters.filter module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.filters.html#src-numeric-filters-filters-module">src.numeric.filters.filters module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.filters.html#src-numeric-filters-particle-module">src.numeric.filters.particle module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.filters.html#src-numeric-filters-pykalman-module">src.numeric.filters.pykalman module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.filters.html#src-numeric-filters-unscented-module">src.numeric.filters.unscented module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.filters.html#src-numeric-filters-utils-module">src.numeric.filters.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.filters.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.numeric.grids.html">src.numeric.grids package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.grids.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.grids.html#src-numeric-grids-grid-module">src.numeric.grids.grid module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.grids.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.numeric.optimization.html">src.numeric.optimization package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.optimization.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.optimization.html#src-numeric-optimization-optimize-module">src.numeric.optimization.optimize module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.optimization.html#src-numeric-optimization-test-module">src.numeric.optimization.test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.optimization.html#src-numeric-optimization-util-module">src.numeric.optimization.util module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.optimization.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.numeric.sa.html">src.numeric.sa package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.sa.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.sa.html#src-numeric-sa-test-x13-module">src.numeric.sa.test_x13 module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.sa.html#src-numeric-sa-x13-module">src.numeric.sa.x13 module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.sa.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.numeric.solver.html">src.numeric.solver package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-ablr-module">src.numeric.solver.ABLR module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-andersonmoore-module">src.numeric.solver.AndersonMoore module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-benes-module">src.numeric.solver.Benes module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-binderpesaran-module">src.numeric.solver.BinderPesaran module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-lbj-module">src.numeric.solver.LBJ module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-villemot-module">src.numeric.solver.Villemot module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-linear-solver-module">src.numeric.solver.linear_solver module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-nonlinear-solver-module">src.numeric.solver.nonlinear_solver module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-solver-module">src.numeric.solver.solver module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-solvers-module">src.numeric.solver.solvers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-tunes-module">src.numeric.solver.tunes module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#src-numeric-solver-util-module">src.numeric.solver.util module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.numeric.solver.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/src.numeric.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

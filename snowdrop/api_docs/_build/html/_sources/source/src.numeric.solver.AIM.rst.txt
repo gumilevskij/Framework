@@ -1,0 +1,117 @@
+src.numeric.solver.AIM package
+==============================
+
+Submodules
+----------
+
+src.numeric.solver.AIM.AIMsolver module
+---------------------------------------
+
+.. automodule:: src.numeric.solver.AIM.AIMsolver
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.Aimerr module
+------------------------------------
+
+.. automodule:: src.numeric.solver.AIM.Aimerr
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.Amalg module
+-----------------------------------
+
+.. automodule:: src.numeric.solver.AIM.Amalg
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.Eigensystem module
+-----------------------------------------
+
+.. automodule:: src.numeric.solver.AIM.Eigensystem
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.Obstruct module
+--------------------------------------
+
+.. automodule:: src.numeric.solver.AIM.Obstruct
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.Shifts module
+------------------------------------
+
+.. automodule:: src.numeric.solver.AIM.Shifts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.buildA module
+------------------------------------
+
+.. automodule:: src.numeric.solver.AIM.buildA
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.checkA module
+------------------------------------
+
+.. automodule:: src.numeric.solver.AIM.checkA
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.copyW module
+-----------------------------------
+
+.. automodule:: src.numeric.solver.AIM.copyW
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.makeF module
+-----------------------------------
+
+.. automodule:: src.numeric.solver.AIM.makeF
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.makePhi module
+-------------------------------------
+
+.. automodule:: src.numeric.solver.AIM.makePhi
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.makeVartheta module
+------------------------------------------
+
+.. automodule:: src.numeric.solver.AIM.makeVartheta
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.numeric.solver.AIM.reducedForm module
+-----------------------------------------
+
+.. automodule:: src.numeric.solver.AIM.reducedForm
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: src.numeric.solver.AIM
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.numeric.grids package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.numeric.optimization package" href="snowdrop.src.numeric.optimization.html" />
+    <link rel="prev" title="snowdrop.src.numeric.filters package" href="snowdrop.src.numeric.filters.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-numeric-grids-package">
+<h1>snowdrop.src.numeric.grids package<a class="headerlink" href="#snowdrop-src-numeric-grids-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.numeric.grids.grid">
+<span id="snowdrop-src-numeric-grids-grid-module"></span><h2>snowdrop.src.numeric.grids.grid module<a class="headerlink" href="#module-snowdrop.src.numeric.grids.grid" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.CartesianGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">CartesianGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#CartesianGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.CartesianGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.grids.grid.Grid" title="snowdrop.src.numeric.grids.grid.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>CartesianGrid is a sub-class of Grid class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.CartesianGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cartesian'</span></em><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.CartesianGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.EmptyGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">EmptyGrid</span></span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#EmptyGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.EmptyGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.grids.grid.Grid" title="snowdrop.src.numeric.grids.grid.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>EmptyGrid is a sub-class of Grid class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.EmptyGrid.n_nodes">
+<span class="sig-name descname"><span class="pre">n_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#EmptyGrid.n_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.EmptyGrid.n_nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.EmptyGrid.node">
+<span class="sig-name descname"><span class="pre">node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#EmptyGrid.node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.EmptyGrid.node" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.EmptyGrid.nodes">
+<span class="sig-name descname"><span class="pre">nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#EmptyGrid.nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.EmptyGrid.nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.EmptyGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'empty'</span></em><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.EmptyGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.Grid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">Grid</span></span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#Grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.Grid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Grid class is a parent class of EmptyGrid, PointGrid, UnstructuredGrid, 
+CartesianGrid, NonUniformCartesianGrid, and SmolyakGrid sub-classes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.Grid.n_nodes">
+<span class="sig-name descname"><span class="pre">n_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#Grid.n_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.Grid.n_nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.Grid.node">
+<span class="sig-name descname"><span class="pre">node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#Grid.node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.Grid.node" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.Grid.nodes">
+<span class="sig-name descname"><span class="pre">nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#Grid.nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.Grid.nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.NonUniformCartesianGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">NonUniformCartesianGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#NonUniformCartesianGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.NonUniformCartesianGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.grids.grid.Grid" title="snowdrop.src.numeric.grids.grid.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>NonUniformCartesianGrid is a sub-class of Grid class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.NonUniformCartesianGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NonUniformCartesian'</span></em><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.NonUniformCartesianGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.PointGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">PointGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#PointGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.PointGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.grids.grid.Grid" title="snowdrop.src.numeric.grids.grid.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>PointGrid is a sub-class of Grid class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.PointGrid.n_nodes">
+<span class="sig-name descname"><span class="pre">n_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#PointGrid.n_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.PointGrid.n_nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.PointGrid.node">
+<span class="sig-name descname"><span class="pre">node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#PointGrid.node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.PointGrid.node" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.PointGrid.nodes">
+<span class="sig-name descname"><span class="pre">nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#PointGrid.nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.PointGrid.nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.PointGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'point'</span></em><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.PointGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.SmolyakGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">SmolyakGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#SmolyakGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.SmolyakGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.grids.grid.Grid" title="snowdrop.src.numeric.grids.grid.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>SmolyakGrid is a sub-class of Grid class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.SmolyakGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Smolyak'</span></em><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.SmolyakGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.UnstructuredGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">UnstructuredGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#UnstructuredGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.UnstructuredGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.grids.grid.Grid" title="snowdrop.src.numeric.grids.grid.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>UnstructuredGrid is a sub-class of Grid class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.UnstructuredGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'unstructured'</span></em><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.UnstructuredGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.cat_grids">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">cat_grids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#cat_grids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.cat_grids" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.mlinspace">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">mlinspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orders</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#mlinspace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.mlinspace" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.n_nodes">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">n_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#n_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.n_nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.node">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.node" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.nodes">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.grids.grid.prod">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.grids.grid.</span></span><span class="sig-name descname"><span class="pre">prod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/grids/grid.html#prod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.grids.grid.prod" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.grids">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.numeric.grids" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+  <li><a href="snowdrop.src.numeric.html">snowdrop.src.numeric package</a><ul>
+      <li>Previous: <a href="snowdrop.src.numeric.filters.html" title="previous chapter">snowdrop.src.numeric.filters package</a></li>
+      <li>Next: <a href="snowdrop.src.numeric.optimization.html" title="next chapter">snowdrop.src.numeric.optimization package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.numeric.grids.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
