@@ -63,6 +63,9 @@ def makedata(Plot=False,save=False):
                 d[name[:-2]] = df_adj["Adjusted"]
                 lst.append((series,df_adj))
                 
+    # GDP,_ = hpf(data=d["GDP"], lmbd=10)
+    # d["GDP"] = pd.Series(GDP,d["GDP"].index)
+    
     ## Make log of variables
     exceptions = ['RS','RS_RW','D4L_CPI_TAR']
     m = {}
@@ -105,6 +108,7 @@ def makedata(Plot=False,save=False):
     
     ## Foreign Output gap - HP filter with judgements
     d["L_GDP_RW_BAR_PURE"], d["L_GDP_RW_GAP_PURE"] = hpf(d["L_GDP_RW"],lmbd=1600)
+    d["DLA_Z_BAR"], _ = hpf(d["DLA_Z"],lmbd=1000)
     
     ## Expert judgement on the foreign output gap
     # Make sure that the last 5-6 observations by the HP filter correspond  
@@ -134,6 +138,18 @@ def makedata(Plot=False,save=False):
     file_path = os.path.abspath(os.path.join(working_dir,"snowdrop/data/MPAF/history_new.csv"))
     dbsave(fname=file_path,data=d,variables=var,prefix="OBS_") 
 
+    # # Compare
+    # df1 = pd.read_csv(file_path.replace("_new.csv", ".csv"))
+    # df2 = pd.read_csv(file_path)
+    # for col in df1.columns:
+    #     if col in df2.columns:
+    #         series = [[df1[col], df2[col]]]
+    #         labels = [["original", "new"]]
+    #         plotTimeSeries(path_to_dir=path_to_dir, header=None, titles=[
+    #                        col], labels=labels, series=series, sizes=[1, 1], fig_sizes=(8, 6), save=False)
+    #     else:
+    #         print(col)
+            
     ## Take time slice of data
     for n in d:
         d[n] = d[n]['1997-1-1':'2013-1-1'].dropna()
