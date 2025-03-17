@@ -55,9 +55,9 @@ def emulateModelLanguageOperators(equation,operator):
     while ind >=0:
         rest_eq = rest_eq[ind+len(operator):]
         arr1 = []; arr2 = []
-        for m in re.finditer("\(", rest_eq):
+        for m in re.finditer(r"\(", rest_eq):
             arr1.append(m.start())
-        for m in re.finditer("\)", rest_eq):
+        for m in re.finditer(r"\)", rest_eq):
             arr2.append(m.start())
         arr = sorted(arr1 + arr2)
         s = 0
@@ -81,7 +81,7 @@ def emulateModelLanguageOperators(equation,operator):
                 n = -1
             else:
                 ex = expr[1+ind:].replace(")","")
-                if re.match("\d+$", ex):
+                if re.match(r"\d+$", ex):
                     n = int(ex)
                     expr = expr[1:ind]
             if operator == "movavg":
@@ -96,7 +96,7 @@ def emulateModelLanguageOperators(equation,operator):
                 n = 4
             else:
                 ex = expr[1+ind:].replace(")","")
-                if re.match("\d+$", ex):
+                if re.match(r"\d+$", ex):
                     n = int(ex)
                     expr = expr[1:ind]
             if operator == "diff":
@@ -124,7 +124,12 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
     txtShocks=[];txtMeasVar=[];txtMeasEqs=[];txtMeasShocks=[];txtLegend=[]
     txtRange='';txtFreq='';txtDescription=''
     
-    text = read_and_combine_text(file_path,conditions=conditions)
+    if len(conditions) == 0:
+        with open(file_path,  encoding='utf8') as f:
+            text = f.read()
+            text = text.replace("^","**")
+    else:
+        text = read_and_combine_text(file_path,conditions=conditions)
     lines = text.split("\n")
                 
     # Parse model file
@@ -182,7 +187,7 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
     var = []; labels = []
     for t in txtEndogVars:
         s = t.replace('\t',' ').strip()
-        arr = [s for s in re.split("[);\W]+", s)]
+        arr = [s for s in re.split(r"[);\W]+", s)]
         v = arr[-1]
         var.append(v)
         lbl = t.replace(v,"").replace('"','').replace("'","").strip()
