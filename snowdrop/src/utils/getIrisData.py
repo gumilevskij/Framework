@@ -323,8 +323,8 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
 
 
 def getIrisModel(fpath,calibration={},options={},conditions={},use_cache=False,
-                     tag_variables="!transition_variables",tag_shocks = "!transition_shocks",
-                     tag_parameters = "!parameters",tag_equations = "!transition_equations",
+                     tag_variables=["!variables","!transition_variables"],tag_shocks = ["!shocks","!transition_shocks"],
+                     tag_parameters = "!parameters",tag_equations = ["!equations","!transition_equations"],
                      tag_measurement_variables="!measurement_variables",
                      tag_measurement_equations="!measurement_equations",
                      tag_measurement_shocks="!measurement_shocks",
@@ -452,10 +452,8 @@ def getIrisModel(fpath,calibration={},options={},conditions={},use_cache=False,
 
 if __name__ == '__main__':
     """The main program."""
-    #fpath = os.path.abspath(os.path.join(path,'../../models/ICD/FPP/model.model'))
-    #fpath = os.path.abspath(os.path.join(path,'../../models/ICD/GH/model.model'))
-    fpath = os.path.abspath(os.path.join(path,'../../models/QPM/model_Lshocks.model'))
-    model = getIrisModel(fpath=fpath,conditions={"fiscalswitch":False,"wedgeswitch":True},debug=False)
+    fpath = os.path.abspath(os.path.join(path,'../../models/TOY/RBC.model'))
+    model = getIrisModel(fpath=fpath,debug=False)
     print(model)
    
  
