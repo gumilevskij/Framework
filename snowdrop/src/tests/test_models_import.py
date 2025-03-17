@@ -70,12 +70,10 @@ def test_model_import(file_path, list_variables, list_shocks, shocks, list_title
         plotTimeSeries(path_to_dir=path_to_dir,header=header,titles=titles,labels=labels,series=series,sizes=sizes)
     
 
-if __name__ == '__main__':
+def test(rng,freq):
     """
     Main program.
     """
-    rng =  ["2025-1-1","2035-1-1"]; freq = 1 # Quarterly
-    
     # 1. Yaml model file
     # Unit shock to nominal interest rate
     file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/MPAF/model.yaml'))
@@ -92,3 +90,11 @@ if __name__ == '__main__':
     file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/TOY/RBC.model'))
     test_model_import(file_path=file_path,list_variables=['Y','C','K','r','A'],list_shocks=['ea'],shocks=[0.1],list_titles=['Macroeconomic Variables'],
                       irf=False,calibration=calib_params,freq=freq,rng=rng,sizes=[3,2])
+
+
+if __name__ == '__main__':
+    """
+    Main program.
+    """
+    rng =  ["2025-1-1","2035-1-1"]; freq = 1 # Quarterly
+    test(rng,freq)
