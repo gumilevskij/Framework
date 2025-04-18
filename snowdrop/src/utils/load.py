@@ -582,7 +582,23 @@ def loadYaml(path,txt):
                     comments.append(' ')
     
     if version >= '0.18':
-        data = yaml.YAML(typ='safe').load(txt)
+        import snowdrop.src.preprocessor.language as module
+        def my_constructor(loader,node):
+            t = node.tag.replace("!","")
+            value = loader.construct_mapping(node)
+            class_ = getattr(module, t)
+            return class_(**value)
+        obj = yaml.YAML(typ='safe')
+        obj.constructor.add_constructor(tag='!Normal',constructor=my_constructor)
+        obj.constructor.add_constructor(tag='!MvNormal',constructor=my_constructor)
+        obj.constructor.add_constructor(tag='!LogNormal',constructor=my_constructor)
+        obj.constructor.add_constructor(tag='!Beta',constructor=my_constructor)
+        obj.constructor.add_constructor(tag='!Binomial',constructor=my_constructor)
+        obj.constructor.add_constructor(tag='!Gamma',constructor=my_constructor)
+        obj.constructor.add_constructor(tag='!Logistic',constructor=my_constructor)
+        obj.constructor.add_constructor(tag='!Uniform',constructor=my_constructor)
+        obj.constructor.add_constructor(tag='!Cartesian',constructor=my_constructor)
+        data = obj.load(txt)
     else:
         data = yaml.load(txt, Loader=yaml.Loader)
     
