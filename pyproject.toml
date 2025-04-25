@@ -7,7 +7,7 @@ authors = ["Alexei Goumilevski <agoumilevski@hotmail.com>",
 maintainers = ["Alexei Goumilevski <Agoumilevski@hotmail.com>",
                "James Otterson <jjotterson@gmail.com>"]
 license = "LGPL-3.0-or-later"
-readme =  "snowdrop/docs/README.md"
+readme =  "README.md"
 keywords = ["DSGE", "Macroeconomic Modeling"]
 classifiers=[
     "Programming Language :: Python",
