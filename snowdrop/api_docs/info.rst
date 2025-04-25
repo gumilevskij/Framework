@@ -5,7 +5,7 @@ This framework is a work in progress. The aim of this project was to develop a u
 Contents
 --------
 
- * How to run models (see `<../../../docs/README.md>`_)
+ * How to run models (see `<../../../README.md>`_)
  * Sample model file (see `<../../../models/TOY/JLMP98.yaml>`_)
  * Documentation (see `<../../../docs/UserGuide.pdf>`_)
  * Paper (see `<../../../docs/Paper(2021).pdf>`_)
