@@ -4,7 +4,7 @@
 * Writing and improving the documentation
 * Reporting or fixing bugs
 * Contributing features or enhancements
-* Writing model YAML model files and applying *Snowdrop* to solve those models
+* Writing model files in YAML format and applying *Snowdrop* to solve those models
 * Creating demonstration projects or tutorials
 
 
