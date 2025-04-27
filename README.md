@@ -3,8 +3,9 @@
 ## Authors: Alexei Goumilevski and James Otterson
  
 ## What it is:
-This Framework aims to help economists to ease development and run 
-of Dynamic Stochastic General Equilibrium (DSGE) models in Python environment.
+This Framework aims to help economists to ease development and run of Dynamic Stochastic General Equilibrium (DSGE) models in Python environment.
+DSGE models utilize macroeconomic theory to analyze behavior in time of macroeconomic agents under uncertainty. They are used for policy analisys, forecasting,
+and historical data explanation.
 
 ## Installation:
 
