@@ -598,7 +598,6 @@ def find_steady_state(model):
     if bFlip:
         # Indices of the flipped variables
         ind_flipped = [i for i,x in enumerate(ss_variables) if x in model.flippedEndogVariables]
-        z[ind_flipped] = p[model.indexOfFlippedExogVariables]
         # Indices of the rest of variables
         ind_rest = [i for i in range(len(ss_variables)) if not i in ind_flipped]
 
@@ -607,7 +606,7 @@ def find_steady_state(model):
         # y = fsolve(func=fobj,x0=x,fprime=fjacob,xtol=TOLERANCE,maxfev=NITERATIONS)
         # err = la.norm(fobj(y)) 
         # Methods: 'hybr','lm','broyden1','broyden2','anderson','linearmixing','diagbroyden','excitingmixing','krylov','df-sane'
-        if not model.indexOfFlippedEndogVariables is None and not model.indexOfFlippedExogVariables is None:
+        if bFlip:
             sol = root(fobj,x0=z,method='broyden1',tol=TOLERANCE)
         else:
             try:
@@ -615,6 +614,10 @@ def find_steady_state(model):
             except:    
                 sol = root(fobj,x0=z,jac=None,method='lm',tol=TOLERANCE,options={"maxiter":NITERATIONS})    
         y = sol.x
+        if bFlip:
+            p[model.indexOfFlippedExogVariables] = y[ind_flipped]
+            y[ind_flipped] = z[ind_flipped]
+            model.calibration['parameters'] = p
         success = sol.success
         err = la.norm(sol.fun)
         bConverged = err < TOLERANCE
@@ -783,10 +786,11 @@ def get_steady_state(model,x0,ss_variables=None,p=None,e=None):
 
 def predict(model:Model,T:int,y:np.array,params:list=None,shocks:list=None,debug=False) -> np.array:
     """
-    Solve backward looking nonlinear model equations.
+    Solve backward looking nonlinear model equations by minimizing equations residuals
+    at each time step.
 
     .. note::
-        This code was developed to solve IMFE aplication.  It doesn't
+        This code was developed to solve IMFE model.  Equations don't
         have lead variables nor shocks.
     
     Parameters:
@@ -843,8 +847,8 @@ def predict(model:Model,T:int,y:np.array,params:list=None,shocks:list=None,debug
         return jacob[:,n:2*n]
     
     err = np.zeros(T)
-
-    for t in range(-2,T+1):
+    
+    for t in range(-2,T+2):
         tp = max(0,t); tp1 = max(0,t+1); tm1 = max(0,t-1)
         shk = shocks[tm1] if not shocks is None and tp <= len(shocks) else np.zeros(n_shk)
         par = params if nd == 1 else params[:,min(t,params.shape[1]-1)]
@@ -862,8 +866,8 @@ def predict(model:Model,T:int,y:np.array,params:list=None,shocks:list=None,debug
     # Impose continuity of slope or value.
     if len(y) > 1:
         y[-1] = y[-2]
-    # if len(y) > 2:
-    #     y[-1] = 2*y[-2]-y[-3]
+    if len(y) > 2:
+        y[-1] = 2*y[-2]-y[-3]
         
     if debug:
         var = model.symbols["variables"]
