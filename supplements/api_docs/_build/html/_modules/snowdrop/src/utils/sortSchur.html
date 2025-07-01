@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.utils.sortSchur &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.utils.sortSchur</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Python version of the following original work:</span>
+<span class="sd">  Title:	Sorting Real Schur Forms</span>
+<span class="sd">  Author:	Jan Brandts</span>
+<span class="sd">  E-Mail:	brandts-AT-science.uva.nl</span>
+<span class="sd">  http://m2matlabdb.ma.tum.de/download.jsp?MC_ID=3&amp;MP_ID=119</span>
+<span class="sd">  http://dx.doi.org/10.1002/nla.274</span>
+<span class="sd">  Institution:	University of Amsterdam</span>
+<span class="sd">  Description:	In Matlab 6, there exists a command to generate a real Schur form, wheras another transforms a real</span>
+<span class="sd">  Schur form into a complex one. There do not exist commands to prescribe the order in which the eigenvalues appear on</span>
+<span class="sd">  the diagonal of the upper (quasi-) triangular factor T.</span>
+<span class="sd">  For the complex case, a routine is sketched in Golub and Van Loan (1996), that orders the diagonal of T according to</span>
+<span class="sd">  their distance to a target value. In the reference below, we give a Matlab routine to sort real Schur forms in Matlab.</span>
+<span class="sd">  It is based on a block-swapping procedure by Bai and Demmel (1993).</span>
+<span class="sd"> </span>
+<span class="sd">  Sorting real Schur forms, both partially and completely, has important applications in the computation of real</span>
+<span class="sd">  invariant subspaces.</span>
+<span class="sd">  J.H. Brandts</span>
+<span class="sd">  Matlab code for sorted real Schur forms</span>
+<span class="sd">  Numerical Linear Algebra with Applications 9(3):249-261 (2002)</span>
+<span class="sd">  Keywords:	Real Schur Form, sorting, Bai-Demmel algorithm, swapping</span>
+<span class="sd">  Based on the original Matlab File Version: 1.0</span>
+
+<span class="sd">  Git: https://gist.github.com/fabian-paul/14679b43ed27aa25fdb8a2e8f021bad5</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">expensive_asserts</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="sort_schur_decomposition">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.sortSchur.sort_schur_decomposition">[docs]</a>
+<span class="k">def</span> <span class="nf">sort_schur_decomposition</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param Q: np.array((N, N))</span>
+<span class="sd">            orthogonal real Q such that AQ=QR</span>
+<span class="sd">        :param R: np.array((N, N))</span>
+<span class="sd">            quasi-triangular real R such that AQ=QR</span>
+<span class="sd">        :param z: complex</span>
+<span class="sd">            target z in the complex plane</span>
+<span class="sd">            if z==float(&#39;inf&#39;), order eigenvalues decreasingly by magnitude</span>
+<span class="sd">        :param b: float</span>
+<span class="sd">            determines the length of the ordering with respect to z to be produced</span>
+<span class="sd">            * if b &lt; 0 then -b blocks will be sorted,</span>
+<span class="sd">            * if b &gt; 0 then  b or b+1 eigenvalues will be sorted, depending on the sizes of the blocks,</span>
+<span class="sd">            * if b = 0 then the whole Schur form will be sorted.</span>
+<span class="sd">    </span>
+<span class="sd">        :return: Q, R, ap</span>
+<span class="sd">     </span>
+<span class="sd">            * A vector ap warns for inaccuracy of the solution if an entry of ap exceeds one.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="o">*</span><span class="n">eps</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;R is not block-triangular&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inplace</span><span class="p">:</span>
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="o">*</span><span class="n">eps</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># detect subdiagonal nonzero entries</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># construct from them a vector s with the-top left positions of each block</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># will hold the eigenvalues</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>  <span class="c1"># debug</span>
+        <span class="k">assert</span> <span class="n">R</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="o">*</span><span class="n">eps</span>  <span class="c1"># debug</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>  <span class="c1"># ranging over all blocks</span>
+        <span class="n">sk</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">sk</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># if the block is 2x2</span>
+            <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">sk</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># normalize it</span>
+            <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">R</span><span class="p">[</span><span class="n">sk</span><span class="p">,</span> <span class="n">sk</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">scimath</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">sk</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sk</span><span class="p">]</span><span class="o">*</span><span class="n">R</span><span class="p">[</span><span class="n">sk</span><span class="p">,</span> <span class="n">sk</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>  <span class="c1"># store the eigenvalues</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># (the one with the positive imaginary part is sufficient)</span>
+            <span class="k">assert</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">sk</span> <span class="o">==</span> <span class="mi">1</span>  <span class="c1"># debug</span>
+            <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">R</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span>  <span class="c1"># if the block is 1x1, only store the eigenvalue</span>
+
+    <span class="n">ap</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">swaplist</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>  <span class="c1"># For k ranging over all neighbor-swaps</span>
+        <span class="k">assert</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>  <span class="c1"># debug</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>  <span class="c1"># collect the coordinates of the blocks</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]))</span>
+        <span class="k">assert</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># debug</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span> <span class="k">assert</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># debug</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span> <span class="k">assert</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># debug</span>
+        <span class="k">if</span> <span class="n">__debug__</span> <span class="ow">and</span> <span class="n">expensive_asserts</span><span class="p">:</span>  <span class="c1"># debug: check that we are moving the larger eigenvalues to the left (expensive test)</span>
+            <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>  <span class="c1"># debug</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]]</span> <span class="c1"># debug</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">which</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>  <span class="c1"># debug</span>
+                <span class="k">assert</span> <span class="n">which</span><span class="o">==</span><span class="mi">1</span>  <span class="c1"># debug</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># debug</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span>  <span class="c1"># debug</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">which</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>  <span class="c1"># debug</span>
+                <span class="k">assert</span> <span class="n">which</span><span class="o">==</span><span class="mi">1</span>  <span class="c1"># debug</span>
+        <span class="n">vw</span> <span class="o">=</span> <span class="n">v</span> <span class="o">+</span> <span class="n">w</span>
+        <span class="n">nrA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">vw</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">vw</span><span class="p">],</span> <span class="nb">ord</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>  <span class="c1"># compute norm of the matrix A from (6)</span>
+        <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">swap</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># swap the blocks</span>
+        <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>  <span class="c1"># debug</span>
+        <span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># update positions of blocks</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>  <span class="c1"># update block-coordinates</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>  <span class="c1"># if the first block is 2 x 2</span>
+            <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># normalize it</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>  <span class="c1"># if the second block is 2 x 2</span>
+            <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># normalize it</span>
+        <span class="n">ap</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">v</span><span class="p">],</span> <span class="nb">ord</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">eps</span><span class="o">*</span><span class="n">nrA</span><span class="p">))</span>  <span class="c1"># measure size of bottom-left block (see p.6, Sect. 2.3)</span>
+
+    <span class="n">R</span> <span class="o">=</span> <span class="n">R</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Zero the below-block entries</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>  <span class="c1"># to get a quasi-triangle again</span>
+        <span class="n">R</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">ap</span></div>
+
+
+<span class="c1">#r = find(abs(diag(R,-1)) &gt; 100*eps);</span>
+<span class="c1">#s = 1:size(R,1)+1;</span>
+<span class="c1">#s(r+1) = [];</span>
+<span class="c1">#</span>
+<span class="c1">#for k=1:length(s)-1;</span>
+<span class="c1">#  sk = s(k);</span>
+<span class="c1">#  if s(k+1)-sk == 2</span>
+<span class="c1">#    [Q,R] = normalize(Q,R,sk:s(k+1)-1);</span>
+<span class="c1">#    p(k)  = R(sk,sk)+sqrt(R(sk+1,sk)*R(sk,sk+1));</span>
+<span class="c1">#  else</span>
+<span class="c1">#    p(k)  = R(s(k),s(k));</span>
+<span class="c1"># end</span>
+<span class="c1">#end</span>
+<span class="c1">#</span>
+<span class="c1">#for k = swaplist(p,s,z,b);</span>
+<span class="c1">#  v      = s(k):s(k+1)-1;</span>
+<span class="c1">#  w      = s(k+1):s(k+2)-1;</span>
+<span class="c1">#  nrA    = norm(R([v,w],[v,w]),inf);</span>
+<span class="c1">#  [Q,R]  = swap(Q,R,v,w);</span>
+<span class="c1">#  s(k+1) = s(k)+s(k+2)-s(k+1);</span>
+<span class="c1">#  v      = s(k):s(k+1)-1;</span>
+<span class="c1">#  w      = s(k+1):s(k+2)-1;</span>
+<span class="c1">#  if length(v)==2</span>
+<span class="c1">#    [Q,R] = normalize(Q,R,v);</span>
+<span class="c1">#  end</span>
+<span class="c1">#  if length(w)==2</span>
+<span class="c1">#    [Q,R] = normalize(Q,R,w);</span>
+<span class="c1">#  end</span>
+<span class="c1">#  ap(k)  = norm(R(w,v),inf)/(10*eps*nrA);</span>
+<span class="c1"># end</span>
+<span class="c1">#</span>
+<span class="c1"># R = R - tril(R,-2);</span>
+<span class="c1"># for j=2:length(s)-1; R(s(j),s(j)-1)=0; end</span>
+
+
+<div class="viewcode-block" id="normalize">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.sortSchur.normalize">[docs]</a>
+<span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Applies a Givens rotation such that the two-by-two diagonal block of S situated at diagonal positions v[0], v[1] is in standardized form.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param U:</span>
+<span class="sd">        :param S:</span>
+<span class="sd">        :param v:</span>
+<span class="sd">        :return:</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">rot</span><span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">v</span><span class="p">])</span>  <span class="c1"># Determine the Givens rotation needed for standardization -</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inplace</span><span class="p">:</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">S</span><span class="p">[:,</span> <span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">S</span><span class="p">[:,</span> <span class="n">v</span><span class="p">],</span> <span class="n">Q</span><span class="p">)</span>  <span class="c1"># and apply it left and right to S, and right to U.</span>
+    <span class="n">S</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">S</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="p">:])</span>  <span class="c1"># Only rows and columns with indices in the vector v can be affected by this.</span>
+    <span class="n">U</span><span class="p">[:,</span> <span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">[:,</span> <span class="n">v</span><span class="p">],</span> <span class="n">Q</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">S</span></div>
+
+
+<span class="c1">#  function [U,S] = normalize(U,S,v);</span>
+<span class="c1">#  n  = size(S,1);</span>
+<span class="c1">#  Q  = rot(S(v,v));</span>
+<span class="c1">#  S(:,v) = S(:,v)*Q;</span>
+<span class="c1">#  S(v,:) = Q&#39;*S(v,:);</span>
+<span class="c1">#  U(:,v) = U(:,v)*Q;</span>
+
+
+<div class="viewcode-block" id="rot">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.sortSchur.rot">[docs]</a>
+<span class="k">def</span> <span class="nf">rot</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Computes a Givens rotation needed in `normalize`</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param X:</span>
+<span class="sd">        :return:</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Start with the identity transformation, and if needed, change it into ...</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+        <span class="n">tau</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">off</span> <span class="o">=</span> <span class="p">(</span><span class="n">tau</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="n">tau</span> <span class="o">-</span> <span class="n">off</span><span class="p">,</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">off</span><span class="p">]</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">v</span><span class="p">[</span><span class="n">w</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>  <span class="c1"># ... the cosine and sine as given in Section 2.3.1</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">w</span><span class="p">]</span><span class="o">*</span><span class="n">c</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">],</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Q</span></div>
+
+
+<span class="c1">#  function Q = rot(X);</span>
+<span class="c1">#  c = 1; s = 0;</span>
+<span class="c1">#  if X(1,1)~=X(2,2);</span>
+<span class="c1">#    tau   = (X(1,2)+X(2,1))/(X(1,1)-X(2,2));</span>
+<span class="c1">#    off   = sqrt(tau^2+1);</span>
+<span class="c1">#    v     = [tau - off, tau + off];</span>
+<span class="c1">#    [d,w] = min(abs(v));</span>
+<span class="c1">#    c     = 1/sqrt(1+v(w)^2);</span>
+<span class="c1">#    s     = v(w)*c;</span>
+<span class="c1">#  end</span>
+<span class="c1">#  Q = [c -s;s c];</span>
+
+
+<div class="viewcode-block" id="swaplist">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.sortSchur.swaplist">[docs]</a>
+<span class="k">def</span> <span class="nf">swaplist</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Produces the list v of swaps of neighboring blocks needed to order the eigenvalues assembled in the vector v</span>
+<span class="sd">     from closest to z to farthest away from z, taking into account the parameter b.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param p: list</span>
+<span class="sd">            list of eigenvalues (only one copy for each complex-conjugate pair)</span>
+<span class="sd">        :param s: list</span>
+<span class="sd">            list of the the-top left positions of each block</span>
+<span class="sd">        :param z: complex</span>
+<span class="sd">            target z in the complex plane</span>
+<span class="sd">        :param b: float</span>
+<span class="sd">            determines the length of the ordering with respect to z to be produced</span>
+<span class="sd">            * if b &lt; 0 then -b blocks will be sorted,</span>
+<span class="sd">            * if b &gt; 0 then  b or b+1 eigenvalues will be sorted, depending on the sizes of the blocks,</span>
+<span class="sd">            * if b = 0 then the whole Schur form will be sorted.</span>
+<span class="sd">        :return:</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">p_orig</span> <span class="o">=</span> <span class="n">p</span>  <span class="c1"># debug</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">srtd</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Number of sorted eigenvalues.</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>  <span class="c1"># Compute block sizes.</span>
+    <span class="n">q_orig</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="c1"># debug</span>
+    <span class="n">fini</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">fini</span><span class="p">:</span>
+        <span class="c1"># Determine which block will go to position k</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">:</span><span class="n">n</span><span class="p">],</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">p_j</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="c1"># debug</span>
+        <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">:</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">k</span><span class="p">]]</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">:</span><span class="n">n</span><span class="p">]</span>  <span class="c1"># insert this block at position k,</span>
+        <span class="k">assert</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">==</span><span class="n">p_j</span>  <span class="c1"># debug</span>
+        <span class="k">del</span> <span class="n">p</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># and remove it from where it was taken.</span>
+        <span class="k">if</span> <span class="n">expensive_asserts</span> <span class="ow">and</span> <span class="n">__debug__</span><span class="p">:</span> <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">==</span><span class="nb">sorted</span><span class="p">(</span><span class="n">p_orig</span><span class="p">))</span>  <span class="c1"># debug</span>
+        <span class="n">q_j</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span>  <span class="c1"># debug</span>
+        <span class="n">q</span><span class="p">[</span><span class="n">k</span><span class="p">:</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">k</span><span class="p">]]</span> <span class="o">+</span> <span class="n">q</span><span class="p">[</span><span class="n">k</span><span class="p">:</span><span class="n">n</span><span class="p">]</span>  <span class="c1"># Similar for the block-sizes</span>
+        <span class="k">assert</span> <span class="n">q</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">==</span> <span class="n">q_j</span>  <span class="c1"># debug</span>
+        <span class="k">del</span> <span class="n">q</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">expensive_asserts</span> <span class="ow">and</span> <span class="n">__debug__</span><span class="p">:</span> <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">q_orig</span><span class="p">))</span> <span class="c1"># debug</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">v</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="n">k</span><span class="p">))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Update the list of swaps for this block</span>
+        <span class="n">srtd</span> <span class="o">=</span> <span class="n">srtd</span> <span class="o">+</span> <span class="n">q</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>  <span class="c1"># Update the number of sorted eigenvalues</span>
+        <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">fini</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span> <span class="o">&gt;=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">k</span> <span class="o">==</span> <span class="o">-</span><span class="n">b</span> <span class="ow">or</span> <span class="n">srtd</span> <span class="o">==</span> <span class="n">b</span> <span class="ow">or</span> <span class="p">(</span><span class="n">srtd</span> <span class="o">==</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">v</span></div>
+
+
+<span class="c1">#  function v = swaplist(p,s,z,b);</span>
+<span class="c1">#  n = length(p);</span>
+<span class="c1">#  k = 0; v = [];</span>
+<span class="c1">#  srtd = 0;</span>
+<span class="c1">#  q = diff(s);</span>
+<span class="c1">#  fini = 0;</span>
+<span class="c1">#  while ~fini</span>
+<span class="c1">#    k        = k+1;</span>
+<span class="c1">#    [dum,j]  = select(p(k:n),z);</span>
+<span class="c1">#    p(k:n+1) = [p(j+k-1) p(k:n)];</span>
+<span class="c1">#    p(j+k)   = [];</span>
+<span class="c1">#    q(k:n+1) = [q(j+k-1) q(k:n)];</span>
+<span class="c1">#    q(j+k)   = [];</span>
+<span class="c1">#    v        = [v,j+k-2:-1:k];</span>
+<span class="c1">#    srtd     = srtd + q(k);</span>
+<span class="c1">#    fini     = (k==n-1)|(k==-b)|(srtd==b)|((srtd==b+1)&amp;(b~=0));</span>
+<span class="c1">#  end</span>
+
+
+<div class="viewcode-block" id="select">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.sortSchur.select">[docs]</a>
+<span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">bOrig</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Determined which element is next in the ordering.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param p:</span>
+<span class="sd">        :param z:</span>
+<span class="sd">        :return:</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+        <span class="k">return</span> <span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">pos</span><span class="p">]),</span> <span class="n">pos</span>
+    <span class="k">elif</span> <span class="n">bOrig</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span>  <span class="c1"># Move target to the upper half plane.</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span>  <span class="c1"># Find block closest to the target.</span>
+        <span class="k">return</span> <span class="n">delta</span><span class="p">[</span><span class="n">pos</span><span class="p">],</span> <span class="n">pos</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span>  <span class="c1"># Move target to the upper half plane.</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+        <span class="n">p1</span><span class="p">[</span><span class="n">p1</span><span class="o">&lt;</span><span class="nb">abs</span><span class="p">(</span><span class="n">y</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>  <span class="c1"># Find block furtherest to the target.</span>
+        <span class="k">return</span> <span class="n">p1</span><span class="p">[</span><span class="n">pos</span><span class="p">],</span> <span class="n">pos</span></div>
+
+
+<span class="c1">#  function [val,pos] = select(p,z);</span>
+<span class="c1">#  y = real(z)+abs(imag(z))*i;</span>
+<span class="c1">#  [val pos] = min(abs(p-y));</span>
+
+
+<div class="viewcode-block" id="swap">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.sortSchur.swap">[docs]</a>
+<span class="k">def</span> <span class="nf">swap</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Swaps the two diagonal blocks at positions symbolized by the entries of v and w.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param U:</span>
+<span class="sd">        :param S:</span>
+<span class="sd">        :param v:</span>
+<span class="sd">        :param w:</span>
+<span class="sd">        :return:</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">w</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># p and q are block sizes</span>
+    <span class="n">Ip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">Iq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">S</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">q</span><span class="p">)])</span>  <span class="c1"># Vectorize right-hand side for Kronecker product formulation of the Sylvester equations (7).</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">Iq</span><span class="p">,</span> <span class="n">S</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">v</span><span class="p">])</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">w</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Ip</span><span class="p">)</span>  <span class="c1"># Kronecker product system matrix.</span>
+    <span class="n">L</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">lu_complpiv</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># LU-decomposition of this matrix.</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">H</span><span class="p">)))</span>  <span class="c1"># Scaling factor to prevent overflow.</span>
+    <span class="n">sigp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">p</span><span class="o">*</span><span class="n">q</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="o">*</span><span class="n">q</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>  <span class="c1"># Implement permutation P of the LU-decomposition PAQ=LU ...</span>
+        <span class="n">sigp</span><span class="p">[[</span><span class="n">k</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">sigp</span><span class="p">[[</span><span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">k</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">e</span><span class="o">*</span><span class="n">r</span><span class="p">[</span><span class="n">sigp</span><span class="p">]</span>  <span class="c1"># ... scale and permute the right-hand side.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>  <span class="c1"># and solve the two triangular systems.</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">H</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>  <span class="c1"># and solve the two triangular systems.</span>
+    <span class="n">sigq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">p</span><span class="o">*</span><span class="n">q</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="o">*</span><span class="n">q</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>  <span class="c1"># Implement permutation Q of the LU-decomposition PAQ=LU ...</span>
+        <span class="n">sigq</span><span class="p">[[</span><span class="n">k</span><span class="p">,</span> <span class="n">Q</span><span class="p">[</span><span class="n">k</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">sigq</span><span class="p">[[</span><span class="n">Q</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">k</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">x</span><span class="p">[</span><span class="n">sigq</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># ... and permute the solution.</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="o">*</span><span class="n">p</span><span class="p">:(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">p</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">q</span><span class="p">)])</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># De-vectorize the solution back to a block, or, quit Kronecker formulation.</span>
+    <span class="n">Q</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="o">-</span><span class="n">X</span><span class="p">,</span> <span class="n">e</span><span class="o">*</span><span class="n">Iq</span><span class="p">)),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;complete&#39;</span><span class="p">)</span>  <span class="c1"># Householder QR-decomposition of X.</span>
+    <span class="n">vw</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inplace</span><span class="p">:</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">S</span><span class="p">[:,</span> <span class="n">vw</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">S</span><span class="p">[:,</span> <span class="n">vw</span><span class="p">],</span> <span class="n">Q</span><span class="p">)</span>  <span class="c1"># Perform the actual swap by left- and right-multiplication of S by Q,</span>
+    <span class="n">S</span><span class="p">[</span><span class="n">vw</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">S</span><span class="p">[</span><span class="n">vw</span><span class="p">,</span> <span class="p">:])</span>
+    <span class="n">U</span><span class="p">[:,</span> <span class="n">vw</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">[:,</span> <span class="n">vw</span><span class="p">],</span> <span class="n">Q</span><span class="p">)</span>  <span class="c1"># and, right-multiplication of U by Q</span>
+    <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">S</span></div>
+
+
+<span class="c1">#  function [U,S] = swap(U,S,v,w);</span>
+<span class="c1">#  [p,q] = size(S(v,w)); Ip = eye(p); Iq = eye(q);</span>
+<span class="c1">#  r = [];</span>
+<span class="c1">#  for j=1:q</span>
+<span class="c1">#    r = [r;S(v,w(j))];</span>
+<span class="c1">#  end</span>
+<span class="c1">#  K = kron(Iq,S(v,v))-kron(S(w,w)&#39;,Ip);</span>
+<span class="c1">#  [L,H,P,Q] = lu_complpiv(K);</span>
+<span class="c1">#  e = min(abs(diag(H)));</span>
+<span class="c1">#  sigp = 1:p*q;</span>
+<span class="c1">#  for k = 1:p*q-1;</span>
+<span class="c1">#    sigp([k,P(k)]) = sigp([P(k),k]);</span>
+<span class="c1">#  end</span>
+<span class="c1">#  r = e*r(sigp);</span>
+<span class="c1">#  x = (H\(L\r));</span>
+<span class="c1">#  sigq = 1:p*q;</span>
+<span class="c1">#  for k = 1:p*q-1;</span>
+<span class="c1">#    sigq([k,Q(k)]) = sigq([Q(k),k]);</span>
+<span class="c1">#  end</span>
+<span class="c1">#  x(sigq) = x;</span>
+<span class="c1">#  X = [];</span>
+<span class="c1">#  for j=1:q</span>
+<span class="c1">#    X = [X,x((j-1)*p+1:j*p)];</span>
+<span class="c1">#  end</span>
+<span class="c1">#  [Q,R]      = qr([-X;e*Iq]);</span>
+<span class="c1">#  S(:,[v,w]) = S(:,[v,w])*Q;</span>
+<span class="c1">#  S([v,w],:) = Q&#39;*S([v,w],:);</span>
+<span class="c1">#  U(:,[v,w]) = U(:,[v,w])*Q;</span>
+
+
+<div class="viewcode-block" id="lu_complpiv">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.sortSchur.lu_complpiv">[docs]</a>
+<span class="k">def</span> <span class="nf">lu_complpiv</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Computes the LU-decomposition of A with complete pivoting, i. e. PAQ=LU, with permutations symbolized by vectors.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param A:</span>
+<span class="sd">        :return:</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">or</span> <span class="p">(</span><span class="n">__debug__</span> <span class="ow">and</span> <span class="n">expensive_asserts</span><span class="p">):</span>
+        <span class="n">A_inp</span> <span class="o">=</span> <span class="n">A</span>  <span class="c1"># debug</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>  <span class="c1"># See Golub and Van Loan, p. 118 for comments on this LU-decomposition with complete pivoting.</span>
+        <span class="n">Ak</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">k</span><span class="p">:</span><span class="n">n</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">k</span><span class="p">:</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">rw</span><span class="p">,</span> <span class="n">cl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Ak</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span> <span class="n">Ak</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">rw</span> <span class="o">+=</span> <span class="n">k</span>
+        <span class="n">cl</span> <span class="o">+=</span> <span class="n">k</span>
+        <span class="n">A</span><span class="p">[[</span><span class="n">k</span><span class="p">,</span> <span class="n">rw</span><span class="p">],</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">A</span><span class="p">[[</span><span class="n">rw</span><span class="p">,</span> <span class="n">k</span><span class="p">],</span> <span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">A</span><span class="p">[:,</span> <span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">cl</span><span class="p">]]</span> <span class="o">=</span> <span class="n">A</span><span class="p">[:,</span> <span class="p">[</span><span class="n">cl</span><span class="p">,</span>  <span class="n">k</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">rw</span>
+        <span class="n">Q</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">cl</span>
+        <span class="k">if</span> <span class="n">A</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">rs</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">A</span><span class="p">[</span><span class="n">rs</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">rs</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="n">A</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+            <span class="n">A</span><span class="p">[</span><span class="n">rs</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">rs</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">rs</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">rs</span><span class="p">]</span> <span class="o">-</span> <span class="n">A</span><span class="p">[</span><span class="n">rs</span><span class="p">,</span> <span class="n">k</span><span class="p">][:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">*</span><span class="n">A</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">rs</span><span class="p">]</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">__debug__</span> <span class="ow">and</span> <span class="n">expensive_asserts</span><span class="p">:</span>
+        <span class="n">perm_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>  <span class="c1"># debug</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>  <span class="c1"># debug</span>
+            <span class="n">perm_p</span><span class="p">[[</span><span class="n">k</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">perm_p</span><span class="p">[[</span><span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">k</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># debug</span>
+        <span class="n">perm_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>  <span class="c1"># debug</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>  <span class="c1"># debug</span>
+            <span class="n">perm_q</span><span class="p">[[</span><span class="n">k</span><span class="p">,</span> <span class="n">Q</span><span class="p">[</span><span class="n">k</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">perm_q</span><span class="p">[[</span><span class="n">Q</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">k</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># debug</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">A_inp</span><span class="p">[</span><span class="n">perm_p</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">perm_q</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">U</span><span class="p">))</span>  <span class="c1"># debug</span>
+    <span class="k">return</span> <span class="n">L</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Q</span></div>
+
+
+<span class="c1">#    function [L,U,P,Q] = lu_complpiv(A);</span>
+<span class="c1">#    P = []; Q = []; n = size(A,1);</span>
+<span class="c1">#    for k=1:n-1;</span>
+<span class="c1">#      [a,r] = max(abs(A(k:n,k:n)));</span>
+<span class="c1">#      [dummy,c] = max(abs(a));</span>
+<span class="c1">#      cl  = c+k-1;</span>
+<span class="c1">#      rw  = r(c)+k-1;</span>
+<span class="c1">#      A([k,rw],:) = A([rw,k],:);</span>
+<span class="c1">#      A(:,[k,cl]) = A(:,[cl,k]);</span>
+<span class="c1">#      P(k) = rw; Q(k) = cl;</span>
+<span class="c1">#      if A(k,k) ~= 0;</span>
+<span class="c1">#        rs = k+1:n;</span>
+<span class="c1">#        A(rs,k)  = A(rs,k)/A(k,k);</span>
+<span class="c1">#        A(rs,rs) = A(rs,rs)-A(rs,k)*A(k,rs);</span>
+<span class="c1">#      end</span>
+<span class="c1">#    end</span>
+<span class="c1">#    U = tril(A&#39;)&#39;; L = tril(A,-1) + eye(n);</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">scipy</span>
+    <span class="kn">import</span> <span class="nn">scipy.linalg</span>
+    <span class="n">expensive_asserts</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">%</span><span class="mi">10</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="c1"># + abs(float(np.random.randn(1)))*1j # TODO: rewrite the whole test to cover complex</span>
+        <span class="n">R</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">schur</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s1">&#39;real&#39;</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">rsf2csf</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+        <span class="n">ev_orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">delta_orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ev_orig</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Q</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">))</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="o">*</span><span class="n">eps</span><span class="p">)</span>
+
+        <span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">ap</span> <span class="o">=</span> <span class="n">sort_schur_decomposition</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="o">%</span><span class="mi">2</span><span class="o">==</span><span class="mi">0</span><span class="p">))</span>
+
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Q</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">))</span>  <span class="c1"># check that still a decomposition of the original matrix</span>
+
+        <span class="c1"># test that Q and R have the correct structure</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">T</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>  <span class="c1"># Q orthonormal</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># R triangular</span>
+        <span class="k">assert</span> <span class="n">r</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">eps</span><span class="p">)</span>  <span class="c1"># number of blocks in R is preserved</span>
+
+        <span class="c1"># check that eigenvalues are sorted</span>
+        <span class="n">T</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">rsf2csf</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">ev</span><span class="p">),</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ev_orig</span><span class="p">))</span>  <span class="c1"># check that eigenvalues were preserved</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ev</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">delta</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">delta</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="mi">100</span><span class="o">*</span><span class="n">eps</span><span class="p">),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">delta</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">delta</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span> <span class="n">delta</span><span class="p">)</span>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

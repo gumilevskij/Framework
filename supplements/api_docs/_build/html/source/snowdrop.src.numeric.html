@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.numeric package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.numeric.bayes package" href="snowdrop.src.numeric.bayes.html" />
+    <link rel="prev" title="snowdrop.src.model package" href="snowdrop.src.model.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-numeric-package">
+<h1>snowdrop.src.numeric package<a class="headerlink" href="#snowdrop-src-numeric-package" title="Link to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="snowdrop.src.numeric.bayes.html">snowdrop.src.numeric.bayes package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.bayes.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.bayes.html#module-snowdrop.src.numeric.bayes.mcmc">snowdrop.src.numeric.bayes.mcmc module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.func_likelihood"><code class="docutils literal notranslate"><span class="pre">func_likelihood()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.func_prior"><code class="docutils literal notranslate"><span class="pre">func_prior()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.gelman_rubin"><code class="docutils literal notranslate"><span class="pre">gelman_rubin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.likelihood_logp"><code class="docutils literal notranslate"><span class="pre">likelihood_logp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.logp"><code class="docutils literal notranslate"><span class="pre">logp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.prior_logp"><code class="docutils literal notranslate"><span class="pre">prior_logp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.sample"><code class="docutils literal notranslate"><span class="pre">sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.bayes.html#module-snowdrop.src.numeric.bayes">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="snowdrop.src.numeric.dp.html">snowdrop.src.numeric.dp package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#module-snowdrop.src.numeric.dp.bellman">snowdrop.src.numeric.dp.bellman module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg"><code class="docutils literal notranslate"><span class="pre">DynProg</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.discrete"><code class="docutils literal notranslate"><span class="pre">DynProg.discrete()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.getBounds"><code class="docutils literal notranslate"><span class="pre">DynProg.getBounds()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.parametric_value_iteration"><code class="docutils literal notranslate"><span class="pre">DynProg.parametric_value_iteration()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.policy_iteration"><code class="docutils literal notranslate"><span class="pre">DynProg.policy_iteration()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.stochastic_policy_iteration"><code class="docutils literal notranslate"><span class="pre">DynProg.stochastic_policy_iteration()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.stochastic_value_iteration"><code class="docutils literal notranslate"><span class="pre">DynProg.stochastic_value_iteration()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.transient_func"><code class="docutils literal notranslate"><span class="pre">DynProg.transient_func()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.updateVariables"><code class="docutils literal notranslate"><span class="pre">DynProg.updateVariables()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.utility_function"><code class="docutils literal notranslate"><span class="pre">DynProg.utility_function()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.value"><code class="docutils literal notranslate"><span class="pre">DynProg.value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.DynProg.value_iteration"><code class="docutils literal notranslate"><span class="pre">DynProg.value_iteration()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.Plot"><code class="docutils literal notranslate"><span class="pre">Plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.bellman.simulate"><code class="docutils literal notranslate"><span class="pre">simulate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#module-snowdrop.src.numeric.dp.collard">snowdrop.src.numeric.dp.collard module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.collard.Plot"><code class="docutils literal notranslate"><span class="pre">Plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.collard.parametric_value_iteration"><code class="docutils literal notranslate"><span class="pre">parametric_value_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.collard.policy_iteration"><code class="docutils literal notranslate"><span class="pre">policy_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.collard.stochastic_constarined_policy_iteration"><code class="docutils literal notranslate"><span class="pre">stochastic_constarined_policy_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.collard.stochastic_policy_iteration"><code class="docutils literal notranslate"><span class="pre">stochastic_policy_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.collard.stochastic_value_iteration"><code class="docutils literal notranslate"><span class="pre">stochastic_value_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.collard.value_iteration"><code class="docutils literal notranslate"><span class="pre">value_iteration()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#module-snowdrop.src.numeric.dp.discrete">snowdrop.src.numeric.dp.discrete module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.discrete.SimpleOG"><code class="docutils literal notranslate"><span class="pre">SimpleOG</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.discrete.SimpleOG.populate_Q"><code class="docutils literal notranslate"><span class="pre">SimpleOG.populate_Q()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.discrete.SimpleOG.populate_R"><code class="docutils literal notranslate"><span class="pre">SimpleOG.populate_R()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.discrete.SimpleOG.u"><code class="docutils literal notranslate"><span class="pre">SimpleOG.u()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#module-snowdrop.src.numeric.dp.grids">snowdrop.src.numeric.dp.grids module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.CartesianGrid"><code class="docutils literal notranslate"><span class="pre">CartesianGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.CartesianGrid.type"><code class="docutils literal notranslate"><span class="pre">CartesianGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.EmptyGrid"><code class="docutils literal notranslate"><span class="pre">EmptyGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.EmptyGrid.n_nodes"><code class="docutils literal notranslate"><span class="pre">EmptyGrid.n_nodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.EmptyGrid.node"><code class="docutils literal notranslate"><span class="pre">EmptyGrid.node()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.EmptyGrid.nodes"><code class="docutils literal notranslate"><span class="pre">EmptyGrid.nodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.EmptyGrid.type"><code class="docutils literal notranslate"><span class="pre">EmptyGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.Grid"><code class="docutils literal notranslate"><span class="pre">Grid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.Grid.n_nodes"><code class="docutils literal notranslate"><span class="pre">Grid.n_nodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.Grid.node"><code class="docutils literal notranslate"><span class="pre">Grid.node()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.Grid.nodes"><code class="docutils literal notranslate"><span class="pre">Grid.nodes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.NonUniformCartesianGrid"><code class="docutils literal notranslate"><span class="pre">NonUniformCartesianGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.NonUniformCartesianGrid.type"><code class="docutils literal notranslate"><span class="pre">NonUniformCartesianGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.Plot"><code class="docutils literal notranslate"><span class="pre">Plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.PointGrid"><code class="docutils literal notranslate"><span class="pre">PointGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.PointGrid.n_nodes"><code class="docutils literal notranslate"><span class="pre">PointGrid.n_nodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.PointGrid.node"><code class="docutils literal notranslate"><span class="pre">PointGrid.node()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.PointGrid.nodes"><code class="docutils literal notranslate"><span class="pre">PointGrid.nodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.PointGrid.type"><code class="docutils literal notranslate"><span class="pre">PointGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.SmolyakGrid"><code class="docutils literal notranslate"><span class="pre">SmolyakGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.SmolyakGrid.type"><code class="docutils literal notranslate"><span class="pre">SmolyakGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.UnstructuredGrid"><code class="docutils literal notranslate"><span class="pre">UnstructuredGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.UnstructuredGrid.type"><code class="docutils literal notranslate"><span class="pre">UnstructuredGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.cat_grids"><code class="docutils literal notranslate"><span class="pre">cat_grids()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.mlinspace"><code class="docutils literal notranslate"><span class="pre">mlinspace()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.n_nodes"><code class="docutils literal notranslate"><span class="pre">n_nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.node"><code class="docutils literal notranslate"><span class="pre">node()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.nodes"><code class="docutils literal notranslate"><span class="pre">nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.grids.prod"><code class="docutils literal notranslate"><span class="pre">prod()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#module-snowdrop.src.numeric.dp.hjb">snowdrop.src.numeric.dp.hjb module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.hjb.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#module-snowdrop.src.numeric.dp.olg">snowdrop.src.numeric.dp.olg module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.MSequilibrium"><code class="docutils literal notranslate"><span class="pre">MSequilibrium()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.MSnext"><code class="docutils literal notranslate"><span class="pre">MSnext()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.Plot"><code class="docutils literal notranslate"><span class="pre">Plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.Qtot"><code class="docutils literal notranslate"><span class="pre">Qtot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.dQdL"><code class="docutils literal notranslate"><span class="pre">dQdL()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.dQdM"><code class="docutils literal notranslate"><span class="pre">dQdM()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.dQdS"><code class="docutils literal notranslate"><span class="pre">dQdS()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.value_iteration"><code class="docutils literal notranslate"><span class="pre">value_iteration()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#module-snowdrop.src.numeric.dp.tauchen">snowdrop.src.numeric.dp.tauchen module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.tauchen.GaussHermite"><code class="docutils literal notranslate"><span class="pre">GaussHermite()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.tauchen.GaussNorm"><code class="docutils literal notranslate"><span class="pre">GaussNorm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.tauchen.tauchen_hussey"><code class="docutils literal notranslate"><span class="pre">tauchen_hussey()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#module-snowdrop.src.numeric.dp.test">snowdrop.src.numeric.dp.test module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.test.Plot"><code class="docutils literal notranslate"><span class="pre">Plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.test.parametric_value_iteration"><code class="docutils literal notranslate"><span class="pre">parametric_value_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.test.policy_iteration"><code class="docutils literal notranslate"><span class="pre">policy_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.test.stochastic_constarined_policy_iteration"><code class="docutils literal notranslate"><span class="pre">stochastic_constarined_policy_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.test.stochastic_policy_iteration"><code class="docutils literal notranslate"><span class="pre">stochastic_policy_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.test.stochastic_value_iteration"><code class="docutils literal notranslate"><span class="pre">stochastic_value_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.test.value_iteration"><code class="docutils literal notranslate"><span class="pre">value_iteration()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#module-snowdrop.src.numeric.dp.util">snowdrop.src.numeric.dp.util module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.util.Chebychev_Polinomial"><code class="docutils literal notranslate"><span class="pre">Chebychev_Polinomial()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.util.gauss_herm"><code class="docutils literal notranslate"><span class="pre">gauss_herm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.util.markov"><code class="docutils literal notranslate"><span class="pre">markov()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.util.scalar_tv"><code class="docutils literal notranslate"><span class="pre">scalar_tv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.util.tausc_hussey"><code class="docutils literal notranslate"><span class="pre">tausc_hussey()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.util.tv"><code class="docutils literal notranslate"><span class="pre">tv()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.dp.html#module-snowdrop.src.numeric.dp">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="snowdrop.src.numeric.estimation.html">snowdrop.src.numeric.estimation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#module-snowdrop.src.numeric.estimation.estimate">snowdrop.src.numeric.estimation.estimate module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.estimate.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#module-snowdrop.src.numeric.estimation.test_grad">snowdrop.src.numeric.estimation.test_grad module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.a_dfdx"><code class="docutils literal notranslate"><span class="pre">a_dfdx()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.a_dfdy"><code class="docutils literal notranslate"><span class="pre">a_dfdy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.datagen"><code class="docutils literal notranslate"><span class="pre">datagen()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.f"><code class="docutils literal notranslate"><span class="pre">f()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.neg_loglike"><code class="docutils literal notranslate"><span class="pre">neg_loglike()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.neg_loglike_"><code class="docutils literal notranslate"><span class="pre">neg_loglike_()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.test"><code class="docutils literal notranslate"><span class="pre">test()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#module-snowdrop.src.numeric.estimation.test_mle">snowdrop.src.numeric.estimation.test_mle module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_mle.test"><code class="docutils literal notranslate"><span class="pre">test()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.estimation.html#module-snowdrop.src.numeric.estimation">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="snowdrop.src.numeric.filters.html">snowdrop.src.numeric.filters package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#module-snowdrop.src.numeric.filters.diffuse">snowdrop.src.numeric.filters.diffuse module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.diffuse.diffuse_filter"><code class="docutils literal notranslate"><span class="pre">diffuse_filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.diffuse.missing_obs_diffuse_multivariate_filter"><code class="docutils literal notranslate"><span class="pre">missing_obs_diffuse_multivariate_filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.diffuse.missing_obs_diffuse_univariate_filter"><code class="docutils literal notranslate"><span class="pre">missing_obs_diffuse_univariate_filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#module-snowdrop.src.numeric.filters.filter">snowdrop.src.numeric.filters.filter module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filter.linear_filter"><code class="docutils literal notranslate"><span class="pre">linear_filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filter.nonlinear_filter"><code class="docutils literal notranslate"><span class="pre">nonlinear_filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#module-snowdrop.src.numeric.filters.filters">snowdrop.src.numeric.filters.filters module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.BPASS"><code class="docutils literal notranslate"><span class="pre">BPASS()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.Bryson_Frazier_Smoother"><code class="docutils literal notranslate"><span class="pre">Bryson_Frazier_Smoother()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.DK_Filter"><code class="docutils literal notranslate"><span class="pre">DK_Filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.DK_Smoother"><code class="docutils literal notranslate"><span class="pre">DK_Smoother()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.Durbin_Koopman_Diffuse_Filter"><code class="docutils literal notranslate"><span class="pre">Durbin_Koopman_Diffuse_Filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.Durbin_Koopman_Diffuse_Smoother"><code class="docutils literal notranslate"><span class="pre">Durbin_Koopman_Diffuse_Smoother()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.Durbin_Koopman_Non_Diffuse_Filter"><code class="docutils literal notranslate"><span class="pre">Durbin_Koopman_Non_Diffuse_Filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.Durbin_Koopman_Non_Diffuse_Smoother"><code class="docutils literal notranslate"><span class="pre">Durbin_Koopman_Non_Diffuse_Smoother()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.HPF"><code class="docutils literal notranslate"><span class="pre">HPF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.HPfilter"><code class="docutils literal notranslate"><span class="pre">HPfilter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.Kalman_Filter"><code class="docutils literal notranslate"><span class="pre">Kalman_Filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.Kalman_Filter_SS"><code class="docutils literal notranslate"><span class="pre">Kalman_Filter_SS()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.LRXfilter"><code class="docutils literal notranslate"><span class="pre">LRXfilter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.Rauch_Tung_Striebel_Smoother"><code class="docutils literal notranslate"><span class="pre">Rauch_Tung_Striebel_Smoother()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.Standard_Kalman_Filter"><code class="docutils literal notranslate"><span class="pre">Standard_Kalman_Filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.bandpass_filter"><code class="docutils literal notranslate"><span class="pre">bandpass_filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.filters.fast_kalman_filter"><code class="docutils literal notranslate"><span class="pre">fast_kalman_filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#module-snowdrop.src.numeric.filters.kalman">snowdrop.src.numeric.filters.kalman module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#mvlineargauss-class-and-subclasses">MVLinearGauss class and subclasses</a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#kalman-class"><cite>Kalman</cite> class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#kalman-objects-as-iterators">Kalman objects as iterators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#functions-to-perform-a-single-step">Functions to perform a single step</a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.Kalman"><code class="docutils literal notranslate"><span class="pre">Kalman</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.Kalman.filter"><code class="docutils literal notranslate"><span class="pre">Kalman.filter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.Kalman.next"><code class="docutils literal notranslate"><span class="pre">Kalman.next()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.Kalman.smoother"><code class="docutils literal notranslate"><span class="pre">Kalman.smoother()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.Kalman.t"><code class="docutils literal notranslate"><span class="pre">Kalman.t</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.LinearGauss"><code class="docutils literal notranslate"><span class="pre">LinearGauss</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.LinearGauss.PX"><code class="docutils literal notranslate"><span class="pre">LinearGauss.PX()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.LinearGauss.PX0"><code class="docutils literal notranslate"><span class="pre">LinearGauss.PX0()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.LinearGauss.PY"><code class="docutils literal notranslate"><span class="pre">LinearGauss.PY()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.LinearGauss.default_params"><code class="docutils literal notranslate"><span class="pre">LinearGauss.default_params</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.LinearGauss.logeta"><code class="docutils literal notranslate"><span class="pre">LinearGauss.logeta()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.LinearGauss.proposal"><code class="docutils literal notranslate"><span class="pre">LinearGauss.proposal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.LinearGauss.proposal0"><code class="docutils literal notranslate"><span class="pre">LinearGauss.proposal0()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MVLinearGauss"><code class="docutils literal notranslate"><span class="pre">MVLinearGauss</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MVLinearGauss.PX"><code class="docutils literal notranslate"><span class="pre">MVLinearGauss.PX()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MVLinearGauss.PX0"><code class="docutils literal notranslate"><span class="pre">MVLinearGauss.PX0()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MVLinearGauss.PY"><code class="docutils literal notranslate"><span class="pre">MVLinearGauss.PY()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MVLinearGauss.check_shapes"><code class="docutils literal notranslate"><span class="pre">MVLinearGauss.check_shapes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MVLinearGauss.logeta"><code class="docutils literal notranslate"><span class="pre">MVLinearGauss.logeta()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MVLinearGauss.proposal"><code class="docutils literal notranslate"><span class="pre">MVLinearGauss.proposal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MVLinearGauss.proposal0"><code class="docutils literal notranslate"><span class="pre">MVLinearGauss.proposal0()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MVLinearGauss_Guarniero_etal"><code class="docutils literal notranslate"><span class="pre">MVLinearGauss_Guarniero_etal</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MeanAndCov"><code class="docutils literal notranslate"><span class="pre">MeanAndCov</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MeanAndCov.cov"><code class="docutils literal notranslate"><span class="pre">MeanAndCov.cov</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.MeanAndCov.mean"><code class="docutils literal notranslate"><span class="pre">MeanAndCov.mean</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.dotdot"><code class="docutils literal notranslate"><span class="pre">dotdot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.dotdotinv"><code class="docutils literal notranslate"><span class="pre">dotdotinv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.filter_step"><code class="docutils literal notranslate"><span class="pre">filter_step()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.filter_step_asarray"><code class="docutils literal notranslate"><span class="pre">filter_step_asarray()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.predict_step"><code class="docutils literal notranslate"><span class="pre">predict_step()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.kalman.smoother_step"><code class="docutils literal notranslate"><span class="pre">smoother_step()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#module-snowdrop.src.numeric.filters.particle">snowdrop.src.numeric.filters.particle module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.NonlinearStateSpaceModel"><code class="docutils literal notranslate"><span class="pre">NonlinearStateSpaceModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.NonlinearStateSpaceModel.PX"><code class="docutils literal notranslate"><span class="pre">NonlinearStateSpaceModel.PX()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.NonlinearStateSpaceModel.PX0"><code class="docutils literal notranslate"><span class="pre">NonlinearStateSpaceModel.PX0()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.NonlinearStateSpaceModel.PY"><code class="docutils literal notranslate"><span class="pre">NonlinearStateSpaceModel.PY()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.ParticleGibbs"><code class="docutils literal notranslate"><span class="pre">ParticleGibbs</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.ParticleGibbs.update_theta"><code class="docutils literal notranslate"><span class="pre">ParticleGibbs.update_theta()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.StateSpaceModel"><code class="docutils literal notranslate"><span class="pre">StateSpaceModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.StateSpaceModel.PX"><code class="docutils literal notranslate"><span class="pre">StateSpaceModel.PX()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.StateSpaceModel.PX0"><code class="docutils literal notranslate"><span class="pre">StateSpaceModel.PX0()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.StateSpaceModel.PY"><code class="docutils literal notranslate"><span class="pre">StateSpaceModel.PY()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.particle.getMatrices"><code class="docutils literal notranslate"><span class="pre">getMatrices()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#module-snowdrop.src.numeric.filters.py_kalman">snowdrop.src.numeric.filters.py_kalman module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyBiermanKalmanFilter"><code class="docutils literal notranslate"><span class="pre">MyBiermanKalmanFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyBiermanKalmanFilter.filter_update"><code class="docutils literal notranslate"><span class="pre">MyBiermanKalmanFilter.filter_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyBiermanKalmanFilter.index"><code class="docutils literal notranslate"><span class="pre">MyBiermanKalmanFilter.index</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyCholeskyKalmanFilter"><code class="docutils literal notranslate"><span class="pre">MyCholeskyKalmanFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyCholeskyKalmanFilter.filter_update"><code class="docutils literal notranslate"><span class="pre">MyCholeskyKalmanFilter.filter_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyCholeskyKalmanFilter.index"><code class="docutils literal notranslate"><span class="pre">MyCholeskyKalmanFilter.index</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyKalmanFilter"><code class="docutils literal notranslate"><span class="pre">MyKalmanFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyKalmanFilter.filter_update"><code class="docutils literal notranslate"><span class="pre">MyKalmanFilter.filter_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyKalmanFilter.index"><code class="docutils literal notranslate"><span class="pre">MyKalmanFilter.index</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyUnscentedKalmanFilter"><code class="docutils literal notranslate"><span class="pre">MyUnscentedKalmanFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyUnscentedKalmanFilter.filter_update"><code class="docutils literal notranslate"><span class="pre">MyUnscentedKalmanFilter.filter_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyUnscentedKalmanFilter.index"><code class="docutils literal notranslate"><span class="pre">MyUnscentedKalmanFilter.index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.py_kalman.MyUnscentedKalmanFilter.unscented_filter_correct"><code class="docutils literal notranslate"><span class="pre">MyUnscentedKalmanFilter.unscented_filter_correct()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#module-snowdrop.src.numeric.filters.pykalman">snowdrop.src.numeric.filters.pykalman module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyBiermanKalmanFilter"><code class="docutils literal notranslate"><span class="pre">MyBiermanKalmanFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyBiermanKalmanFilter.filter_update"><code class="docutils literal notranslate"><span class="pre">MyBiermanKalmanFilter.filter_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyBiermanKalmanFilter.index"><code class="docutils literal notranslate"><span class="pre">MyBiermanKalmanFilter.index</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyCholeskyKalmanFilter"><code class="docutils literal notranslate"><span class="pre">MyCholeskyKalmanFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyCholeskyKalmanFilter.filter_update"><code class="docutils literal notranslate"><span class="pre">MyCholeskyKalmanFilter.filter_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyCholeskyKalmanFilter.index"><code class="docutils literal notranslate"><span class="pre">MyCholeskyKalmanFilter.index</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyKalmanFilter"><code class="docutils literal notranslate"><span class="pre">MyKalmanFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyKalmanFilter.filter_update"><code class="docutils literal notranslate"><span class="pre">MyKalmanFilter.filter_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyKalmanFilter.index"><code class="docutils literal notranslate"><span class="pre">MyKalmanFilter.index</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyUnscentedKalmanFilter"><code class="docutils literal notranslate"><span class="pre">MyUnscentedKalmanFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyUnscentedKalmanFilter.filter_update"><code class="docutils literal notranslate"><span class="pre">MyUnscentedKalmanFilter.filter_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyUnscentedKalmanFilter.index"><code class="docutils literal notranslate"><span class="pre">MyUnscentedKalmanFilter.index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyUnscentedKalmanFilter.unscented_filter_correct"><code class="docutils literal notranslate"><span class="pre">MyUnscentedKalmanFilter.unscented_filter_correct()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#module-snowdrop.src.numeric.filters.unscented">snowdrop.src.numeric.filters.unscented module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#inference-for-non-linear-gaussian-systems">Inference for Non-Linear Gaussian Systems</a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.AdditiveUnscentedKalmanFilter"><code class="docutils literal notranslate"><span class="pre">AdditiveUnscentedKalmanFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.AdditiveUnscentedKalmanFilter.filter"><code class="docutils literal notranslate"><span class="pre">AdditiveUnscentedKalmanFilter.filter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.AdditiveUnscentedKalmanFilter.filter_update"><code class="docutils literal notranslate"><span class="pre">AdditiveUnscentedKalmanFilter.filter_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.AdditiveUnscentedKalmanFilter.sample"><code class="docutils literal notranslate"><span class="pre">AdditiveUnscentedKalmanFilter.sample()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.AdditiveUnscentedKalmanFilter.smooth"><code class="docutils literal notranslate"><span class="pre">AdditiveUnscentedKalmanFilter.smooth()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.Moments"><code class="docutils literal notranslate"><span class="pre">Moments</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.Moments.covariance"><code class="docutils literal notranslate"><span class="pre">Moments.covariance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.Moments.mean"><code class="docutils literal notranslate"><span class="pre">Moments.mean</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.SigmaPoints"><code class="docutils literal notranslate"><span class="pre">SigmaPoints</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.SigmaPoints.points"><code class="docutils literal notranslate"><span class="pre">SigmaPoints.points</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.SigmaPoints.weights_covariance"><code class="docutils literal notranslate"><span class="pre">SigmaPoints.weights_covariance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.SigmaPoints.weights_mean"><code class="docutils literal notranslate"><span class="pre">SigmaPoints.weights_mean</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.UnscentedKalmanFilter"><code class="docutils literal notranslate"><span class="pre">UnscentedKalmanFilter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.UnscentedKalmanFilter.filter"><code class="docutils literal notranslate"><span class="pre">UnscentedKalmanFilter.filter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.UnscentedKalmanFilter.filter_update"><code class="docutils literal notranslate"><span class="pre">UnscentedKalmanFilter.filter_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.UnscentedKalmanFilter.sample"><code class="docutils literal notranslate"><span class="pre">UnscentedKalmanFilter.sample()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.UnscentedKalmanFilter.smooth"><code class="docutils literal notranslate"><span class="pre">UnscentedKalmanFilter.smooth()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.UnscentedMixin"><code class="docutils literal notranslate"><span class="pre">UnscentedMixin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.additive_unscented_filter"><code class="docutils literal notranslate"><span class="pre">additive_unscented_filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.additive_unscented_smoother"><code class="docutils literal notranslate"><span class="pre">additive_unscented_smoother()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.augmented_points"><code class="docutils literal notranslate"><span class="pre">augmented_points()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.augmented_unscented_filter"><code class="docutils literal notranslate"><span class="pre">augmented_unscented_filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.augmented_unscented_filter_points"><code class="docutils literal notranslate"><span class="pre">augmented_unscented_filter_points()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.augmented_unscented_smoother"><code class="docutils literal notranslate"><span class="pre">augmented_unscented_smoother()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.moments2points"><code class="docutils literal notranslate"><span class="pre">moments2points()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.points2moments"><code class="docutils literal notranslate"><span class="pre">points2moments()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.unscented_correct"><code class="docutils literal notranslate"><span class="pre">unscented_correct()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.unscented_filter_correct"><code class="docutils literal notranslate"><span class="pre">unscented_filter_correct()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.unscented_filter_predict"><code class="docutils literal notranslate"><span class="pre">unscented_filter_predict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.unscented.unscented_transform"><code class="docutils literal notranslate"><span class="pre">unscented_transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#module-snowdrop.src.numeric.filters.utils">snowdrop.src.numeric.filters.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.utils.compute_Pinf_Pstar"><code class="docutils literal notranslate"><span class="pre">compute_Pinf_Pstar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.utils.getCovarianceMatrix"><code class="docutils literal notranslate"><span class="pre">getCovarianceMatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.utils.getEndogVarInMeasEqs"><code class="docutils literal notranslate"><span class="pre">getEndogVarInMeasEqs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.utils.getMissingInitialVariables"><code class="docutils literal notranslate"><span class="pre">getMissingInitialVariables()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.utils.getSteadyStateCovarianceMatrix"><code class="docutils literal notranslate"><span class="pre">getSteadyStateCovarianceMatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.utils.getTimeShift"><code class="docutils literal notranslate"><span class="pre">getTimeShift()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.utils.sorter"><code class="docutils literal notranslate"><span class="pre">sorter()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.filters.html#module-snowdrop.src.numeric.filters">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="snowdrop.src.numeric.grids.html">snowdrop.src.numeric.grids package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.grids.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.grids.html#module-snowdrop.src.numeric.grids.grid">snowdrop.src.numeric.grids.grid module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.CartesianGrid"><code class="docutils literal notranslate"><span class="pre">CartesianGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.CartesianGrid.type"><code class="docutils literal notranslate"><span class="pre">CartesianGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.EmptyGrid"><code class="docutils literal notranslate"><span class="pre">EmptyGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.EmptyGrid.n_nodes"><code class="docutils literal notranslate"><span class="pre">EmptyGrid.n_nodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.EmptyGrid.node"><code class="docutils literal notranslate"><span class="pre">EmptyGrid.node()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.EmptyGrid.nodes"><code class="docutils literal notranslate"><span class="pre">EmptyGrid.nodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.EmptyGrid.type"><code class="docutils literal notranslate"><span class="pre">EmptyGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.Grid"><code class="docutils literal notranslate"><span class="pre">Grid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.Grid.n_nodes"><code class="docutils literal notranslate"><span class="pre">Grid.n_nodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.Grid.node"><code class="docutils literal notranslate"><span class="pre">Grid.node()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.Grid.nodes"><code class="docutils literal notranslate"><span class="pre">Grid.nodes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.NonUniformCartesianGrid"><code class="docutils literal notranslate"><span class="pre">NonUniformCartesianGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.NonUniformCartesianGrid.type"><code class="docutils literal notranslate"><span class="pre">NonUniformCartesianGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.PointGrid"><code class="docutils literal notranslate"><span class="pre">PointGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.PointGrid.n_nodes"><code class="docutils literal notranslate"><span class="pre">PointGrid.n_nodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.PointGrid.node"><code class="docutils literal notranslate"><span class="pre">PointGrid.node()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.PointGrid.nodes"><code class="docutils literal notranslate"><span class="pre">PointGrid.nodes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.PointGrid.type"><code class="docutils literal notranslate"><span class="pre">PointGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.SmolyakGrid"><code class="docutils literal notranslate"><span class="pre">SmolyakGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.SmolyakGrid.type"><code class="docutils literal notranslate"><span class="pre">SmolyakGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.UnstructuredGrid"><code class="docutils literal notranslate"><span class="pre">UnstructuredGrid</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.UnstructuredGrid.type"><code class="docutils literal notranslate"><span class="pre">UnstructuredGrid.type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.cat_grids"><code class="docutils literal notranslate"><span class="pre">cat_grids()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.mlinspace"><code class="docutils literal notranslate"><span class="pre">mlinspace()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.n_nodes"><code class="docutils literal notranslate"><span class="pre">n_nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.node"><code class="docutils literal notranslate"><span class="pre">node()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.nodes"><code class="docutils literal notranslate"><span class="pre">nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.grids.html#snowdrop.src.numeric.grids.grid.prod"><code class="docutils literal notranslate"><span class="pre">prod()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.grids.html#module-snowdrop.src.numeric.grids">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="snowdrop.src.numeric.optimization.html">snowdrop.src.numeric.optimization package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#module-snowdrop.src.numeric.optimization.optimize">snowdrop.src.numeric.optimization.optimize module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.Data"><code class="docutils literal notranslate"><span class="pre">Data</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.Data.fun"><code class="docutils literal notranslate"><span class="pre">Data.fun</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.Data.message"><code class="docutils literal notranslate"><span class="pre">Data.message</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.Data.nfev"><code class="docutils literal notranslate"><span class="pre">Data.nfev</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.Data.success"><code class="docutils literal notranslate"><span class="pre">Data.success</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.Data.x"><code class="docutils literal notranslate"><span class="pre">Data.x</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.solver"><code class="docutils literal notranslate"><span class="pre">solver()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#module-snowdrop.src.numeric.optimization.test">snowdrop.src.numeric.optimization.test module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.test.fun"><code class="docutils literal notranslate"><span class="pre">fun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.test.func"><code class="docutils literal notranslate"><span class="pre">func()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.test.jacob"><code class="docutils literal notranslate"><span class="pre">jacob()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.test.jacobian"><code class="docutils literal notranslate"><span class="pre">jacobian()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.test.map_func"><code class="docutils literal notranslate"><span class="pre">map_func()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.test.map_func_der"><code class="docutils literal notranslate"><span class="pre">map_func_der()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.test.path_func"><code class="docutils literal notranslate"><span class="pre">path_func()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.test.path_jacob"><code class="docutils literal notranslate"><span class="pre">path_jacob()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#module-snowdrop.src.numeric.optimization.util">snowdrop.src.numeric.optimization.util module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.Data"><code class="docutils literal notranslate"><span class="pre">Data</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.Data.fun"><code class="docutils literal notranslate"><span class="pre">Data.fun</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.Data.nfev"><code class="docutils literal notranslate"><span class="pre">Data.nfev</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.Data.success"><code class="docutils literal notranslate"><span class="pre">Data.success</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.Data.x"><code class="docutils literal notranslate"><span class="pre">Data.x</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.expand"><code class="docutils literal notranslate"><span class="pre">expand()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.expand_list"><code class="docutils literal notranslate"><span class="pre">expand_list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.expand_loop"><code class="docutils literal notranslate"><span class="pre">expand_loop()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.expand_map"><code class="docutils literal notranslate"><span class="pre">expand_map()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.expand_minmax"><code class="docutils literal notranslate"><span class="pre">expand_minmax()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.expand_obj_func_sum"><code class="docutils literal notranslate"><span class="pre">expand_obj_func_sum()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.expand_prod"><code class="docutils literal notranslate"><span class="pre">expand_prod()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.expand_sum"><code class="docutils literal notranslate"><span class="pre">expand_sum()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.expand_sum_or_prod"><code class="docutils literal notranslate"><span class="pre">expand_sum_or_prod()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.fix"><code class="docutils literal notranslate"><span class="pre">fix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.getConstraints"><code class="docutils literal notranslate"><span class="pre">getConstraints()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.getIndex"><code class="docutils literal notranslate"><span class="pre">getIndex()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.getLabels"><code class="docutils literal notranslate"><span class="pre">getLabels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.getLimits"><code class="docutils literal notranslate"><span class="pre">getLimits()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.importModel"><code class="docutils literal notranslate"><span class="pre">importModel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.loadLibrary"><code class="docutils literal notranslate"><span class="pre">loadLibrary()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.print_path_solution_status"><code class="docutils literal notranslate"><span class="pre">print_path_solution_status()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.util.replace_all"><code class="docutils literal notranslate"><span class="pre">replace_all()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.optimization.html#module-snowdrop.src.numeric.optimization">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="snowdrop.src.numeric.sa.html">snowdrop.src.numeric.sa package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.sa.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.sa.html#module-snowdrop.src.numeric.sa.test_x13">snowdrop.src.numeric.sa.test_x13 module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.sa.html#snowdrop.src.numeric.sa.test_x13.test1"><code class="docutils literal notranslate"><span class="pre">test1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.sa.html#snowdrop.src.numeric.sa.test_x13.test2"><code class="docutils literal notranslate"><span class="pre">test2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.sa.html#module-snowdrop.src.numeric.sa.x13">snowdrop.src.numeric.sa.x13 module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.sa.html#snowdrop.src.numeric.sa.x13.x13"><code class="docutils literal notranslate"><span class="pre">x13()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.sa.html#module-snowdrop.src.numeric.sa">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="snowdrop.src.numeric.solver.html">snowdrop.src.numeric.solver package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html">snowdrop.src.numeric.solver.AIM package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.AIMsolver">snowdrop.src.numeric.solver.AIM.AIMsolver module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.Aimerr">snowdrop.src.numeric.solver.AIM.Aimerr module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.Amalg">snowdrop.src.numeric.solver.AIM.Amalg module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.Eigensystem">snowdrop.src.numeric.solver.AIM.Eigensystem module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.Obstruct">snowdrop.src.numeric.solver.AIM.Obstruct module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.Shifts">snowdrop.src.numeric.solver.AIM.Shifts module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.buildA">snowdrop.src.numeric.solver.AIM.buildA module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.checkA">snowdrop.src.numeric.solver.AIM.checkA module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.copyW">snowdrop.src.numeric.solver.AIM.copyW module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.makeF">snowdrop.src.numeric.solver.AIM.makeF module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.makePhi">snowdrop.src.numeric.solver.AIM.makePhi module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.makeVartheta">snowdrop.src.numeric.solver.AIM.makeVartheta module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM.reducedForm">snowdrop.src.numeric.solver.AIM.reducedForm module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.AIM.html#module-snowdrop.src.numeric.solver.AIM">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.ABLR">snowdrop.src.numeric.solver.ABLR module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.ABLR.ABLRsolver"><code class="docutils literal notranslate"><span class="pre">ABLRsolver()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.ABLR.dense_Fstack"><code class="docutils literal notranslate"><span class="pre">dense_Fstack()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.ABLR.parallel_sparse_Fstack"><code class="docutils literal notranslate"><span class="pre">parallel_sparse_Fstack()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.ABLR.sparse_Fstack"><code class="docutils literal notranslate"><span class="pre">sparse_Fstack()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.AndersonMoore">snowdrop.src.numeric.solver.AndersonMoore module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.AndersonMoore.solve_am"><code class="docutils literal notranslate"><span class="pre">solve_am()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop-src-numeric-solver-benes-module">snowdrop.src.numeric.solver.Benes module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.BinderPesaran">snowdrop.src.numeric.solver.BinderPesaran module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.BinderPesaran.getMatrices"><code class="docutils literal notranslate"><span class="pre">getMatrices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.BinderPesaran.printResults"><code class="docutils literal notranslate"><span class="pre">printResults()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.BinderPesaran.solve_quadratic_determinantal_equation"><code class="docutils literal notranslate"><span class="pre">solve_quadratic_determinantal_equation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.BinderPesaran.solve_quadratic_equation"><code class="docutils literal notranslate"><span class="pre">solve_quadratic_equation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.BinderPesaran.solve_recursive"><code class="docutils literal notranslate"><span class="pre">solve_recursive()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.LBJ">snowdrop.src.numeric.solver.LBJ module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.LBJ.LBJsolver"><code class="docutils literal notranslate"><span class="pre">LBJsolver()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.LBJ.dense_system_solver"><code class="docutils literal notranslate"><span class="pre">dense_system_solver()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.LBJ.solver_with_tunes"><code class="docutils literal notranslate"><span class="pre">solver_with_tunes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.LBJ.sparse_system_solver"><code class="docutils literal notranslate"><span class="pre">sparse_system_solver()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.Villemot">snowdrop.src.numeric.solver.Villemot module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.Villemot.solution"><code class="docutils literal notranslate"><span class="pre">solution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.Villemot.solve_villemot"><code class="docutils literal notranslate"><span class="pre">solve_villemot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.linear_solver">snowdrop.src.numeric.solver.linear_solver module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.linear_solver.find_steady_state"><code class="docutils literal notranslate"><span class="pre">find_steady_state()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.linear_solver.simulate"><code class="docutils literal notranslate"><span class="pre">simulate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.linear_solver.solve"><code class="docutils literal notranslate"><span class="pre">solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.nonlinear_solver">snowdrop.src.numeric.solver.nonlinear_solver module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.nonlinear_solver.TOLERANCE"><code class="docutils literal notranslate"><span class="pre">TOLERANCE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.nonlinear_solver.find_steady_state"><code class="docutils literal notranslate"><span class="pre">find_steady_state()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.nonlinear_solver.first_order_solution"><code class="docutils literal notranslate"><span class="pre">first_order_solution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.nonlinear_solver.get_steady_state"><code class="docutils literal notranslate"><span class="pre">get_steady_state()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.nonlinear_solver.homotopy_solver"><code class="docutils literal notranslate"><span class="pre">homotopy_solver()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.nonlinear_solver.predict"><code class="docutils literal notranslate"><span class="pre">predict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.nonlinear_solver.second_order_approximation"><code class="docutils literal notranslate"><span class="pre">second_order_approximation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.nonlinear_solver.second_order_solution"><code class="docutils literal notranslate"><span class="pre">second_order_solution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.nonlinear_solver.simulate"><code class="docutils literal notranslate"><span class="pre">simulate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.solver">snowdrop.src.numeric.solver.solver module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solver.SerialDifferentiableFunction"><code class="docutils literal notranslate"><span class="pre">SerialDifferentiableFunction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solver.my_solve"><code class="docutils literal notranslate"><span class="pre">my_solve()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solver.newton"><code class="docutils literal notranslate"><span class="pre">newton()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solver.serial_solve"><code class="docutils literal notranslate"><span class="pre">serial_solve()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solver.test_serial_solve"><code class="docutils literal notranslate"><span class="pre">test_serial_solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.solvers">snowdrop.src.numeric.solver.solvers module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.SerialDifferentiableFunction"><code class="docutils literal notranslate"><span class="pre">SerialDifferentiableFunction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.Sylvester_iterative_solver"><code class="docutils literal notranslate"><span class="pre">Sylvester_iterative_solver()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.Sylvester_solver"><code class="docutils literal notranslate"><span class="pre">Sylvester_solver()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.disclyap_fast"><code class="docutils literal notranslate"><span class="pre">disclyap_fast()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.lyapunov_solver"><code class="docutils literal notranslate"><span class="pre">lyapunov_solver()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.lyapunov_symm"><code class="docutils literal notranslate"><span class="pre">lyapunov_symm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.newton"><code class="docutils literal notranslate"><span class="pre">newton()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.serial_solve"><code class="docutils literal notranslate"><span class="pre">serial_solve()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.solve"><code class="docutils literal notranslate"><span class="pre">solve()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.sylvester_solver"><code class="docutils literal notranslate"><span class="pre">sylvester_solver()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.test1"><code class="docutils literal notranslate"><span class="pre">test1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.test2"><code class="docutils literal notranslate"><span class="pre">test2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solvers.test_serial_solve"><code class="docutils literal notranslate"><span class="pre">test_serial_solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.tunes">snowdrop.src.numeric.solver.tunes module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.anticipated"><code class="docutils literal notranslate"><span class="pre">anticipated()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.calcPrhs"><code class="docutils literal notranslate"><span class="pre">calcPrhs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.computeMatrices"><code class="docutils literal notranslate"><span class="pre">computeMatrices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.forecast_with_tunes"><code class="docutils literal notranslate"><span class="pre">forecast_with_tunes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.getData"><code class="docutils literal notranslate"><span class="pre">getData()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.getIndices"><code class="docutils literal notranslate"><span class="pre">getIndices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.hasImaginaryShocks"><code class="docutils literal notranslate"><span class="pre">hasImaginaryShocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.hasImaginaryValues"><code class="docutils literal notranslate"><span class="pre">hasImaginaryValues()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.mixed"><code class="docutils literal notranslate"><span class="pre">mixed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.non_linear_anticipated"><code class="docutils literal notranslate"><span class="pre">non_linear_anticipated()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.non_linear_mixed"><code class="docutils literal notranslate"><span class="pre">non_linear_mixed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.non_linear_not_anticipated"><code class="docutils literal notranslate"><span class="pre">non_linear_not_anticipated()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.not_anticipated"><code class="docutils literal notranslate"><span class="pre">not_anticipated()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.stdcorr2cov"><code class="docutils literal notranslate"><span class="pre">stdcorr2cov()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver.util">snowdrop.src.numeric.solver.util module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.UnionFind"><code class="docutils literal notranslate"><span class="pre">UnionFind</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.UnionFind.find_set"><code class="docutils literal notranslate"><span class="pre">UnionFind.find_set()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.UnionFind.union_set"><code class="docutils literal notranslate"><span class="pre">UnionFind.union_set()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.arnoldi_iteration"><code class="docutils literal notranslate"><span class="pre">arnoldi_iteration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.cartesian"><code class="docutils literal notranslate"><span class="pre">cartesian()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.check"><code class="docutils literal notranslate"><span class="pre">check()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.checkBK"><code class="docutils literal notranslate"><span class="pre">checkBK()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.checkSolution"><code class="docutils literal notranslate"><span class="pre">checkSolution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.checkSteadyState"><code class="docutils literal notranslate"><span class="pre">checkSteadyState()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.clustered_sorter"><code class="docutils literal notranslate"><span class="pre">clustered_sorter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.decompose"><code class="docutils literal notranslate"><span class="pre">decompose()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.find_eigen_values"><code class="docutils literal notranslate"><span class="pre">find_eigen_values()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.find_residuals"><code class="docutils literal notranslate"><span class="pre">find_residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.find_starting_lag_values"><code class="docutils literal notranslate"><span class="pre">find_starting_lag_values()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.gauss_hermite_nodes"><code class="docutils literal notranslate"><span class="pre">gauss_hermite_nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getAllShocks"><code class="docutils literal notranslate"><span class="pre">getAllShocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getCombinedShocks"><code class="docutils literal notranslate"><span class="pre">getCombinedShocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getCovarianceMatricies"><code class="docutils literal notranslate"><span class="pre">getCovarianceMatricies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getCovarianceMatrix"><code class="docutils literal notranslate"><span class="pre">getCovarianceMatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getExogenousData"><code class="docutils literal notranslate"><span class="pre">getExogenousData()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getForwardLookingVariables"><code class="docutils literal notranslate"><span class="pre">getForwardLookingVariables()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getIndicesAndData"><code class="docutils literal notranslate"><span class="pre">getIndicesAndData()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getMatlabMatrices"><code class="docutils literal notranslate"><span class="pre">getMatlabMatrices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getMatrices"><code class="docutils literal notranslate"><span class="pre">getMatrices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getMatrix"><code class="docutils literal notranslate"><span class="pre">getMatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getOneVarEqsSolution"><code class="docutils literal notranslate"><span class="pre">getOneVarEqsSolution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getParameters"><code class="docutils literal notranslate"><span class="pre">getParameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getShocks"><code class="docutils literal notranslate"><span class="pre">getShocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getStableUnstableRowsColumns"><code class="docutils literal notranslate"><span class="pre">getStableUnstableRowsColumns()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getStableUnstableVariables"><code class="docutils literal notranslate"><span class="pre">getStableUnstableVariables()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getStationaryVariables"><code class="docutils literal notranslate"><span class="pre">getStationaryVariables()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getTrend"><code class="docutils literal notranslate"><span class="pre">getTrend()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.getTrendCofficients"><code class="docutils literal notranslate"><span class="pre">getTrendCofficients()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.get_adjusted_shocks"><code class="docutils literal notranslate"><span class="pre">get_adjusted_shocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.hermgauss"><code class="docutils literal notranslate"><span class="pre">hermgauss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.is_pd"><code class="docutils literal notranslate"><span class="pre">is_pd()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.nearest_pd"><code class="docutils literal notranslate"><span class="pre">nearest_pd()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.orthogonalize_shocks"><code class="docutils literal notranslate"><span class="pre">orthogonalize_shocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.qzdiv"><code class="docutils literal notranslate"><span class="pre">qzdiv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.qzdiv2"><code class="docutils literal notranslate"><span class="pre">qzdiv2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.qzswitch"><code class="docutils literal notranslate"><span class="pre">qzswitch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.qzswitch2"><code class="docutils literal notranslate"><span class="pre">qzswitch2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.sorter"><code class="docutils literal notranslate"><span class="pre">sorter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.util.test_hermite"><code class="docutils literal notranslate"><span class="pre">test_hermite()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="snowdrop.src.numeric.solver.html#module-snowdrop.src.numeric.solver">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="module-snowdrop.src.numeric">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.numeric" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+      <li>Previous: <a href="snowdrop.src.model.html" title="previous chapter">snowdrop.src.model package</a></li>
+      <li>Next: <a href="snowdrop.src.numeric.bayes.html" title="next chapter">snowdrop.src.numeric.bayes package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.numeric.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

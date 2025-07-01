@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.preprocessor.processes_new &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.preprocessor.processes_new</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">default_rng</span>
+<span class="c1">#from numpy.random import multivariate_normal</span>
+<span class="c1">#from numpy.random import uniform,normal,lognormal,beta,binomial,gamma,logistic</span>
+<span class="c1">#from numpy.random import chisquare,laplace,poisson,pareto,wald,weibull</span>
+
+<span class="n">rng</span> <span class="o">=</span> <span class="n">default_rng</span><span class="p">()</span>
+
+<span class="c1">### Multivariate distributions</span>
+<div class="viewcode-block" id="MvNormal">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.MvNormal">[docs]</a>
+<span class="k">class</span> <span class="nc">MvNormal</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Multivariate normal distribution class.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="mf">1.0</span><span class="p">]]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for `MvNormal` normal class.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            mean : 1-D array_like, optional</span>
+<span class="sd">                Mean values. The default is [0].</span>
+<span class="sd">            cov : 2-D array_like, optional</span>
+<span class="sd">                Covariance matrix of the distribution. The default is [[1.0]].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="p">)</span>
+
+<div class="viewcode-block" id="MvNormal.simulate">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.MvNormal.simulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sample draw from multivariate normal distribution.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            N : int</span>
+<span class="sd">                Sample size.</span>
+<span class="sd">            T : int</span>
+<span class="sd">                Time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ndarray or scalar</span>
+<span class="sd">                Drawn samples from the parameterized multivariate normal distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">MvNormal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span><span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">N</span><span class="o">*</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">result</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">T</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">mean</span><span class="p">)))</span></div>
+</div>
+
+
+
+<span class="c1">### Univariate distributions</span>
+<div class="viewcode-block" id="Normal">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Normal">[docs]</a>
+<span class="k">class</span> <span class="nc">Normal</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normal distribution class.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for `Normal` class.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            loc : float or array_like of floats, optional</span>
+<span class="sd">                Mean of the distribution. The default is 0.</span>
+<span class="sd">            scale : float or array_like of floats, optional</span>
+<span class="sd">                Standard deviation of the distribution. The default is 1.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="n">loc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
+
+<div class="viewcode-block" id="Normal.simulate">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Normal.simulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sample draw from normal distribution.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            T : int</span>
+<span class="sd">                Time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">             result : ndarray or scalar</span>
+<span class="sd">                Drawn samples from the parameterized normal distribution.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loc</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">Normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">result</span></div>
+</div>
+
+    
+    
+<div class="viewcode-block" id="LogNormal">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.LogNormal">[docs]</a>
+<span class="k">class</span> <span class="nc">LogNormal</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Univariate LogNormal distribution class.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Mu</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">Sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for `LogNormal` class.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            Mu : float or array_like of floats, optional</span>
+<span class="sd">                Mean value of the underlying normal distribution. The default is 0.0.</span>
+<span class="sd">            Sigma : float or array_like of floats, optional</span>
+<span class="sd">                Standard deviation. The default is 1.0.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">Sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Mu</span> <span class="o">=</span> <span class="n">Mu</span>
+
+<div class="viewcode-block" id="LogNormal.simulate">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.LogNormal.simulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sample draw from log-normal distribution.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            T : int</span>
+<span class="sd">                Time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">             result : ndarray or scalar</span>
+<span class="sd">                 Drawn samples from the parameterized log-normal distribution..</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span>
+        <span class="n">Mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Mu</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">Mu</span><span class="p">,</span><span class="n">sigma</span><span class="o">=</span><span class="n">Sigma</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">result</span></div>
+</div>
+
+    
+    
+<div class="viewcode-block" id="Beta">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Beta">[docs]</a>
+<span class="k">class</span> <span class="nc">Beta</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Univariate Beta distribution class.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for `Beta` class.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            a : float or array_like of floats.</span>
+<span class="sd">                Alpha, positive (&gt;0).</span>
+<span class="sd">            b : float or array_like of floats.</span>
+<span class="sd">                Beta, positive (&gt;0).</span>
+<span class="sd">`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+
+<div class="viewcode-block" id="Beta.simulate">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Beta.simulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sample draw from beta distribution.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            T : int</span>
+<span class="sd">                Time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">             result : ndarray or scalar</span>
+<span class="sd">                Drawn samples from the parameterized beta distribution.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">Beta</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">result</span></div>
+</div>
+
+    
+    
+<div class="viewcode-block" id="Binomial">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Binomial">[docs]</a>
+<span class="k">class</span> <span class="nc">Binomial</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Binomial distribution class.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for `Binomial` class.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            n : int or array_like of ints.</span>
+<span class="sd">                Parameter of the distribution, non-negative.</span>
+<span class="sd">            p : float or array_like of floats.</span>
+<span class="sd">                Parameter of the distribution, 0 &lt;= p &lt;= 1.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span>
+
+<div class="viewcode-block" id="Binomial.simulate">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Binomial.simulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sample draw from binomial distribution.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            T : int</span>
+<span class="sd">                Time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">             result : ndarray or scalar</span>
+<span class="sd">                Drawn samples from the parameterized binomial distribution.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">Binomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">result</span></div>
+</div>
+
+    
+    
+<div class="viewcode-block" id="Gamma">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Gamma">[docs]</a>
+<span class="k">class</span> <span class="nc">Gamma</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Univariate Gamma distribution class.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for  `Gamma` class.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            shape : float or array_like of floats.</span>
+<span class="sd">                The shape of the gamma distribution.</span>
+<span class="sd">            scale : float or array_like of floats, optional.</span>
+<span class="sd">                The scale of the gamma distribution. Must be non-negative. The default is 1.0.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
+
+<div class="viewcode-block" id="Gamma.simulate">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Gamma.simulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sample draw from gamma distribution.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            T : int</span>
+<span class="sd">                Time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">             result : ndarray or scalar</span>
+<span class="sd">                Drawn samples from the parameterized gamma distribution.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">Gamma</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">result</span></div>
+</div>
+
+          
+    
+<div class="viewcode-block" id="Logistic">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Logistic">[docs]</a>
+<span class="k">class</span> <span class="nc">Logistic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Univariate Logistic distribution class.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for `Logistic` class.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            loc : float or array_like of floats, optional.</span>
+<span class="sd">                Parameter of the distribution. The default is 0.</span>
+<span class="sd">            scale : loat or array_like of floats, optional.</span>
+<span class="sd">                Parameter of the distribution. Must be non-negative. The default is 1.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="n">loc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
+
+<div class="viewcode-block" id="Logistic.simulate">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Logistic.simulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sample draw from logistic distribution.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            T : int</span>
+<span class="sd">                Time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">             result : ndarray or scalar</span>
+<span class="sd">                Drawn samples from the parameterized logistics distribution.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loc</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">result</span></div>
+</div>
+
+                
+    
+<div class="viewcode-block" id="Uniform">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Uniform">[docs]</a>
+<span class="k">class</span> <span class="nc">Uniform</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Univariate Uniform distribution class.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for `Uniform` class.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            low : float or array_like of floats, optional.</span>
+<span class="sd">                Lower boundary of the output interval. The default is 0.</span>
+<span class="sd">            high : float or array_like of floats, optional.</span>
+<span class="sd">                Upper boundary of the output interval. . The default is 1.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">=</span> <span class="n">low</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="n">high</span>
+
+<div class="viewcode-block" id="Uniform.simulate">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.processes_new.Uniform.simulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sample draw from uniform distribution.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            T : int</span>
+<span class="sd">                Time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">             result : ndarray or scalar</span>
+<span class="sd">                Drawn samples from the parameterized uniform distribution.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="p">,</span><span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">result</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

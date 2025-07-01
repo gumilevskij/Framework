@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.info package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.misc package" href="snowdrop.src.misc.html" />
+    <link rel="prev" title="snowdrop.src.gui package" href="snowdrop.src.gui.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-info-package">
+<h1>snowdrop.src.info package<a class="headerlink" href="#snowdrop-src-info-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.info.graph">
+<span id="snowdrop-src-info-graph-module"></span><h2>snowdrop.src.info.graph module<a class="headerlink" href="#module-snowdrop.src.info.graph" title="Link to this heading">¶</a></h2>
+<p>Python class that demonstrates the essential facts and functionalities of graphs.
+This class represents a directed graph using adjacency list representation 
+It finds biconnected components in a given undirected graph with complexity : O(V + E)</p>
+<dl class="simple">
+<dt>Original version of the code can be found at:</dt><dd><p><a class="reference external" href="https://www.python-course.eu/graphs_python.php">https://www.python-course.eu/graphs_python.php</a>
+<a class="reference external" href="https://tutorialspoint.dev/data-structure/graph-data-structure/biconnected-components">https://tutorialspoint.dev/data-structure/graph-data-structure/biconnected-components</a></p>
+</dd>
+</dl>
+<p>Modified by A.Goumilevski</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.info.graph.</span></span><span class="sig-name descname"><span class="pre">Graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Graph class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.BCC">
+<span class="sig-name descname"><span class="pre">BCC</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.BCC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.BCC" title="Link to this definition">¶</a></dt>
+<dd><p>Function to do DFS traversal. It uses recursive BCCUtil().</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.BCCUtil">
+<span class="sig-name descname"><span class="pre">BCCUtil</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.BCCUtil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.BCCUtil" title="Link to this definition">¶</a></dt>
+<dd><p>A recursive function that finds and prints strongly connected components using DFS traversal</p>
+<p>u –&gt; The vertex to be visited next 
+disc[] –&gt; Stores discovery times of visited vertices 
+low[] – &gt;&gt; earliest visited vertex (the vertex with minimum</p>
+<blockquote>
+<div><p>discovery time) that can be reached from subtree 
+rooted with current vertex</p>
+</div></blockquote>
+<p>st – &gt;&gt; To store visited edges</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.Delta">
+<span class="sig-name descname"><span class="pre">Delta</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.Delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.Delta" title="Link to this definition">¶</a></dt>
+<dd><p>Get the maximum degree of the vertices.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.addEdge">
+<span class="sig-name descname"><span class="pre">addEdge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.addEdge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.addEdge" title="Link to this definition">¶</a></dt>
+<dd><p>Function to add an edge to graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.add_edge">
+<span class="sig-name descname"><span class="pre">add_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.add_edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.add_edge" title="Link to this definition">¶</a></dt>
+<dd><p>Add an edge.</p>
+<p>It is assumed that edge is of type set, tuple or list; between two vertices can be multiple edges!</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.add_vertex">
+<span class="sig-name descname"><span class="pre">add_vertex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.add_vertex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.add_vertex" title="Link to this definition">¶</a></dt>
+<dd><p>Add graph vertex.</p>
+<p>If the vertex is not in self.__graph_dict, a key “vertex” with an empty
+list as a value is added to the dictionary. Otherwise nothing has to be done.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.connected">
+<span class="sig-name descname"><span class="pre">connected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.connected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.connected" title="Link to this definition">¶</a></dt>
+<dd><p>Return connected vertices of a minimum spanning tree.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>t<span class="classifier">list</span></dt><dd><p>List of vertices.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>Connected vertices of a minimum spanning tree.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.degree_sequence">
+<span class="sig-name descname"><span class="pre">degree_sequence</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.degree_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.degree_sequence" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate the degree sequence.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.delta">
+<span class="sig-name descname"><span class="pre">delta</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.delta" title="Link to this definition">¶</a></dt>
+<dd><p>Get the minimum degree of the vertices.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.density">
+<span class="sig-name descname"><span class="pre">density</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.density" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate the density of a graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.diameter">
+<span class="sig-name descname"><span class="pre">diameter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.diameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.diameter" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate the diameter of the graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.edges">
+<span class="sig-name descname"><span class="pre">edges</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.edges" title="Link to this definition">¶</a></dt>
+<dd><p>Return the edges of a graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.erdoes_gallai">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">erdoes_gallai</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dsequence</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.erdoes_gallai"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.erdoes_gallai" title="Link to this definition">¶</a></dt>
+<dd><p>Check if the condition of the Erdoes-Gallai inequality is fullfilled.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.find">
+<span class="sig-name descname"><span class="pre">find</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.find"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.find" title="Link to this definition">¶</a></dt>
+<dd><p>Find a set of an element i.</p>
+<p>This algorithm uses path compression technique.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>parent<span class="classifier">list</span></dt><dd><p>Parent list.</p>
+</dd>
+<dt>i<span class="classifier">int</span></dt><dd><p>Element.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>Set of an element i.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.find_all_paths">
+<span class="sig-name descname"><span class="pre">find_all_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_vertex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_vertex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.find_all_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.find_all_paths" title="Link to this definition">¶</a></dt>
+<dd><p>Find all paths from start_vertex to end_vertex in graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.find_distance">
+<span class="sig-name descname"><span class="pre">find_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_vertex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_vertex</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.find_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.find_distance" title="Link to this definition">¶</a></dt>
+<dd><p>Find number of edges from start_vertex to end_vertex.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.find_isolated_vertices">
+<span class="sig-name descname"><span class="pre">find_isolated_vertices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.find_isolated_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.find_isolated_vertices" title="Link to this definition">¶</a></dt>
+<dd><p>Return a list of isolated vertices.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.find_path">
+<span class="sig-name descname"><span class="pre">find_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_vertex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_vertex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.find_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.find_path" title="Link to this definition">¶</a></dt>
+<dd><p>Find a path from start_vertex to end_vertex in graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.find_shortest_path">
+<span class="sig-name descname"><span class="pre">find_shortest_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_vertex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_vertex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.find_shortest_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.find_shortest_path" title="Link to this definition">¶</a></dt>
+<dd><p>Find shortest path from start_vertex to end_vertex.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.getBiconnectedComponents">
+<span class="sig-name descname"><span class="pre">getBiconnectedComponents</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.getBiconnectedComponents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.getBiconnectedComponents" title="Link to this definition">¶</a></dt>
+<dd><p>Get biconnected components in a graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.getMinimumSpanningTree">
+<span class="sig-name descname"><span class="pre">getMinimumSpanningTree</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.getMinimumSpanningTree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.getMinimumSpanningTree" title="Link to this definition">¶</a></dt>
+<dd><p>Kruskal’s algorithm to find Minimum Spanning Tree (MST)of a given connected, undirected and weighted graph.</p>
+<p>Time Complexity: O(ElogE) or O(ElogV). Here E is the number of edges and V is the number of vertices.
+Sorting of edges takes O(ELogE) time. After sorting, we iterate through all edges and apply find-union algorithm. 
+The find and union operations can take atmost O(LogV) time. So overall complexity is O(ELogE + ELogV) time. 
+The value of E can be atmost O(V2), so O(LogV) are O(LogE) same. Therefore, overall time complexity is O(ElogE) or O(ElogV).</p>
+<p><a class="reference external" href="https://www.geeksforgeeks.org/kruskals-minimum-spanning-tree-algorithm-greedy-algo-2/">https://www.geeksforgeeks.org/kruskals-minimum-spanning-tree-algorithm-greedy-algo-2/</a></p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>self: Graph object.</p>
+</dd>
+<dt>Returns:</dt><dd><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.get_components">
+<span class="sig-name descname"><span class="pre">get_components</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.get_components"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.get_components" title="Link to this definition">¶</a></dt>
+<dd><p>Find isolated components of a graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.get_connected_vertices">
+<span class="sig-name descname"><span class="pre">get_connected_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_vertex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices_encountered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gdict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.get_connected_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.get_connected_vertices" title="Link to this definition">¶</a></dt>
+<dd><p>Determine if graph is connected.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.get_vertices">
+<span class="sig-name descname"><span class="pre">get_vertices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.get_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.get_vertices" title="Link to this definition">¶</a></dt>
+<dd><p>Get graph vertices.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>vertices<span class="classifier">list</span></dt><dd><p>List of vertices.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.isCyclic">
+<span class="sig-name descname"><span class="pre">isCyclic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.isCyclic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.isCyclic" title="Link to this definition">¶</a></dt>
+<dd><p>Check whether a given graph contains a cycle or not.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>bool</dt><dd><p>True if graph is cyclic and False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.is_connected">
+<span class="sig-name descname"><span class="pre">is_connected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices_encountered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_vertex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.is_connected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.is_connected" title="Link to this definition">¶</a></dt>
+<dd><p>Determine if graph is connected.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.is_degree_sequence">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_degree_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.is_degree_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.is_degree_sequence" title="Link to this definition">¶</a></dt>
+<dd><p>Find degree sequence.</p>
+<p>Method returns True, if the “sequence” is a 
+degree sequence, i.e. a non-increasing sequence. 
+Otherwise returns False.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.printBiconnectedComponents">
+<span class="sig-name descname"><span class="pre">printBiconnectedComponents</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.printBiconnectedComponents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.printBiconnectedComponents" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.summary" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.union">
+<span class="sig-name descname"><span class="pre">union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.union"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.union" title="Link to this definition">¶</a></dt>
+<dd><p>Return  union of two sets of x and y.</p>
+<p>This algoritm sorts uses union by rank.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>parent<span class="classifier">list</span></dt><dd><p>Parent list of vertices.</p>
+</dd>
+<dt>rank<span class="classifier">list</span></dt><dd><p>Rank of tree.</p>
+</dd>
+<dt>x<span class="classifier">list</span></dt><dd><p>Graph vertices.</p>
+</dd>
+<dt>y<span class="classifier">list</span></dt><dd><p>Graph vertices.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.vertex_degree">
+<span class="sig-name descname"><span class="pre">vertex_degree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.vertex_degree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.vertex_degree" title="Link to this definition">¶</a></dt>
+<dd><p>Find vertex degree.</p>
+<p>The degree of a vertex is the number of edges connecting
+it, i.e. the number of adjacent vertices. Loops are counted 
+double, i.e. every occurence of vertex in the list 
+of adjacent vertices.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Graph.vertices">
+<span class="sig-name descname"><span class="pre">vertices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Graph.vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Graph.vertices" title="Link to this definition">¶</a></dt>
+<dd><p>Return the vertices of a graph.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.LinkedList">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.info.graph.</span></span><span class="sig-name descname"><span class="pre">LinkedList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#LinkedList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.LinkedList" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A Simple linked list class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.LinkedList.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#LinkedList.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.LinkedList.append" title="Link to this definition">¶</a></dt>
+<dd><p>Append a new node at the end.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.LinkedList.display">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#LinkedList.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.LinkedList.display" title="Link to this definition">¶</a></dt>
+<dd><p>Display the linked list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.LinkedList.getNode">
+<span class="sig-name descname"><span class="pre">getNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#LinkedList.getNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.LinkedList.getNode" title="Link to this definition">¶</a></dt>
+<dd><p>Return node of a linked list by value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.LinkedList.getParentNode">
+<span class="sig-name descname"><span class="pre">getParentNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#LinkedList.getParentNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.LinkedList.getParentNode" title="Link to this definition">¶</a></dt>
+<dd><p>Get previous node in the linked list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.LinkedList.insertAfter">
+<span class="sig-name descname"><span class="pre">insertAfter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prev_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#LinkedList.insertAfter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.LinkedList.insertAfter" title="Link to this definition">¶</a></dt>
+<dd><p>Insert a new node after the given prev_node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.LinkedList.insertBefore">
+<span class="sig-name descname"><span class="pre">insertBefore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#LinkedList.insertBefore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.LinkedList.insertBefore" title="Link to this definition">¶</a></dt>
+<dd><p>Insert a new node before the given node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.LinkedList.push">
+<span class="sig-name descname"><span class="pre">push</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#LinkedList.push"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.LinkedList.push" title="Link to this definition">¶</a></dt>
+<dd><p>Insert a new node at the beginning.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.LinkedList.toList">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">toList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#LinkedList.toList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.LinkedList.toList" title="Link to this definition">¶</a></dt>
+<dd><p>Convert a linked list to a list.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Node">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.info.graph.</span></span><span class="sig-name descname"><span class="pre">Node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graph.html#Node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graph.Node" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Node class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Node.next">
+<span class="sig-name descname"><span class="pre">next</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#snowdrop.src.info.graph.Node.next" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.info.graph.Node.value">
+<span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#snowdrop.src.info.graph.Node.value" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.info.graphs">
+<span id="snowdrop-src-info-graphs-module"></span><h2>snowdrop.src.info.graphs module<a class="headerlink" href="#module-snowdrop.src.info.graphs" title="Link to this heading">¶</a></h2>
+<p>Created on Sat Apr 18 13:01:21 2020</p>
+<p>&#64;author: A.Goumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.info.graphs.createClusters">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.info.graphs.</span></span><span class="sig-name descname"><span class="pre">createClusters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Minimum_Spanning_Tree.png'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graphs.html#createClusters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graphs.createClusters" title="Link to this definition">¶</a></dt>
+<dd><p>Create graph of components of model equations endogenous variables.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param model<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The Model object.</p>
+</dd>
+<dt class="field-even">type model<span class="colon">:</span></dt>
+<dd class="field-even"><p>Instance of class Model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.info.graphs.createGraph">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.info.graphs.</span></span><span class="sig-name descname"><span class="pre">createGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Equations_Graph.png'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graphs.html#createGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graphs.createGraph" title="Link to this definition">¶</a></dt>
+<dd><p>Create a graph of endogenous variables of a model.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param model<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The Model object.</p>
+</dd>
+<dt class="field-even">type model<span class="colon">:</span></dt>
+<dd class="field-even"><p>Instance of class Model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.info.graphs.getInfo">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.info.graphs.</span></span><span class="sig-name descname"><span class="pre">getInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graphs.html#getInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graphs.getInfo" title="Link to this definition">¶</a></dt>
+<dd><p>Get information on components of a graph’ model equations variables.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param model<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The Model object.</p>
+</dd>
+<dt class="field-even">type model<span class="colon">:</span></dt>
+<dd class="field-even"><p>Instance of class Model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.info.graphs.plot_image">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.info.graphs.</span></span><span class="sig-name descname"><span class="pre">plot_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fpath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graphs.html#plot_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graphs.plot_image" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.info.graphs.save_image">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.info.graphs.</span></span><span class="sig-name descname"><span class="pre">save_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graphs.html#save_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graphs.save_image" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.info.graphs.summary">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.info.graphs.</span></span><span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">components</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/info/graphs.html#summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.info.graphs.summary" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.info.test">
+<span id="snowdrop-src-info-test-module"></span><h2>snowdrop.src.info.test module<a class="headerlink" href="#module-snowdrop.src.info.test" title="Link to this heading">¶</a></h2>
+<p>Created on Sun Apr 19 16:16:04 2020</p>
+<p>&#64;author: Alexei</p>
+</section>
+<section id="module-snowdrop.src.info">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.info" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+      <li>Previous: <a href="snowdrop.src.gui.html" title="previous chapter">snowdrop.src.gui package</a></li>
+      <li>Next: <a href="snowdrop.src.misc.html" title="next chapter">snowdrop.src.misc package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.info.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.bayes.mcmc &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.bayes.mcmc</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Apr  5 13:09:34 2019</span>
+
+<span class="sd">Curently implemented for linear models only.</span>
+
+<span class="sd">@author: A.Goumilevski</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="c1">#from numeric.bayes.logp import logp</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.utils.distributions</span> <span class="kn">import</span> <span class="n">pdf</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.utils.distributions</span> <span class="kn">import</span> <span class="n">getHyperParameters</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver</span> <span class="kn">import</span> <span class="n">linear_solver</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.filters.filters</span> <span class="kn">import</span> <span class="n">DK_Filter</span> <span class="k">as</span> <span class="n">dk_filter</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.filters.filters</span> <span class="kn">import</span> <span class="n">Durbin_Koopman_Non_Diffuse_Filter</span> <span class="k">as</span> <span class="n">dk_non_diffuse_filter</span> 
+<span class="kn">from</span> <span class="nn">snowdrop.src.model.settings</span> <span class="kn">import</span> <span class="n">SamplingAlgorithm</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.model.settings</span> <span class="kn">import</span> <span class="n">PriorAssumption</span><span class="p">,</span><span class="n">FilterAlgorithm</span>
+<span class="kn">import</span> <span class="nn">snowdrop.src.numeric.solver.linear_solver</span> <span class="k">as</span> <span class="nn">ls</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.utils.prettyTable</span> <span class="kn">import</span> <span class="n">PrettyTable</span>
+
+<span class="n">num_cores</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+<span class="n">num_chains</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">PARALLEL</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># if True runs parallel sampling</span>
+
+<span class="n">count</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">nt</span><span class="o">=-</span><span class="mi">1</span><span class="p">;</span> <span class="n">n_</span><span class="o">=-</span><span class="mi">1</span><span class="p">;</span> <span class="n">n_shocks_</span><span class="o">=-</span><span class="mi">1</span><span class="p">;</span> <span class="n">ind_non_missing_</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">model_</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">param_names</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">y0_</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">param_index</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">meas_shocks_</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">obs_</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">Z_</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">Hm_</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">Qm_</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">pm_model</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">Pstar</span><span class="o">=</span><span class="kc">None</span>
+<span class="n">pm_names</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">pm_params</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">priors</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">data_</span><span class="o">=</span><span class="kc">None</span><span class="p">;</span> <span class="n">est_shocks_names</span><span class="o">=</span><span class="p">[];</span> <span class="n">shocks_</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">LARGE_NUMBER</span> <span class="o">=</span> <span class="mf">1.e10</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">path_to_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="s1">&#39;../../../graphs&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="prior_logp">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.prior_logp">[docs]</a>
+<span class="k">def</span> <span class="nf">prior_logp</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function defining log of prior probability.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">model_</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">param_names</span><span class="p">,</span><span class="n">param_index</span><span class="p">,</span><span class="n">count</span>
+    <span class="n">log_likelihood</span> <span class="o">=</span> <span class="mi">0</span>     
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param_index</span><span class="p">):</span>
+            <span class="n">name</span>  <span class="o">=</span> <span class="n">param_names</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">model_</span><span class="o">.</span><span class="n">priors</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">distr</span> <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;distribution&#39;</span><span class="p">]</span>
+            <span class="n">pars</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">])</span>
+            <span class="n">x</span>     <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">lower_bound</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">upper_bound</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">lower_bound</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">upper_bound</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="n">LARGE_NUMBER</span> <span class="o">-</span> <span class="n">count</span>
+            <span class="c1"># Get distribution hyperparameters</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">distr</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_hp&quot;</span><span class="p">):</span>
+                <span class="n">pars</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">pars</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">getHyperParameters</span><span class="p">(</span><span class="n">distr</span><span class="o">=</span><span class="n">distr</span><span class="p">,</span><span class="n">mean</span><span class="o">=</span><span class="n">pars</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">std</span><span class="o">=</span><span class="n">pars</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+            <span class="n">likelihood</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">pdf</span><span class="p">(</span><span class="n">distr</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">pars</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">b</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="n">LARGE_NUMBER</span> <span class="o">-</span> <span class="n">count</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">likelihood</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">likelihood</span><span class="p">):</span>
+                <span class="n">log_likelihood</span> <span class="o">=</span> <span class="o">-</span><span class="n">LARGE_NUMBER</span> <span class="o">-</span> <span class="n">count</span>
+            <span class="k">elif</span> <span class="n">likelihood</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">log_likelihood</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.e-10</span><span class="p">,</span><span class="n">likelihood</span><span class="p">))</span>
+                                     
+        <span class="c1"># Find standard deviations of shocks </span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">param_index</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">est_shocks_names</span><span class="p">):</span>
+            <span class="n">par</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">npar</span><span class="p">]</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">model_</span><span class="o">.</span><span class="n">priors</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">distr</span> <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;distribution&#39;</span><span class="p">]</span>
+            <span class="n">pars</span>  <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+            <span class="n">lower_bound</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">upper_bound</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">par</span> <span class="o">&lt;</span> <span class="n">lower_bound</span> <span class="ow">or</span> <span class="n">par</span> <span class="o">&gt;</span> <span class="n">upper_bound</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="n">LARGE_NUMBER</span> <span class="o">-</span> <span class="n">count</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Get distribution hyperparameters</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">distr</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_hp&quot;</span><span class="p">):</span>
+                    <span class="n">pars</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">pars</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">getHyperParameters</span><span class="p">(</span><span class="n">distr</span><span class="o">=</span><span class="n">distr</span><span class="p">,</span><span class="n">mean</span><span class="o">=</span><span class="n">pars</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">std</span><span class="o">=</span><span class="n">pars</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+                <span class="n">x</span><span class="p">,</span><span class="n">b</span>   <span class="o">=</span> <span class="n">pdf</span><span class="p">(</span><span class="n">distr</span><span class="p">,</span><span class="n">par</span><span class="p">,</span><span class="n">pars</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">b</span><span class="p">:</span> 
+                    <span class="k">return</span> <span class="o">-</span><span class="n">LARGE_NUMBER</span> <span class="o">-</span> <span class="n">count</span>
+                <span class="n">log_likelihood</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.e-10</span><span class="p">,</span><span class="n">x</span><span class="p">))</span>
+
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">log_likelihood</span> <span class="o">=</span> <span class="o">-</span><span class="n">LARGE_NUMBER</span> <span class="o">-</span> <span class="n">count</span>
+            
+    <span class="k">return</span> <span class="n">log_likelihood</span></div>
+
+
+
+<div class="viewcode-block" id="likelihood_logp">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.likelihood_logp">[docs]</a>
+<span class="k">def</span> <span class="nf">likelihood_logp</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span><span class="n">stds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function defining log of likelihood.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">model_</span><span class="p">,</span><span class="n">count</span><span class="p">,</span><span class="n">n_</span><span class="p">,</span><span class="n">nt</span><span class="p">,</span><span class="n">n_shocks_</span><span class="p">,</span><span class="n">Pstar</span><span class="p">,</span><span class="n">shocks_</span><span class="p">,</span><span class="n">meas_shocks_</span>
+    <span class="k">global</span> <span class="n">y0_</span><span class="p">,</span><span class="n">Qm_</span><span class="p">,</span><span class="n">obs_</span><span class="p">,</span><span class="n">Z_</span><span class="p">,</span><span class="n">Hm_</span><span class="p">,</span><span class="n">ind_non_missing_</span>
+      
+    <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.util</span> <span class="kn">import</span> <span class="n">getCovarianceMatrix</span>
+    
+    <span class="c1"># Expected value of outcome</span>
+    <span class="n">log_likelihood</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="kc">None</span><span class="p">;</span> <span class="n">S</span> <span class="o">=</span> <span class="kc">None</span><span class="p">;</span> <span class="n">Sinv</span> <span class="o">=</span> <span class="kc">None</span>
+    
+    <span class="n">calib</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">est_shocks_names</span><span class="p">):</span>
+        <span class="n">calib</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">stds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+             
+    <span class="c1"># Set values of covariance matrix</span>
+    <span class="n">Qm</span><span class="p">,</span><span class="n">Hm</span> <span class="o">=</span> <span class="n">getCovarianceMatrix</span><span class="p">(</span><span class="n">Qm_</span><span class="p">,</span><span class="n">Hm_</span><span class="p">,</span><span class="n">calib</span><span class="p">,</span><span class="n">shocks_</span><span class="p">,</span><span class="n">meas_shocks_</span><span class="p">)</span>  
+            
+    <span class="c1"># Solve linear model</span>
+    <span class="n">model_</span><span class="o">.</span><span class="n">solved</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">linear_solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model_</span><span class="p">,</span><span class="n">p</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span><span class="n">steady_state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_</span><span class="p">),</span><span class="n">suppress_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># State transition matrix</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="n">model_</span><span class="o">.</span><span class="n">linear_model</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span>
+    <span class="n">F1</span> <span class="o">=</span> <span class="n">F</span><span class="p">[:</span><span class="n">n_</span><span class="p">,:</span><span class="n">n_</span><span class="p">]</span>
+    <span class="c1"># Array of constants</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">model_</span><span class="o">.</span><span class="n">linear_model</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">C</span><span class="p">[:</span><span class="n">n_</span><span class="p">]</span>
+    <span class="c1"># Matrix of coefficients of shocks</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">model_</span><span class="o">.</span><span class="n">linear_model</span><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">]</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">R</span><span class="p">[:</span><span class="n">n_</span><span class="p">]</span>
+
+    <span class="n">Q</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">model_</span><span class="o">.</span><span class="n">max_lead_shock</span><span class="o">-</span><span class="n">model_</span><span class="o">.</span><span class="n">min_lag_shock</span><span class="p">):</span>
+        <span class="n">R1</span> <span class="o">=</span> <span class="n">R</span><span class="p">[:,</span><span class="n">i</span><span class="o">*</span><span class="n">n_shocks_</span><span class="p">:(</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">n_shocks_</span><span class="p">]</span>
+        <span class="n">Q</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">R1</span> <span class="o">@</span> <span class="n">Qm_</span> <span class="o">@</span> <span class="n">R1</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            
+    <span class="n">bUnivariate</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">yt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">y0_</span><span class="p">)</span>
+    
+    <span class="c1"># Get model likelihood by applying Kalman filter</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="n">nt</span><span class="p">):</span>
+        <span class="c1"># Initialize covariance matrices</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">Pstar</span><span class="p">)</span>
+        <span class="c1"># Apply Kalman filter to find log-likelyhood</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model_</span><span class="o">.</span><span class="n">FILTER</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">model_</span><span class="o">.</span><span class="n">FILTER</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">FilterAlgorithm</span><span class="o">.</span><span class="n">Non_Diffuse_Filter</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="n">yt</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">residual</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">K</span><span class="p">,</span><span class="n">S</span><span class="p">,</span><span class="n">Sinv</span><span class="p">,</span><span class="n">bUnivariate</span><span class="p">,</span><span class="n">loglk</span>  <span class="o">=</span> \
+                <span class="n">dk_non_diffuse_filter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">yt</span><span class="p">,</span><span class="n">xtilde</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">obs_</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="n">T</span><span class="o">=</span><span class="n">F1</span><span class="p">,</span><span class="n">Z</span><span class="o">=</span><span class="n">Z_</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="n">P</span><span class="p">,</span><span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span><span class="n">H</span><span class="o">=</span><span class="n">Hm</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">bUnivariate</span><span class="o">=</span><span class="n">bUnivariate</span><span class="p">,</span><span class="n">ind_non_missing</span><span class="o">=</span><span class="n">ind_non_missing_</span><span class="p">[</span><span class="n">t</span><span class="p">])</span> 
+        <span class="k">elif</span> <span class="n">model_</span><span class="o">.</span><span class="n">FILTER</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">FilterAlgorithm</span><span class="o">.</span><span class="n">Durbin_Koopman</span><span class="o">.</span><span class="n">value</span><span class="p">:</span> 
+            <span class="n">yt</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">residual</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="n">K</span><span class="p">,</span><span class="n">S</span><span class="p">,</span><span class="n">Sinv</span><span class="p">,</span><span class="n">loglk</span> <span class="o">=</span> \
+                <span class="n">dk_filter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">yt</span><span class="p">,</span><span class="n">xtilde</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">obs_</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="n">v</span><span class="o">=</span><span class="n">residual</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">F1</span><span class="p">,</span><span class="n">Z</span><span class="o">=</span><span class="n">Z_</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="n">P</span><span class="p">,</span><span class="n">H</span><span class="o">=</span><span class="n">Hm</span><span class="p">,</span><span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">ind_non_missing</span><span class="o">=</span><span class="n">ind_non_missing_</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+ 
+        <span class="n">log_likelihood</span> <span class="o">+=</span> <span class="n">loglk</span>
+        
+    <span class="k">return</span> <span class="n">log_likelihood</span></div>
+
+
+            
+<div class="viewcode-block" id="logp">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.logp">[docs]</a>
+<span class="k">def</span> <span class="nf">logp</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom function defining log of posterioir probability.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">count</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">param_index</span><span class="p">,</span><span class="n">model_</span>
+    
+    <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="c1">#print(p)</span>
+    <span class="c1"># Expected value of outcome</span>
+    <span class="n">posterior_log_likelihood</span> <span class="o">=</span> <span class="mi">0</span> 
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Get prior likelihood of model parameters </span>
+        <span class="n">prior_log_likelihood</span> <span class="o">=</span> <span class="n">prior_logp</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">prior_log_likelihood</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">LARGE_NUMBER</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">prior_log_likelihood</span>
+        
+        <span class="c1"># Update parameters</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="n">param_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">param_index</span><span class="p">)]</span> 
+        <span class="n">stds</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">param_index</span><span class="p">):]</span>
+            
+        <span class="c1"># Get poserior likelihood of model fit to data</span>
+        <span class="n">log_likelihood</span> <span class="o">=</span> <span class="n">likelihood_logp</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span><span class="n">stds</span><span class="p">)</span>
+            
+        <span class="c1"># update the progress bar</span>
+        <span class="k">if</span> <span class="n">PARALLEL</span> <span class="ow">and</span> <span class="n">count</span><span class="o">%</span><span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\b</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;=&gt;&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        
+        <span class="c1">#print(&#39;parameters: &#39;,p)</span>
+        <span class="c1">#print(&#39;prior: &#39;,prior_log_likelihood,&#39;log_likelihood: &#39;,log_likelihood)</span>
+        <span class="n">posterior_log_likelihood</span> <span class="o">=</span> <span class="n">prior_log_likelihood</span> <span class="o">+</span> <span class="n">log_likelihood</span>
+        <span class="k">return</span> <span class="n">posterior_log_likelihood</span>
+    
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span></div>
+
+   
+    
+<div class="viewcode-block" id="func_likelihood">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.func_likelihood">[docs]</a>
+<span class="k">def</span> <span class="nf">func_likelihood</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom function defining log of likelihood.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">count</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">param_index</span>
+    
+    <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="c1"># Expected value of outcome</span>
+    <span class="n">log_likelihood</span> <span class="o">=</span> <span class="mi">0</span> 
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Update parameters</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="n">param_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">param_index</span><span class="p">)]</span>
+        <span class="n">stds</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">param_index</span><span class="p">):]</span>
+        
+        <span class="c1"># Get poserior likelihood of model fit to data</span>
+        <span class="n">log_likelihood</span> <span class="o">=</span> <span class="n">likelihood_logp</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span><span class="n">stds</span><span class="p">)</span>
+            
+        <span class="c1"># update the progress bar</span>
+        <span class="k">if</span> <span class="n">PARALLEL</span> <span class="ow">and</span> <span class="n">count</span><span class="o">%</span><span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\b</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;=&gt;&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="n">log_likelihood</span>
+    
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">LARGE_NUMBER</span><span class="o">-</span><span class="n">count</span></div>
+
+    
+    
+<div class="viewcode-block" id="func_prior">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.func_prior">[docs]</a>
+<span class="k">def</span> <span class="nf">func_prior</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom function defining log of prior probability.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">count</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">param_index</span>
+    
+    <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="c1">#print(p)</span>
+    <span class="c1"># Expected value of outcome</span>
+    <span class="n">log_likelihood</span> <span class="o">=</span> <span class="mi">0</span> 
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Get prior likelihood of model parameters </span>
+        <span class="n">log_likelihood</span> <span class="o">=</span> <span class="n">prior_logp</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            
+        <span class="c1"># update the progress bar</span>
+        <span class="k">if</span> <span class="n">PARALLEL</span> <span class="ow">and</span> <span class="n">count</span><span class="o">%</span><span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\b</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;=&gt;&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="n">log_likelihood</span>
+    
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">LARGE_NUMBER</span><span class="o">-</span><span class="n">count</span></div>
+
+         
+
+<div class="viewcode-block" id="gelman_rubin">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.gelman_rubin">[docs]</a>
+<span class="k">def</span> <span class="nf">gelman_rubin</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The Gelman-Rubin Test.&quot;&quot;&quot;</span>
+    <span class="n">ssq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">ssq</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">θb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">θbb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">θb</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">n</span><span class="o">/</span><span class="p">(</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">θbb</span><span class="o">-</span><span class="n">θb</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">var_θ</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">n</span><span class="o">*</span><span class="n">W</span><span class="o">+</span><span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="o">*</span><span class="n">B</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var_θ</span><span class="o">/</span><span class="n">W</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">R</span></div>
+
+
+        
+<div class="viewcode-block" id="sample">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.bayes.html#snowdrop.src.numeric.bayes.mcmc.sample">[docs]</a>
+<span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">obs</span><span class="p">,</span><span class="n">Qm</span><span class="p">,</span><span class="n">Hm</span><span class="p">,</span><span class="n">y0</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;emcee&quot;</span><span class="p">,</span><span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">steady_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">burn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">Ndraws</span><span class="o">=</span><span class="mi">310</span><span class="p">,</span><span class="n">Niter</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span><span class="n">ind_non_missing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">Parallel</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">resetParameters</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Draw model parameters samples by using MCMC sampler.</span>
+<span class="sd">    </span>
+<span class="sd">    The variants of MC2 sampler are:</span>
+<span class="sd">        </span>
+<span class="sd">    * Affine Invariant Markov Chain Monte Carlo (MCMC) Ensemble sampler (emcee package). </span>
+<span class="sd">        * Emcee is a Python ensemble sampling toolkit for affine-invariant MCMC.</span>
+<span class="sd">        * For references on emcee package please see http://dfm.io/emcee/current/</span>
+<span class="sd">        * The algorithm is based on 2010 paper of Jonathan Goodman and Jonathan Weare’s paper, &quot;Ensemble Samplers with Affine Invariance&quot;, https://projecteuclid.org/download/pdf_1/euclid.camcos/1513731992</span>
+<span class="sd">    * Markov Chain Monte Carlo (MCMC) sampler includes different Metropolis based sampling techniques:</span>
+<span class="sd">        * Metropolis-Hastings (MH): Primary sampling method.</span>
+<span class="sd">        * Adaptive-Metropolis (AM): Adapts covariance matrix at specified intervals.</span>
+<span class="sd">        * Delayed-Rejection (DR): Delays rejection by sampling from a narrower distribution. Capable of n-stage delayed rejection.</span>
+<span class="sd">        * Delayed Rejection Adaptive Metropolis (DRAM): DR + AM</span>
+<span class="sd">        Please see https://pymcmcstat.readthedocs.io/_/downloads/en/latest/pdf/</span>
+<span class="sd">    * Markov Chain Monte Carlo (MCMC) sampler with &quot;particles&quot; package</span>
+<span class="sd">        Please see https://pypi.org/project/particles ,</span>
+<span class="sd">        https://github.com/nchopin/particles ,</span>
+<span class="sd">        </span>
+<span class="sd">        Nicolas, Chopin and Omiros, Papaspiliopoulos, 2020, &quot;An Introduction to Sequential</span>
+<span class="sd">        Monte Carlo&quot;, Springer Series in Statistics.</span>
+<span class="sd">      </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param model: Model object.</span>
+<span class="sd">        :type model: Model.</span>
+<span class="sd">        :param n: Number of endogenous variables.</span>
+<span class="sd">        :type n: int.</span>
+<span class="sd">        :param obs: Measurement data.</span>
+<span class="sd">        :type obs: numpy.array.</span>
+<span class="sd">        :param Qm: Covariance matrix of errors of endogenous variables. </span>
+<span class="sd">        :type Qm: numpy.array.</span>
+<span class="sd">        :param Hm: Covariance matrix of errors of measurement variables.</span>
+<span class="sd">        :type Hm: numpy.array.</span>
+<span class="sd">        :param y0: Starting values of endogenous variables.</span>
+<span class="sd">        :type y0: list.</span>
+<span class="sd">        :param method: Sampler algorithm.</span>
+<span class="sd">        :type method: str.</span>
+<span class="sd">        :param parameters: List of model parameters.</span>
+<span class="sd">        :type parameters: list.</span>
+<span class="sd">        :param steady_state: List of steady states.</span>
+<span class="sd">        :type steady_state: list.</span>
+<span class="sd">        :param burn: Number of samples to discard.</span>
+<span class="sd">        :type burn: int.</span>
+<span class="sd">        :param Ndraws: Number of draws.</span>
+<span class="sd">        :type Ndraws: int.</span>
+<span class="sd">        :param Niter: Number of iterations.</span>
+<span class="sd">        :type Niter: int.</span>
+<span class="sd">        :param ind_non_missing: indices of non-missing observations.</span>
+<span class="sd">        :type ind_non_missing: list.</span>
+<span class="sd">        :param Parallel: If True runs parallel parameters sampling.</span>
+<span class="sd">        :type Parallel: bool.</span>
+<span class="sd">        :param resetParameters: If True resets parameters to the samples mean values.</span>
+<span class="sd">        :type resetParameters: bool</span>
+<span class="sd">        :param debug: If True print chain statistics information for pymcmcstat method.</span>
+<span class="sd">        :type debug: bool.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">warnings</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+        
+    <span class="k">global</span> <span class="n">count</span><span class="p">,</span><span class="n">n_</span><span class="p">,</span><span class="n">nt</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">param_names</span><span class="p">,</span><span class="n">param_index</span><span class="p">,</span><span class="n">est_shocks_names</span>
+    <span class="k">global</span> <span class="n">Z_</span><span class="p">,</span><span class="n">y0_</span><span class="p">,</span><span class="n">Qm_</span><span class="p">,</span><span class="n">obs_</span><span class="p">,</span><span class="n">data_</span><span class="p">,</span><span class="n">Hm_</span><span class="p">,</span><span class="n">ind_non_missing_</span><span class="p">,</span><span class="n">n_shocks_</span><span class="p">,</span><span class="n">shocks_</span>
+    <span class="k">global</span> <span class="n">model_</span><span class="p">,</span><span class="n">priors</span><span class="p">,</span><span class="n">pm_model</span><span class="p">,</span><span class="n">pm_names</span><span class="p">,</span><span class="n">pm_params</span><span class="p">,</span><span class="n">meas_shocks_</span><span class="p">,</span><span class="n">Pstar</span><span class="p">,</span><span class="n">PARALLEL</span>
+    
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> 
+    <span class="n">n_</span>  <span class="o">=</span> <span class="n">n</span>
+    <span class="n">PARALLEL</span> <span class="o">=</span> <span class="n">Parallel</span>
+    <span class="n">model_</span> <span class="o">=</span> <span class="n">model</span>
+    <span class="n">y0_</span> <span class="o">=</span> <span class="n">y0</span><span class="p">;</span> <span class="n">obs_</span><span class="o">=</span> <span class="n">obs</span>
+    <span class="n">Qm_</span> <span class="o">=</span> <span class="n">Qm</span><span class="p">;</span> <span class="n">Hm_</span> <span class="o">=</span> <span class="n">Hm</span>
+    <span class="n">ind_non_missing_</span> <span class="o">=</span> <span class="n">ind_non_missing</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="kc">None</span>
+    
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="n">n</span><span class="p">,</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">shocks</span> <span class="o">=</span> <span class="n">meas_shocks_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">]</span>
+    <span class="n">n_shocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shocks</span><span class="p">)</span>
+    <span class="n">n_shocks_</span> <span class="o">=</span> <span class="n">n_shocks</span>
+                
+    <span class="n">param_names</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+    <span class="c1">#m_params = dict(zip(param_names,params))</span>
+    <span class="n">priors</span> <span class="o">=</span> <span class="n">model_</span><span class="o">.</span><span class="n">priors</span>
+    
+    <span class="k">if</span> <span class="s1">&#39;measurement_shocks&#39;</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">:</span>
+        <span class="n">meas_shocks</span> <span class="o">=</span> <span class="n">meas_shocks_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;measurement_shocks&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">meas_shocks</span> <span class="o">=</span> <span class="n">meas_shocks_</span> <span class="o">=</span> <span class="p">[]</span>
+                            
+    <span class="c1"># Find standard deviations of calibrated shocks</span>
+    <span class="n">est_shocks_std</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cal</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">priors</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;std_&quot;</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shocks</span><span class="o">+</span><span class="n">meas_shocks</span><span class="p">):</span>
+        <span class="n">std_v</span> <span class="o">=</span> <span class="s2">&quot;std_&quot;</span><span class="o">+</span><span class="n">v</span>
+        <span class="k">if</span> <span class="n">std_v</span> <span class="ow">in</span> <span class="n">cal</span><span class="p">:</span>
+            <span class="n">est_shocks_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">std_v</span><span class="p">)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">cal</span><span class="p">[</span><span class="n">std_v</span><span class="p">][</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+            <span class="n">est_shocks_std</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="n">param_index</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>      
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param_names</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">priors</span><span class="p">:</span>
+            <span class="n">param_index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">est_shocks_names</span><span class="p">)):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">est_shocks_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="c1"># Get reference to measurement function</span>
+    <span class="n">nt</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+       
+    <span class="n">s</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="n">meas_variables</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;measurement_variables&#39;</span><span class="p">]</span>
+    <span class="n">meas_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">meas_variables</span><span class="p">]</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">mvr</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">meas_variables</span><span class="p">,</span><span class="n">meas_vars</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;_meas&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">mvr</span><span class="p">[:</span><span class="o">-</span><span class="mi">5</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="s2">&quot;obs_&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">mvr</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span>
+        <span class="n">ind</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        
+    <span class="k">if</span> <span class="s1">&#39;measurement_shocks&#39;</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">:</span>
+        <span class="n">n_meas_shocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;measurement_shocks&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n_meas_shocks</span> <span class="o">=</span> <span class="mi">0</span>
+        
+    <span class="c1"># Get reference to measurement function</span>
+    <span class="n">f_measurement</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s1">&#39;f_measurement&#39;</span><span class="p">]</span>
+    <span class="n">bHasAttr</span>  <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f_measurement</span><span class="p">,</span><span class="s2">&quot;py_func&quot;</span><span class="p">)</span>
+    <span class="n">mv</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;measurement_variables&#39;</span><span class="p">]</span>
+    <span class="n">nm</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mv</span><span class="p">)</span>
+    
+    <span class="c1"># Find measurement equations jacobian</span>
+    <span class="n">meas_params</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;measurement_parameters&#39;</span><span class="p">]</span>
+    <span class="n">meas_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="n">nm</span><span class="o">+</span><span class="n">n_shocks</span><span class="o">+</span><span class="n">n_meas_shocks</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bHasAttr</span><span class="p">:</span>
+        <span class="n">meas_const</span><span class="p">,</span><span class="n">meas_jacob</span> <span class="o">=</span> <span class="n">f_measurement</span><span class="o">.</span><span class="n">py_func</span><span class="p">(</span><span class="n">meas_var</span><span class="p">,</span><span class="n">meas_params</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">meas_const</span><span class="p">,</span><span class="n">meas_jacob</span> <span class="o">=</span> <span class="n">f_measurement</span><span class="p">(</span><span class="n">meas_var</span><span class="p">,</span><span class="n">meas_params</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">obs</span> <span class="o">-=</span> <span class="n">meas_const</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="o">-</span><span class="n">meas_jacob</span><span class="p">[:,:</span><span class="n">n</span><span class="p">]</span>  
+    <span class="n">Z_</span> <span class="o">=</span> <span class="n">Z</span>
+    
+    
+    <span class="c1">### Get model matrices</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">solved</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">ls</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">p</span><span class="o">=</span><span class="n">params</span><span class="p">,</span><span class="n">steady_state</span><span class="o">=</span><span class="n">steady_state</span><span class="p">,</span><span class="n">suppress_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># State transition matrix</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">linear_model</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">])</span>
+    <span class="n">F1</span> <span class="o">=</span> <span class="n">F</span><span class="p">[:</span><span class="n">n</span><span class="p">,:</span><span class="n">n</span><span class="p">]</span>
+    <span class="c1"># Array of constants</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">linear_model</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">][:</span><span class="n">n</span><span class="p">])</span>
+    <span class="c1"># Matrix of coefficients of shocks</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">linear_model</span><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">][:</span><span class="n">n</span><span class="p">]</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">model</span><span class="o">.</span><span class="n">max_lead_shock</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">min_lag_shock</span><span class="p">):</span>
+        <span class="n">R1</span> <span class="o">=</span> <span class="n">R</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span><span class="n">i</span><span class="o">*</span><span class="n">n_shocks</span><span class="p">:(</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">n_shocks</span><span class="p">]</span>
+        <span class="n">Q</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">R1</span> <span class="o">@</span> <span class="n">Qm</span> <span class="o">@</span> <span class="n">R1</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        
+    <span class="c1"># Set covariance matrix</span>
+    <span class="n">Nd</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">max_lead_shock</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">min_lag_shock</span>
+    <span class="c1"># Get starting values of matrix P</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">PRIOR</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Pstar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">PRIOR</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">PriorAssumption</span><span class="o">.</span><span class="n">StartingValues</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+        <span class="n">Pstar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">PRIOR</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">PriorAssumption</span><span class="o">.</span><span class="n">Diffuse</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.filters.utils</span> <span class="kn">import</span> <span class="n">compute_Pinf_Pstar</span>
+        <span class="n">mf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
+        <span class="n">Pinf</span><span class="p">,</span><span class="n">Pstar</span> <span class="o">=</span> <span class="n">compute_Pinf_Pstar</span><span class="p">(</span><span class="n">mf</span><span class="o">=</span><span class="n">mf</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">F1</span><span class="p">,</span><span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span><span class="n">Q</span><span class="o">=</span><span class="n">Qm</span><span class="p">,</span><span class="n">N</span><span class="o">=</span><span class="n">Nd</span><span class="p">,</span><span class="n">n_shocks</span><span class="o">=</span><span class="n">n_shocks</span><span class="p">)</span> 
+    <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">PRIOR</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">PriorAssumption</span><span class="o">.</span><span class="n">Equilibrium</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.solvers</span> <span class="kn">import</span> <span class="n">lyapunov_solver</span>                     
+        <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.util</span> <span class="kn">import</span> <span class="n">getStableUnstableRowsColumns</span>
+        <span class="n">rowStable</span><span class="p">,</span><span class="n">colStable</span><span class="p">,</span><span class="n">rowUnstable</span><span class="p">,</span><span class="n">colUnstable</span> <span class="o">=</span> <span class="n">getStableUnstableRowsColumns</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">F1</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">C</span><span class="p">)</span>                       
+        <span class="n">Pstar</span> <span class="o">=</span> <span class="n">lyapunov_solver</span><span class="p">(</span><span class="n">T</span><span class="o">=</span><span class="n">F1</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">rowStable</span><span class="p">,</span><span class="n">colStable</span><span class="p">)],</span><span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">[</span><span class="n">rowStable</span><span class="p">],</span><span class="n">Q</span><span class="o">=</span><span class="n">Qm</span><span class="p">,</span><span class="n">N</span><span class="o">=</span><span class="n">Nd</span><span class="p">,</span><span class="n">n_shocks</span><span class="o">=</span><span class="n">n_shocks</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="s2">&quot;discrete&quot;</span><span class="p">)</span>               
+    <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">PRIOR</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">PriorAssumption</span><span class="o">.</span><span class="n">Asymptotic</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+        <span class="c1"># Riccati equation</span>
+        <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">solve_discrete_are</span> 
+        <span class="n">Pstar</span> <span class="o">=</span> <span class="n">solve_discrete_are</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">F1</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span><span class="n">r</span><span class="o">=</span><span class="n">Hm</span><span class="p">)</span>
+ 
+    <span class="c1">###------------------------------------------------   Sampling around optimized solution</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Running Markov Chain Monte Carlo Sampling...&quot;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Emcee</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+        <span class="c1"># Bayesian parameter estimation with &quot;emcee&quot; package</span>
+        <span class="kn">import</span> <span class="nn">emcee</span>
+        
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">param_index</span><span class="p">])</span> <span class="o">+</span> <span class="n">est_shocks_std</span><span class="p">)</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">nwalkers</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">ndim</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span><span class="n">ndim</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">PARALLEL</span><span class="p">:</span>
+            <span class="n">n_threads</span> <span class="o">=</span> <span class="n">num_cores</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_threads</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1"># Set sampler</span>
+        <span class="k">if</span> <span class="n">emcee</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&lt;</span> <span class="s2">&quot;3&quot;</span><span class="p">:</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span><span class="n">nwalkers</span><span class="o">=</span><span class="n">nwalkers</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="n">ndim</span><span class="p">,</span><span class="n">lnpostfn</span><span class="o">=</span><span class="n">logp</span><span class="p">,</span><span class="n">threads</span><span class="o">=</span><span class="n">n_threads</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span><span class="n">nwalkers</span><span class="o">=</span><span class="n">nwalkers</span><span class="p">,</span><span class="n">ndim</span><span class="o">=</span><span class="n">ndim</span><span class="p">,</span><span class="n">log_prob_fn</span><span class="o">=</span><span class="n">logp</span><span class="p">,</span><span class="n">threads</span><span class="o">=</span><span class="n">n_threads</span><span class="p">)</span>
+     
+        <span class="c1"># Run the MCMC for N steps</span>
+        <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">Ndraws</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">chain</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">chain</span>
+        
+        <span class="c1"># Discard the initial &quot;burn&quot; steps</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[:,</span> <span class="n">burn</span><span class="p">:,</span> <span class="p">:]</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span><span class="p">))</span>
+        <span class="n">panel</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">panel2</span>  <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span><span class="p">))</span>
+        <span class="n">params_last</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]</span>
+        
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Acceptance fraction: </span><span class="si">{:.1f}</span><span class="s2">%&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">acceptance_fraction</span><span class="p">)))</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">μ</span><span class="se">\t\t\t</span><span class="s2">σ</span><span class="se">\t\t\t</span><span class="s2">Gelman-Rubin&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========================================&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{:.2f}</span><span class="se">\t\t</span><span class="si">{:.2f}</span><span class="se">\t\t</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">chain</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">chain</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">chain</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">chain</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">gelman_rubin</span><span class="p">(</span><span class="n">chain</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+            
+            <span class="kn">from</span> <span class="nn">snowdrop.src.graphs.util</span> <span class="kn">import</span> <span class="n">plot_chain</span><span class="p">,</span><span class="n">plot_pairwise_correlation</span>
+            <span class="n">plot_chain</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">chains</span><span class="o">=</span><span class="n">panel</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Convergence&quot;</span><span class="p">,</span><span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+            <span class="n">plot_pairwise_correlation</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">chains</span><span class="o">=</span><span class="n">panel2</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pairwise Correlation&quot;</span><span class="p">,</span><span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+                    
+
+    <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="p">[</span><span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Particle_pmmh</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                            <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Particle_smc</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                            <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Particle_gibbs</span><span class="o">.</span><span class="n">value</span><span class="p">]:</span>
+        <span class="c1"># Bayesian parameter estimation with &quot;particles&quot; package</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.utils.distributions</span> <span class="kn">import</span> <span class="n">StructDist</span>
+        <span class="c1">#import particles.distributions as dists  # Distributions</span>
+        <span class="kn">from</span> <span class="nn">particles</span> <span class="kn">import</span> <span class="n">mcmc</span>  <span class="c1"># MCMC algorithms (PMMH, Particle Gibbs, etc.)</span>
+        <span class="kn">from</span> <span class="nn">particles</span> <span class="kn">import</span> <span class="n">smc_samplers</span> <span class="k">as</span> <span class="n">ssp</span>
+        <span class="c1">#from particles import collectors as col</span>
+        <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.utils.distributions</span> <span class="kn">import</span> <span class="n">getParticleParameter</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.filters.particle</span> <span class="kn">import</span> <span class="n">StateSpaceModel</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.filters.particle</span> <span class="kn">import</span> <span class="n">ParticleGibbs</span>
+        
+        <span class="c1">#from statsmodels.stats.correlation_tools import cov_nearest as nearestPositiveDefinite</span>
+    
+        <span class="n">non_empty</span> <span class="o">=</span> <span class="p">[</span><span class="nb">bool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ind_non_missing_</span><span class="p">]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data_</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">non_empty</span><span class="p">]</span>
+        <span class="c1">### Get matrices</span>
+        <span class="c1"># State transition matrix.</span>
+        <span class="c1">#T_ = model.linear_model[&quot;A&quot;][:n,:n]</span>
+        <span class="c1"># Array of constants.</span>
+        <span class="c1">#C_ = model.linear_model[&quot;C&quot;][:n]</span>
+        <span class="c1"># Matrix of coefficients of shocks</span>
+        <span class="n">R</span>  <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">linear_model</span><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">][:</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">Q_</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">model</span><span class="o">.</span><span class="n">max_lead_shock</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">min_lag_shock</span><span class="p">):</span>
+            <span class="n">R1</span> <span class="o">=</span> <span class="n">R</span><span class="p">[:,</span><span class="n">i</span><span class="o">*</span><span class="n">n_shocks</span><span class="p">:(</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">n_shocks</span><span class="p">]</span>
+            <span class="n">Q_</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">R1</span> <span class="o">@</span> <span class="n">Qm</span> <span class="o">@</span> <span class="n">R1</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">Q_</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">Q_</span><span class="o">+</span><span class="n">Q_</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            
+        <span class="c1"># Initialize parameter&#39;s array</span>
+        <span class="n">prior_names</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">prior_dict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">();</span> <span class="n">val</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param_index</span><span class="p">):</span>
+            <span class="n">name</span>  <span class="o">=</span> <span class="n">param_names</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">model_</span><span class="o">.</span><span class="n">priors</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">pars</span>  <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+            <span class="n">distr</span> <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;distribution&#39;</span><span class="p">]</span>
+            <span class="n">p</span>     <span class="o">=</span> <span class="n">getParticleParameter</span><span class="p">(</span><span class="n">distr</span><span class="p">,</span><span class="n">pars</span><span class="p">)</span>
+            <span class="n">prior_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">prior_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
+            <span class="n">val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">est_shocks_names</span><span class="p">)):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">est_shocks_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">model_</span><span class="o">.</span><span class="n">priors</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">pars</span>  <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+            <span class="n">distr</span> <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;distribution&#39;</span><span class="p">]</span>
+            <span class="n">p</span>     <span class="o">=</span> <span class="n">getParticleParameter</span><span class="p">(</span><span class="n">distr</span><span class="p">,</span><span class="n">pars</span><span class="p">)</span>
+            <span class="n">prior_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
+        
+        <span class="n">my_prior</span> <span class="o">=</span> <span class="n">StructDist</span><span class="p">(</span><span class="n">prior_dict</span><span class="p">)</span>
+        
+        <span class="c1"># Initial values of parameters</span>
+        <span class="n">theta0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">my_prior</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="n">names</span><span class="p">):</span>
+            <span class="n">theta0</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">est_shocks_names</span><span class="p">)):</span>
+            <span class="n">theta0</span><span class="p">[</span><span class="n">est_shocks_names</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">est_shocks_std</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        
+        <span class="c1"># Initial number of particles</span>
+        <span class="n">Nparticles</span> <span class="o">=</span> <span class="mi">100</span>
+        
+        <span class="c1"># Initialize state-space model           </span>
+        <span class="c1"># ss_model = StateSpaceModel(x=y0,y=obs,theta0=theta0,data=data,T=T_,R=R,Z=Z,P=Q_,Q=Q_,Qm=Qm,H=Hm,C=C_,n_shocks=n_shocks,verbose=True)</span>
+        <span class="c1"># Simulate from the model &#39;nt&#39; data points</span>
+        <span class="c1"># states, y_data = ss_model.simulate(nt)</span>
+        
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Particle_gibbs</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="c1"># Particle Gibbs sampler for a state-space model</span>
+            <span class="n">pf</span> <span class="o">=</span> <span class="n">ParticleGibbs</span><span class="p">(</span><span class="n">niter</span><span class="o">=</span><span class="n">Niter</span><span class="p">,</span><span class="n">Nx</span><span class="o">=</span><span class="n">Nparticles</span><span class="p">,</span><span class="n">ssm_cls</span><span class="o">=</span><span class="n">StateSpaceModel</span><span class="p">,</span>
+                               <span class="n">theta0</span><span class="o">=</span><span class="n">theta0</span><span class="p">,</span><span class="n">prior</span><span class="o">=</span><span class="n">my_prior</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">pf</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">theta</span>
+        <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Particle_pmmh</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="c1"># Particle Marginal Metropolis Hastings algorithm</span>
+            <span class="n">pf</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">PMMH</span><span class="p">(</span><span class="n">niter</span><span class="o">=</span><span class="n">Niter</span><span class="p">,</span><span class="n">Nx</span><span class="o">=</span><span class="n">Ndraws</span><span class="p">,</span><span class="n">ssm_cls</span><span class="o">=</span><span class="n">StateSpaceModel</span><span class="p">,</span>
+                           <span class="n">prior</span><span class="o">=</span><span class="n">my_prior</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span><span class="n">theta0</span><span class="o">=</span><span class="n">theta0</span><span class="p">)</span>
+            <span class="n">pf</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">theta</span>
+        <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Particle_smc</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="c1"># Sequential Quasi-Monte Carlo algorithm</span>
+            <span class="kn">import</span> <span class="nn">particles</span>
+            <span class="n">fk_smc</span> <span class="o">=</span> <span class="n">ssp</span><span class="o">.</span><span class="n">SMC2</span><span class="p">(</span><span class="n">ssm_cls</span><span class="o">=</span><span class="n">StateSpaceModel</span><span class="p">,</span><span class="n">prior</span><span class="o">=</span><span class="n">my_prior</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                              <span class="n">init_Nx</span><span class="o">=</span><span class="n">Nparticles</span><span class="p">,</span><span class="n">wastefree</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">collect</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#[col.Moments()]</span>
+            <span class="n">pf</span> <span class="o">=</span> <span class="n">particles</span><span class="o">.</span><span class="n">SMC</span><span class="p">(</span><span class="n">fk</span><span class="o">=</span><span class="n">fk_smc</span><span class="p">,</span><span class="n">qmc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">N</span><span class="o">=</span><span class="n">Nparticles</span><span class="p">,</span><span class="n">store_history</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                               <span class="n">collect</span><span class="o">=</span><span class="n">collect</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">pf</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="c1"># for i in range(len(data)-1):</span>
+            <span class="c1">#     next(pf)</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">theta</span>
+            
+        <span class="n">samples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">burn</span><span class="p">:</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="n">burn</span><span class="p">:]</span>  <span class="c1"># discard the first &quot;burn&quot; iterations</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">z</span>
+            <span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">params_last</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">snowdrop.src.graphs.util</span> <span class="kn">import</span> <span class="n">plot_chain</span><span class="p">,</span><span class="n">plot_pairwise_correlation</span>
+            <span class="n">plot_chain</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">chains</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Convergence&quot;</span><span class="p">,</span><span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+            <span class="n">plot_pairwise_correlation</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">chains</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pairwise Correlation&quot;</span><span class="p">,</span><span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+ 
+                
+    <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="p">[</span><span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Pymcmcstat_mh</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                            <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Pymcmcstat_am</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                            <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Pymcmcstat_dr</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                            <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Pymcmcstat_dram</span><span class="o">.</span><span class="n">value</span><span class="p">]:</span>       
+        <span class="c1"># Bayesian parameter estimation with &quot;pymcmcstat&quot; package</span>
+        <span class="kn">import</span> <span class="nn">tempfile</span> 
+        <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+        <span class="kn">import</span> <span class="nn">pymcmcstat</span> <span class="k">as</span> <span class="nn">mcstat</span>
+        <span class="kn">from</span> <span class="nn">pymcmcstat.MCMC</span> <span class="kn">import</span> <span class="n">MCMC</span>
+        <span class="kn">from</span> <span class="nn">pymcmcstat.ParallelMCMC</span> <span class="kn">import</span> <span class="n">ParallelMCMC</span>
+        <span class="kn">from</span> <span class="nn">pymcmcstat.chain</span> <span class="kn">import</span> <span class="n">ChainProcessing</span> <span class="k">as</span> <span class="n">CP</span>
+        <span class="kn">from</span> <span class="nn">pymcmcstat.chain</span> <span class="kn">import</span> <span class="n">ChainStatistics</span> <span class="k">as</span> <span class="n">CS</span>
+
+        <span class="c1"># Define a directory name based on the date/time to ensure we do not overwrite any results.</span>
+        <span class="n">datestr</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">_%H%M%S&#39;</span><span class="p">)</span>
+        <span class="n">savedir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span>  <span class="s1">&#39;resources&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datestr</span><span class="p">,</span> <span class="s1">&#39;parallel_chains&#39;</span><span class="p">))</span> 
+        
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Pymcmcstat_mh</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="n">sampling_method</span> <span class="o">=</span> <span class="s2">&quot;mh&quot;</span>
+        <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Pymcmcstat_am</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="n">sampling_method</span> <span class="o">=</span> <span class="s2">&quot;am&quot;</span>
+        <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Pymcmcstat_dr</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="n">sampling_method</span> <span class="o">=</span> <span class="s2">&quot;dr&quot;</span>
+        <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">SamplingAlgorithm</span><span class="o">.</span><span class="n">Pymcmcstat_dram</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="n">sampling_method</span> <span class="o">=</span> <span class="s2">&quot;dram&quot;</span>
+            
+        <span class="c1"># Initialize MCMC object</span>
+        <span class="n">mc2</span> <span class="o">=</span> <span class="n">MCMC</span><span class="p">()</span>
+        <span class="c1"># initialize data structure </span>
+        <span class="n">mc2</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">add_data_set</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[],</span> <span class="n">y</span><span class="o">=</span><span class="p">[])</span>
+        <span class="n">mc2</span><span class="o">.</span><span class="n">simulation_options</span><span class="o">.</span><span class="n">define_simulation_options</span><span class="p">(</span>
+            <span class="n">nsimu</span><span class="o">=</span><span class="n">Ndraws</span><span class="p">,</span><span class="n">updatesigma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="n">sampling_method</span><span class="p">,</span>
+            <span class="n">savedir</span><span class="o">=</span><span class="n">savedir</span><span class="p">,</span><span class="n">savesize</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span><span class="n">save_to_json</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">waitbar</span><span class="o">=</span><span class="ow">not</span> <span class="n">PARALLEL</span><span class="p">,</span><span class="n">save_lightly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">save_to_bin</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">mc2</span><span class="o">.</span><span class="n">model_settings</span><span class="o">.</span><span class="n">define_model_settings</span><span class="p">(</span><span class="n">sos_function</span><span class="o">=</span><span class="n">func_likelihood</span><span class="p">,</span><span class="n">prior_function</span><span class="o">=</span><span class="n">func_prior</span><span class="p">,</span><span class="n">sigma2</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        
+        <span class="c1"># Initialize parameter&#39;s array</span>
+        <span class="n">iv</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param_index</span><span class="p">):</span>
+            <span class="n">name</span>  <span class="o">=</span> <span class="n">param_names</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">model_</span><span class="o">.</span><span class="n">priors</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">pars</span>  <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+            <span class="n">lower_bound</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">upper_bound</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1">#x = m_params[name]</span>
+            <span class="n">iv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="c1">#print(name,x,lower_bound,upper_bound)</span>
+            <span class="n">mc2</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">add_model_parameter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">theta0</span><span class="o">=</span><span class="n">x</span><span class="p">,</span><span class="n">minimum</span><span class="o">=</span><span class="n">lower_bound</span><span class="p">,</span><span class="n">maximum</span><span class="o">=</span><span class="n">upper_bound</span><span class="p">,</span><span class="n">sample</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Initialize standard deviation&#39;s array</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">est_shocks_names</span><span class="p">:</span>            
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">model_</span><span class="o">.</span><span class="n">priors</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">pars</span>  <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+            <span class="n">lower_bound</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">upper_bound</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">iv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="c1">#print(name,x,lower_bound,upper_bound)</span>
+            <span class="n">mc2</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">add_model_parameter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">theta0</span><span class="o">=</span><span class="n">x</span><span class="p">,</span><span class="n">minimum</span><span class="o">=</span><span class="n">lower_bound</span><span class="p">,</span><span class="n">maximum</span><span class="o">=</span><span class="n">upper_bound</span><span class="p">,</span><span class="n">sample</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+           
+        <span class="k">if</span> <span class="n">PARALLEL</span><span class="p">:</span>
+            <span class="c1"># # Setup Parallel Simulation and Define Initial Values</span>
+            <span class="c1"># - You can specify the number of chains to be generated (`num_chain`) </span>
+            <span class="c1">#   and the number of cores to use (`num_cores`).</span>
+            <span class="c1"># setup parallel MCMC</span>
+            <span class="n">parMC</span> <span class="o">=</span> <span class="n">ParallelMCMC</span><span class="p">()</span>
+            <span class="n">parMC</span><span class="o">.</span><span class="n">setup_parallel_simulation</span><span class="p">(</span><span class="n">mcset</span><span class="o">=</span><span class="n">mc2</span><span class="p">,</span><span class="n">initial_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">iv</span><span class="p">]</span><span class="o">*</span><span class="n">num_chains</span><span class="p">),</span>
+                                            <span class="n">num_chain</span><span class="o">=</span><span class="n">num_chains</span><span class="p">,</span><span class="n">num_cores</span><span class="o">=</span><span class="n">num_cores</span><span class="p">)</span>
+            
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Run Parallel Simulations.</span>
+                <span class="n">parMC</span><span class="o">.</span><span class="n">run_parallel_simulation</span><span class="p">()</span>
+                <span class="c1"># Display Chain Statistics.</span>
+                <span class="c1">#parMC.display_individual_chain_statistics()</span>
+                
+                <span class="c1"># Processing Chains</span>
+                <span class="c1"># To load the results we must specify the name of the top level directory </span>
+                <span class="c1"># where the parallel results are stored.  </span>
+                <span class="n">pres</span> <span class="o">=</span> <span class="n">CP</span><span class="o">.</span><span class="n">load_parallel_simulation_results</span><span class="p">(</span><span class="n">savedir</span><span class="p">)</span>
+                <span class="n">combined_chains</span><span class="p">,</span><span class="n">index</span> <span class="o">=</span> <span class="n">CP</span><span class="o">.</span><span class="n">generate_combined_chain_with_index</span><span class="p">(</span><span class="n">pres</span><span class="p">)</span>
+                
+                <span class="n">chains</span> <span class="o">=</span> <span class="n">CP</span><span class="o">.</span><span class="n">generate_chain_list</span><span class="p">(</span><span class="n">pres</span><span class="p">,</span><span class="n">burnin_percentage</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">100.</span><span class="o">*</span><span class="n">burn</span><span class="o">/</span><span class="n">Ndraws</span><span class="p">))</span>
+                <span class="c1"># Aggregate chains</span>
+                <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">chains</span><span class="p">)</span>
+                <span class="n">params_last</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                
+                <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+                    <span class="c1"># Gelman-Rubin Diagnostic</span>
+                    <span class="c1"># We generated the list of chains which are required for the Gelman-Rubin diagnostic.  </span>
+                    <span class="c1"># The output will be a dictionary where the keys are the parameter names.  </span>
+                    <span class="c1"># Each parameter references another dictionary which contains</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; - `R`, Potential Scale Reduction Factor (PSRF)&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; - `B`, Between Sequence Variance&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; - `W`, Within Sequence Variance&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; - `V`, Mixture-of-Sequences Variance&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; - `neff`, Effective Number of Samples&quot;</span><span class="p">)</span>
+                    <span class="n">CS</span><span class="o">.</span><span class="n">gelman_rubin</span><span class="p">(</span><span class="n">chains</span><span class="o">=</span><span class="n">chains</span><span class="p">,</span> <span class="n">display</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            
+                    <span class="kn">from</span> <span class="nn">snowdrop.src.graphs.util</span> <span class="kn">import</span> <span class="n">plot_chain</span><span class="p">,</span><span class="n">plot_pairwise_correlation</span>
+                    <span class="n">plot_chain</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">chains</span><span class="o">=</span><span class="n">chains</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Convergence&quot;</span><span class="p">,</span><span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+                    <span class="n">plot_pairwise_correlation</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">chains</span><span class="o">=</span><span class="n">chains</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pairwise Correlation&quot;</span><span class="p">,</span><span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+                            
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">samples</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="c1"># Remove temporary directory</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">savedir</span><span class="p">):</span>
+                    <span class="kn">import</span> <span class="nn">shutil</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">savedir</span><span class="p">)</span>
+                
+        <span class="k">else</span><span class="p">:</span>
+            
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Run Sequential Simulations.</span>
+                <span class="n">mc2</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">()</span>
+                <span class="c1"># Extract results.</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="n">mc2</span><span class="o">.</span><span class="n">simulation_results</span><span class="o">.</span><span class="n">results</span>
+                <span class="n">chain</span>   <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;chain&#39;</span><span class="p">]</span>
+                <span class="n">samples</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[</span><span class="n">burn</span><span class="p">:]</span>
+                <span class="n">params_last</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                
+                <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+                    <span class="c1"># Display chain statistics</span>
+                    <span class="n">mc2</span><span class="o">.</span><span class="n">chainstats</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span><span class="n">results</span><span class="p">)</span>
+                    
+                    <span class="c1"># Generate mcmc plots</span>
+                    <span class="n">mcpl</span> <span class="o">=</span> <span class="n">mcstat</span><span class="o">.</span><span class="n">mcmcplot</span> <span class="c1"># initialize plotting methods</span>
+                    <span class="n">mcpl</span><span class="o">.</span><span class="n">plot_chain_panel</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span><span class="n">names</span><span class="p">)</span>
+                    <span class="n">mcpl</span><span class="o">.</span><span class="n">plot_density_panel</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span><span class="n">names</span><span class="p">)</span>
+                    <span class="n">mcpl</span><span class="o">.</span><span class="n">plot_pairwise_correlation_panel</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span><span class="n">names</span><span class="p">)</span>
+                
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
+                
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="c1"># Remove temporary directory</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">savedir</span><span class="p">):</span>
+                    <span class="kn">import</span> <span class="nn">shutil</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">savedir</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Undefined sampling algorithm: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">SAMPLING_ALGORITHM</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="c1"># Mean, median and standard deviation of sample</span>
+    <span class="n">params_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">params_median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">params_std</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="n">header</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">,</span><span class="s1">&#39;Start Val.&#39;</span><span class="p">,</span><span class="s1">&#39;Median&#39;</span><span class="p">,</span><span class="s1">&#39;Std.&#39;</span><span class="p">,</span><span class="s1">&#39;Last&#39;</span><span class="p">,</span><span class="s1">&#39;Shape&#39;</span><span class="p">,</span><span class="s1">&#39;L.B.&#39;</span><span class="p">,</span><span class="s1">&#39;U.B.&#39;</span><span class="p">]</span>
+    <span class="n">pTable</span> <span class="o">=</span> <span class="n">PrettyTable</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+    <span class="n">pTable</span><span class="o">.</span><span class="n">float_format</span> <span class="o">=</span> <span class="s1">&#39;5.3&#39;</span>
+    
+    <span class="c1"># Estimated parameters</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">param_index</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+        <span class="n">prior</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">priors</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">distr</span> <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;distribution&#39;</span><span class="p">]</span>
+        <span class="n">pars</span>  <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+        <span class="n">par</span>   <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">else</span> <span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">row</span>   <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span><span class="n">par</span><span class="p">,</span><span class="n">params_median</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">params_std</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">params_last</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">distr</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_pdf&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_hp&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">),</span><span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">pars</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="n">pTable</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    
+    <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Ensemble Estimation&quot;</span><span class="p">,</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pTable</span><span class="p">)</span>
+    
+    <span class="c1"># Save parameters</span>
+    <span class="n">all_parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">resetParameters</span><span class="p">:</span>
+        <span class="n">all_parameters</span><span class="p">[</span><span class="n">param_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">params_mean</span>
+        <span class="c1">#all_parameters[param_index] = params_last</span>
+    
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1"># this ends the progress bar</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">solved</span> <span class="o">=</span> <span class="kc">False</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Sampling elapsed time: </span><span class="si">{0}</span><span class="s2"> (seconds)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed</span><span class="p">))</span>
+    
+
+    <span class="k">return</span> <span class="n">all_parameters</span><span class="p">,</span><span class="n">names</span><span class="p">,</span><span class="n">samples</span></div>
+
+    
+    
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

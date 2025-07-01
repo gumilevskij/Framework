@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.numeric.estimation package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.numeric.filters package" href="snowdrop.src.numeric.filters.html" />
+    <link rel="prev" title="snowdrop.src.numeric.dp package" href="snowdrop.src.numeric.dp.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-numeric-estimation-package">
+<h1>snowdrop.src.numeric.estimation package<a class="headerlink" href="#snowdrop-src-numeric-estimation-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.numeric.estimation.estimate">
+<span id="snowdrop-src-numeric-estimation-estimate-module"></span><h2>snowdrop.src.numeric.estimation.estimate module<a class="headerlink" href="#module-snowdrop.src.numeric.estimation.estimate" title="Link to this heading">¶</a></h2>
+<p>Created on Wed Jan 23 12:52:44 2019</p>
+<p>&#64;author: AGoumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.estimation.estimate.run">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.estimation.estimate.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Qm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Hm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steady_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind_non_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_data_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimate_Posterior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimate_ML</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SLSQP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linearized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/estimation/estimate.html#run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.estimation.estimate.run" title="Link to this definition">¶</a></dt>
+<dd><p>Estimates linear/nonlinear model parameters given measurement data.</p>
+<dl class="simple">
+<dt>Parameters: </dt><dd><dl class="field-list simple">
+<dt class="field-odd">param y0<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Starting values of endogenous variables.</p>
+</dd>
+<dt class="field-even">type y0<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.array</p>
+</dd>
+<dt class="field-odd">param model<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model object.</p>
+</dd>
+<dt class="field-even">type model<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model.</p>
+</dd>
+<dt class="field-odd">param T<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Time span.</p>
+</dd>
+<dt class="field-even">type T<span class="colon">:</span></dt>
+<dd class="field-even"><p>int.</p>
+</dd>
+<dt class="field-odd">param Qm<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Covariance matrix of errors of endogenous variables.</p>
+</dd>
+<dt class="field-even">type Qm<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.array.</p>
+</dd>
+<dt class="field-odd">param Hm<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Covariance matrix of errors of measurement variables.</p>
+</dd>
+<dt class="field-even">type Hm<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.array.</p>
+</dd>
+<dt class="field-odd">param obs<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of measurement variables.</p>
+</dd>
+<dt class="field-even">type obs<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param ss<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of steady states.</p>
+</dd>
+<dt class="field-even">type s<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param ind_non_missing<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Indices of non-missing observations.</p>
+</dd>
+<dt class="field-even">type ind_non_missing<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param fit_data_only<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If True calibrate model parameters by minimizing sum of squared errors of model fit to data.   
+Otherwise, calibrate model by maximizing sum of the prior likelihood of model parameters and the likelihood of model fit to data.</p>
+</dd>
+<dt class="field-even">type fit_data_only<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">param estimate_ML<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If True estimate maximum likelihood only.</p>
+</dd>
+<dt class="field-even">type estimate_ML<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">param linearized<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If True model transition matrices are computed at steady state.  Use this option to speed up calculations.</p>
+</dd>
+<dt class="field-even">type linearized<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Numerical solution.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.estimation.test_grad">
+<span id="snowdrop-src-numeric-estimation-test-grad-module"></span><h2>snowdrop.src.numeric.estimation.test_grad module<a class="headerlink" href="#module-snowdrop.src.numeric.estimation.test_grad" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.estimation.test_grad.a_dfdx">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.estimation.test_grad.</span></span><span class="sig-name descname"><span class="pre">a_dfdx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#snowdrop.src.numeric.estimation.test_grad.a_dfdx" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.estimation.test_grad.a_dfdy">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.estimation.test_grad.</span></span><span class="sig-name descname"><span class="pre">a_dfdy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#snowdrop.src.numeric.estimation.test_grad.a_dfdy" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.estimation.test_grad.datagen">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.estimation.test_grad.</span></span><span class="sig-name descname"><span class="pre">datagen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/estimation/test_grad.html#datagen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.estimation.test_grad.datagen" title="Link to this definition">¶</a></dt>
+<dd><p>Generates data for OLS regression.
+Inputs:
+N: Number of observations
+beta: K x 1 true parameter values
+sigma: std dev of error</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.estimation.test_grad.f">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.estimation.test_grad.</span></span><span class="sig-name descname"><span class="pre">f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/estimation/test_grad.html#f"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.estimation.test_grad.f" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.estimation.test_grad.neg_loglike">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.estimation.test_grad.</span></span><span class="sig-name descname"><span class="pre">neg_loglike</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/estimation/test_grad.html#neg_loglike"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.estimation.test_grad.neg_loglike" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.estimation.test_grad.neg_loglike_">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.estimation.test_grad.</span></span><span class="sig-name descname"><span class="pre">neg_loglike_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/estimation/test_grad.html#neg_loglike_"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.estimation.test_grad.neg_loglike_" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.estimation.test_grad.test">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.estimation.test_grad.</span></span><span class="sig-name descname"><span class="pre">test</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/estimation/test_grad.html#test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.estimation.test_grad.test" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.estimation.test_mle">
+<span id="snowdrop-src-numeric-estimation-test-mle-module"></span><h2>snowdrop.src.numeric.estimation.test_mle module<a class="headerlink" href="#module-snowdrop.src.numeric.estimation.test_mle" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.estimation.test_mle.test">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.estimation.test_mle.</span></span><span class="sig-name descname"><span class="pre">test</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/estimation/test_mle.html#test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.estimation.test_mle.test" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.estimation">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.numeric.estimation" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+  <li><a href="snowdrop.src.numeric.html">snowdrop.src.numeric package</a><ul>
+      <li>Previous: <a href="snowdrop.src.numeric.dp.html" title="previous chapter">snowdrop.src.numeric.dp package</a></li>
+      <li>Next: <a href="snowdrop.src.numeric.filters.html" title="next chapter">snowdrop.src.numeric.filters package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.numeric.estimation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

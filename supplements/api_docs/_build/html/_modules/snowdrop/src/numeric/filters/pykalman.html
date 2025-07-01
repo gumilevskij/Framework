@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.filters.pykalman &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.filters.pykalman</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span>
+<span class="kn">from</span> <span class="nn">pykalman</span> <span class="kn">import</span> <span class="n">KalmanFilter</span>
+<span class="kn">from</span> <span class="nn">pykalman.sqrt.cholesky</span> <span class="kn">import</span> <span class="n">CholeskyKalmanFilter</span>
+<span class="kn">from</span> <span class="nn">pykalman.sqrt.bierman</span> <span class="kn">import</span> <span class="n">BiermanKalmanFilter</span>
+<span class="kn">from</span> <span class="nn">pykalman.unscented</span> <span class="kn">import</span> <span class="n">UnscentedKalmanFilter</span>
+            
+
+<div class="viewcode-block" id="MyKalmanFilter">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyKalmanFilter">[docs]</a>
+<span class="k">class</span> <span class="nc">MyKalmanFilter</span><span class="p">(</span><span class="n">KalmanFilter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This module implements Kalman Filter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="nf">_filter_correct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">observation_matrix</span><span class="p">,</span> <span class="n">observation_covariance</span><span class="p">,</span>
+                        <span class="n">observation_offset</span><span class="p">,</span> <span class="n">predicted_state_mean</span><span class="p">,</span>
+                        <span class="n">predicted_state_covariance</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Correct a predicted state with a Kalman Filter update</span>
+
+<span class="sd">        Incorporate observation `observation` from time `t` to turn</span>
+<span class="sd">        </span>
+<span class="sd">        :math:`P(x_t | z_{0:t-1})` into :math:`P(x_t | z_{0:t})`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            observation_matrix : [n_dim_obs, n_dim_state] array</span>
+<span class="sd">                observation matrix for time t</span>
+<span class="sd">            observation_covariance : [n_dim_obs, n_dim_obs] array</span>
+<span class="sd">                covariance matrix for observation at time t</span>
+<span class="sd">            observation_offset : [n_dim_obs] array</span>
+<span class="sd">                offset for observation at time t</span>
+<span class="sd">            predicted_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean of state at time t given observations from times</span>
+<span class="sd">                [0...t-1]</span>
+<span class="sd">            predicted_state_covariance : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                covariance of state at time t given observations from times</span>
+<span class="sd">                [0...t-1]</span>
+<span class="sd">            observation : [n_dim_obs] array</span>
+<span class="sd">                observation at time t.  If `observation` is a masked array and any of</span>
+<span class="sd">                its values are masked, the observation will be ignored.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            kalman_gain : [n_dim_state, n_dim_obs] array</span>
+<span class="sd">                Kalman gain matrix for time t</span>
+<span class="sd">            corrected_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean of state at time t given observations from times</span>
+<span class="sd">                [0...t]</span>
+<span class="sd">            corrected_state_covariance : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                covariance of state at time t given observations from times</span>
+<span class="sd">                [0...t]</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmask</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+            <span class="n">predicted_observation_mean</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">observation_matrix</span><span class="p">,</span>
+                       <span class="n">predicted_state_mean</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">observation_offset</span>
+            <span class="p">)</span>
+            <span class="n">predicted_observation_covariance</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">observation_matrix</span><span class="p">,</span>
+                       <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">predicted_state_covariance</span><span class="p">,</span>
+                              <span class="n">observation_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+                <span class="o">+</span> <span class="n">observation_covariance</span>
+            <span class="p">)</span>
+            <span class="n">kalman_gain</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">predicted_state_covariance</span><span class="p">,</span>
+                       <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">observation_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                              <span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">predicted_observation_covariance</span><span class="p">)))</span>
+            <span class="p">)</span>
+            <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">predicted_state_mean</span>
+                <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">kalman_gain</span><span class="p">,</span> <span class="n">observation</span> <span class="o">-</span> <span class="n">predicted_observation_mean</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">corrected_state_covariance</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">predicted_state_covariance</span>
+                <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">kalman_gain</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">observation_matrix</span><span class="p">,</span>
+                                <span class="n">predicted_state_covariance</span><span class="p">))</span>
+            <span class="p">)</span>
+                
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">mask</span><span class="o">==</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">n_dim_state</span> <span class="o">=</span> <span class="n">predicted_state_covariance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="n">observation_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">kalman_gain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_dim_state</span><span class="p">,</span> <span class="n">n_dim_obs</span><span class="p">))</span>
+            <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="n">predicted_state_mean</span>
+            <span class="n">corrected_state_covariance</span> <span class="o">=</span> <span class="n">predicted_state_covariance</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_dim_state</span> <span class="o">=</span> <span class="n">predicted_state_covariance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ind_missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">MyKalmanFilter</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">mask</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">]</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="p">[</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_dim_state</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ind_missing</span><span class="p">]</span>
+            
+            <span class="n">predicted_observation_mean</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">observation_matrix</span><span class="p">,</span>
+                       <span class="n">predicted_state_mean</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">observation_offset</span>
+            <span class="p">)</span>
+            <span class="n">predicted_observation_covariance</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">observation_matrix</span><span class="p">,</span>
+                       <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">predicted_state_covariance</span><span class="p">,</span>
+                              <span class="n">observation_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+                <span class="o">+</span> <span class="n">observation_covariance</span>
+            <span class="p">)</span>
+            <span class="n">kalman_gain</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">predicted_state_covariance</span><span class="p">,</span>
+                       <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">observation_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                              <span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">predicted_observation_covariance</span><span class="p">)))</span>
+            <span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">observation</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span> <span class="o">-</span> <span class="n">predicted_observation_mean</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">])</span>
+            <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="n">predicted_state_mean</span>
+            <span class="n">corrected_state_mean</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">predicted_state_mean</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">kalman_gain</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span><span class="o">~</span><span class="n">mask</span><span class="p">)],</span> <span class="n">v</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">corrected_state_covariance</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">predicted_state_covariance</span>
+                <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">kalman_gain</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">observation_matrix</span><span class="p">,</span>
+                                <span class="n">predicted_state_covariance</span><span class="p">))</span>
+            <span class="p">)</span>
+            
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">kalman_gain</span><span class="p">,</span> <span class="n">corrected_state_mean</span><span class="p">,</span>
+                <span class="n">corrected_state_covariance</span><span class="p">)</span>
+        
+
+<div class="viewcode-block" id="MyKalmanFilter.filter_update">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyKalmanFilter.filter_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">filter_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filtered_state_mean</span><span class="p">,</span> <span class="n">filtered_state_covariance</span><span class="p">,</span>
+                      <span class="n">observation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transition_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">transition_offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transition_covariance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">observation_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">observation_offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">observation_covariance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Update a Kalman Filter state estimate.</span>
+
+<span class="sd">        Perform a one-step update to estimate the state at time :math:`t+1`</span>
+<span class="sd">        give an observation at time :math:`t+1` and the previous estimate for</span>
+<span class="sd">        time :math:`t` given observations from times :math:`[0...t]`.  This</span>
+<span class="sd">        method is useful if one wants to track an object with streaming</span>
+<span class="sd">        observations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filtered_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean estimate for state at time t given observations from times</span>
+<span class="sd">                [1...t]</span>
+<span class="sd">            filtered_state_covariance : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                covariance of estimate for state at time t given observations from</span>
+<span class="sd">                times [1...t]</span>
+<span class="sd">            observation : [n_dim_obs] array or None</span>
+<span class="sd">                observation from time t+1.  If `observation` is a masked array and</span>
+<span class="sd">                any of `observation`&#39;s components are masked or if `observation` is</span>
+<span class="sd">                None, then `observation` will be treated as a missing observation.</span>
+<span class="sd">            transition_matrix : optional, [n_dim_state, n_dim_state] array</span>
+<span class="sd">                state transition matrix from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_matrices` will be used.</span>
+<span class="sd">            transition_offset : optional, [n_dim_state] array</span>
+<span class="sd">                state offset for transition from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_offset` will be used.</span>
+<span class="sd">            transition_covariance : optional, [n_dim_state, n_dim_state] array</span>
+<span class="sd">                state transition covariance from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_covariance` will be used.</span>
+<span class="sd">            observation_matrix : optional, [n_dim_obs, n_dim_state] array</span>
+<span class="sd">                observation matrix at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_matrices` will be used.</span>
+<span class="sd">            observation_offset : optional, [n_dim_obs] array</span>
+<span class="sd">                observation offset at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_offset` will be used.</span>
+<span class="sd">            observation_covariance : optional, [n_dim_obs, n_dim_obs] array</span>
+<span class="sd">                observation covariance at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_covariance` will be used.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            next_filtered_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean estimate for state at time t+1 given observations from times</span>
+<span class="sd">                [1...t+1]</span>
+<span class="sd">            next_filtered_state_covariance : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                covariance of estimate for state at time t+1 given observations</span>
+<span class="sd">                from times [1...t+1]</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">pykalman.standard</span> <span class="kn">import</span> <span class="n">_arg_or_default</span><span class="p">,</span><span class="n">_filter_predict</span>
+        <span class="c1"># initialize matrices</span>
+        <span class="p">(</span><span class="n">transition_matrices</span><span class="p">,</span> <span class="n">transition_offsets</span><span class="p">,</span> <span class="n">transition_cov</span><span class="p">,</span>
+         <span class="n">observation_matrices</span><span class="p">,</span> <span class="n">observation_offsets</span><span class="p">,</span> <span class="n">observation_cov</span><span class="p">,</span>
+         <span class="n">initial_state_mean</span><span class="p">,</span> <span class="n">initial_state_covariance</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_parameters</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">transition_offset</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">transition_offset</span><span class="p">,</span> <span class="n">transition_offsets</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;transition_offset&quot;</span>
+        <span class="p">)</span>
+        <span class="n">observation_offset</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">observation_offset</span><span class="p">,</span> <span class="n">observation_offsets</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;observation_offset&quot;</span>
+        <span class="p">)</span>
+        <span class="n">transition_matrix</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">transition_matrix</span><span class="p">,</span> <span class="n">transition_matrices</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;transition_matrix&quot;</span>
+        <span class="p">)</span>
+        <span class="n">observation_matrix</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">observation_matrix</span><span class="p">,</span> <span class="n">observation_matrices</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;observation_matrix&quot;</span>
+        <span class="p">)</span>
+        <span class="n">transition_covariance</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">transition_covariance</span><span class="p">,</span> <span class="n">transition_cov</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;transition_covariance&quot;</span>
+        <span class="p">)</span>
+        <span class="n">observation_covariance</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">observation_covariance</span><span class="p">,</span> <span class="n">observation_cov</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;observation_covariance&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Make a masked observation if necessary</span>
+        <span class="k">if</span> <span class="n">observation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="n">observation_covariance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">observation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim_obs</span><span class="p">))</span>
+            <span class="n">observation</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">observation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+
+        <span class="n">predicted_state_mean</span><span class="p">,</span> <span class="n">predicted_state_covariance</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_filter_predict</span><span class="p">(</span>
+                <span class="n">transition_matrix</span><span class="p">,</span> <span class="n">transition_covariance</span><span class="p">,</span>
+                <span class="n">transition_offset</span><span class="p">,</span> <span class="n">filtered_state_mean</span><span class="p">,</span>
+                <span class="n">filtered_state_covariance</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">next_filtered_state_mean</span><span class="p">,</span>
+         <span class="n">next_filtered_state_covariance</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filter_correct</span><span class="p">(</span>
+                <span class="n">observation_matrix</span><span class="p">,</span> <span class="n">observation_covariance</span><span class="p">,</span>
+                <span class="n">observation_offset</span><span class="p">,</span> <span class="n">predicted_state_mean</span><span class="p">,</span>
+                <span class="n">predicted_state_covariance</span><span class="p">,</span> <span class="n">observation</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">next_filtered_state_mean</span><span class="p">,</span> <span class="n">next_filtered_state_covariance</span><span class="p">)</span></div>
+</div>
+
+        
+
+<div class="viewcode-block" id="MyBiermanKalmanFilter">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyBiermanKalmanFilter">[docs]</a>
+<span class="k">class</span> <span class="nc">MyBiermanKalmanFilter</span><span class="p">(</span><span class="n">BiermanKalmanFilter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This module implements Bierman&#39;s version of the Kalman Filter.  In particular,</span>
+<span class="sd">    the UDU&#39; decomposition of the covariance matrix is used instead of the full</span>
+<span class="sd">    matrix, where U is upper triangular and D is diagonal.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="nf">_filter_correct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">observation_matrix</span><span class="p">,</span> <span class="n">observation_covariance</span><span class="p">,</span>
+                        <span class="n">observation_offset</span><span class="p">,</span> <span class="n">predicted_state_mean</span><span class="p">,</span>
+                        <span class="n">predicted_state_covariance</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Correct a predicted state with a Kalman Filter update</span>
+
+<span class="sd">        Incorporate observation `observation` from time `t` to turn</span>
+<span class="sd">        :math:`P(x_t | z_{0:t-1})` into :math:`P(x_t | z_{0:t})`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            observation_matrix : [n_dim_obs, n_dim_state] array</span>
+<span class="sd">                observation matrix for time t</span>
+<span class="sd">            observation_covariance : n_dim_state UDU_decomposition</span>
+<span class="sd">                UDU&#39; decomposition of observation covariance matrix for observation at</span>
+<span class="sd">                time t</span>
+<span class="sd">            observation_offset : [n_dim_obs] array</span>
+<span class="sd">                offset for observation at time t</span>
+<span class="sd">            predicted_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean of state at time t given observations from times</span>
+<span class="sd">                [0...t-1]</span>
+<span class="sd">            predicted_state_covariance : n_dim_state UDU_decomposition</span>
+<span class="sd">                UDU&#39; decomposition of the covariance of state at time t given</span>
+<span class="sd">                observations from times [0...t-1]</span>
+<span class="sd">            observation : [n_dim_obs] array</span>
+<span class="sd">                observation at time t.  If `observation` is a masked array and any of</span>
+<span class="sd">                its values are masked, the observation will be ignored.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            corrected_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean of state at time t given observations from times</span>
+<span class="sd">                [0...t]</span>
+<span class="sd">            corrected_state_covariance : n_dim_state UDU_decomposition</span>
+<span class="sd">                UDU&#39; decomposition of the covariance of state at time t given</span>
+<span class="sd">                observations from times [0...t]</span>
+
+<span class="sd">        References:</span>
+<span class="sd">            * Gibbs, Bruce P. Advanced Kalman Filtering, Least-Squares, and Modeling: A</span>
+<span class="sd">              Practical Handbook. Page 394-396</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">pykalman.sqrt.bierman</span> <span class="kn">import</span> <span class="n">_filter_correct_single</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmask</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+            <span class="c1"># extract size of state space</span>
+            <span class="c1">#n_dim_state = len(predicted_state_mean)</span>
+            <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+
+            <span class="c1"># calculate corrected state mean, covariance</span>
+            <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="n">predicted_state_mean</span>
+            <span class="n">corrected_state_covariance</span> <span class="o">=</span> <span class="n">predicted_state_covariance</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_dim_obs</span><span class="p">):</span>
+                <span class="c1"># extract components for updating i-th coordinate&#39;s covariance</span>
+                <span class="n">o</span> <span class="o">=</span> <span class="n">observation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">observation_offset</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">observation_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">R</span> <span class="o">=</span> <span class="n">observation_covariance</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+
+                <span class="c1"># calculate new UDU&#39; decomposition for corrected_state_covariance</span>
+                <span class="c1"># and a new column of the kalman gain</span>
+                <span class="p">(</span><span class="n">corrected_state_covariance</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="n">_filter_correct_single</span><span class="p">(</span><span class="n">corrected_state_covariance</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+
+                <span class="c1"># update corrected state mean</span>
+                <span class="n">predicted_observation_mean</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">corrected_state_mean</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
+                <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="n">corrected_state_mean</span> <span class="o">+</span> <span class="n">k</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">o</span> <span class="o">-</span> <span class="n">predicted_observation_mean</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">mask</span><span class="o">==</span><span class="kc">False</span><span class="p">):</span>
+            <span class="c1">#n_dim_state = len(predicted_state_mean)</span>
+            <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+
+            <span class="c1">#kalman_gain = np.zeros((n_dim_state, n_dim_obs))</span>
+
+            <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="n">predicted_state_mean</span>
+            <span class="n">corrected_state_covariance</span> <span class="o">=</span> <span class="n">predicted_state_covariance</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+
+            <span class="c1"># calculate corrected state mean, covariance</span>
+            <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="n">predicted_state_mean</span>
+            <span class="n">corrected_state_covariance</span> <span class="o">=</span> <span class="n">predicted_state_covariance</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_dim_obs</span><span class="p">):</span>
+                <span class="c1"># extract components for updating i-th coordinate&#39;s covariance</span>
+                <span class="n">o</span> <span class="o">=</span> <span class="n">observation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+                   <span class="n">b</span> <span class="o">=</span> <span class="n">observation_offset</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                   <span class="n">h</span> <span class="o">=</span> <span class="n">observation_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                   <span class="n">R</span> <span class="o">=</span> <span class="n">observation_covariance</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+
+                   <span class="c1"># calculate new UDU&#39; decomposition for corrected_state_covariance</span>
+                   <span class="c1"># and a new column of the kalman gain</span>
+                   <span class="p">(</span><span class="n">corrected_state_covariance</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="n">_filter_correct_single</span><span class="p">(</span><span class="n">corrected_state_covariance</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+
+                   <span class="c1"># update corrected state mean</span>
+                   <span class="n">predicted_observation_mean</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">corrected_state_mean</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
+                
+                   <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="n">corrected_state_mean</span> <span class="o">+</span> <span class="n">k</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">o</span> <span class="o">-</span> <span class="n">predicted_observation_mean</span><span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">corrected_state_mean</span><span class="p">,</span> <span class="n">corrected_state_covariance</span><span class="p">)</span>
+    
+    
+<div class="viewcode-block" id="MyBiermanKalmanFilter.filter_update">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyBiermanKalmanFilter.filter_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">filter_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filtered_state_mean</span><span class="p">,</span> <span class="n">filtered_state_covariance</span><span class="p">,</span>
+                      <span class="n">observation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transition_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">transition_offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transition_covariance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">observation_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">observation_offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">observation_covariance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Update a Kalman Filter state estimate</span>
+
+<span class="sd">        Perform a one-step update to estimate the state at time :math:`t+1`</span>
+<span class="sd">        give an observation at time :math:`t+1` and the previous estimate for</span>
+<span class="sd">        time :math:`t` given observations from times :math:`[0...t]`.  This</span>
+<span class="sd">        method is useful if one wants to track an object with streaming</span>
+<span class="sd">        observations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filtered_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean estimate for state at time t given observations from times</span>
+<span class="sd">                [1...t]</span>
+<span class="sd">            filtered_state_covariance : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                covariance of estimate for state at time t given observations from</span>
+<span class="sd">                times [1...t]</span>
+<span class="sd">            observation : [n_dim_obs] array or None</span>
+<span class="sd">                observation from time t+1.  If `observation` is a masked array and</span>
+<span class="sd">                any of `observation`&#39;s components are masked or if `observation` is</span>
+<span class="sd">                None, then `observation` will be treated as a missing observation.</span>
+<span class="sd">            transition_matrix : optional, [n_dim_state, n_dim_state] array</span>
+<span class="sd">                state transition matrix from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_matrices` will be used.</span>
+<span class="sd">            transition_offset : optional, [n_dim_state] array</span>
+<span class="sd">                state offset for transition from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_offset` will be used.</span>
+<span class="sd">            transition_covariance : optional, [n_dim_state, n_dim_state] array</span>
+<span class="sd">                state transition covariance from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_covariance` will be used.</span>
+<span class="sd">            observation_matrix : optional, [n_dim_obs, n_dim_state] array</span>
+<span class="sd">                observation matrix at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_matrices` will be used.</span>
+<span class="sd">            observation_offset : optional, [n_dim_obs] array</span>
+<span class="sd">                observation offset at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_offset` will be used.</span>
+<span class="sd">            observation_covariance : optional, [n_dim_obs, n_dim_obs] array</span>
+<span class="sd">                observation covariance at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_covariance` will be used.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            next_filtered_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean estimate for state at time t+1 given observations from times</span>
+<span class="sd">                [1...t+1]</span>
+<span class="sd">            next_filtered_state_covariance : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                covariance of estimate for state at time t+1 given observations</span>
+<span class="sd">                from times [1...t+1]</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">pykalman.standard</span> <span class="kn">import</span> <span class="n">_arg_or_default</span>
+        <span class="kn">from</span> <span class="nn">pykalman.sqrt.bierman</span> <span class="kn">import</span> <span class="n">_filter_predict</span><span class="p">,</span><span class="n">udu</span><span class="p">,</span><span class="n">decorrelate_observations</span><span class="p">,</span><span class="n">_reconstruct_covariances</span>
+        <span class="c1"># initialize matrices</span>
+        <span class="p">(</span><span class="n">transition_matrices</span><span class="p">,</span> <span class="n">transition_offsets</span><span class="p">,</span> <span class="n">transition_cov</span><span class="p">,</span>
+         <span class="n">observation_matrices</span><span class="p">,</span> <span class="n">observation_offsets</span><span class="p">,</span> <span class="n">observation_cov</span><span class="p">,</span>
+         <span class="n">initial_state_mean</span><span class="p">,</span> <span class="n">initial_state_covariance</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_parameters</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">transition_offset</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">transition_offset</span><span class="p">,</span> <span class="n">transition_offsets</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;transition_offset&quot;</span>
+        <span class="p">)</span>
+        <span class="n">observation_offset</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">observation_offset</span><span class="p">,</span> <span class="n">observation_offsets</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;observation_offset&quot;</span>
+        <span class="p">)</span>
+        <span class="n">transition_matrix</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">transition_matrix</span><span class="p">,</span> <span class="n">transition_matrices</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;transition_matrix&quot;</span>
+        <span class="p">)</span>
+        <span class="n">observation_matrix</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">observation_matrix</span><span class="p">,</span> <span class="n">observation_matrices</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;observation_matrix&quot;</span>
+        <span class="p">)</span>
+        <span class="n">transition_covariance</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">transition_covariance</span><span class="p">,</span> <span class="n">transition_cov</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;transition_covariance&quot;</span>
+        <span class="p">)</span>
+        <span class="n">observation_covariance</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">observation_covariance</span><span class="p">,</span> <span class="n">observation_cov</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;observation_covariance&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Make a masked observation if necessary</span>
+        <span class="k">if</span> <span class="n">observation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+           <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="n">observation_covariance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+           <span class="n">observation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim_obs</span><span class="p">))</span>
+           <span class="n">observation</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+           <span class="n">observation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+
+        <span class="c1"># transform filtered_state_covariance into its UDU decomposition</span>
+        <span class="n">filtered_state_covariance</span> <span class="o">=</span> <span class="n">udu</span><span class="p">(</span><span class="n">filtered_state_covariance</span><span class="p">)</span>
+
+        <span class="c1"># decorrelate observations</span>
+        <span class="p">(</span><span class="n">observation_matrix</span><span class="p">,</span> <span class="n">observation_offset</span><span class="p">,</span>
+         <span class="n">observation_covariance</span><span class="p">,</span> <span class="n">observation</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">decorrelate_observations</span><span class="p">(</span>
+                <span class="n">observation_matrix</span><span class="p">,</span>
+                <span class="n">observation_offset</span><span class="p">,</span>
+                <span class="n">observation_covariance</span><span class="p">,</span>
+                <span class="n">observation</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># predict</span>
+        <span class="n">predicted_state_mean</span><span class="p">,</span> <span class="n">predicted_state_covariance</span> <span class="o">=</span> <span class="p">(</span>
+           <span class="n">_filter_predict</span><span class="p">(</span>
+                <span class="n">transition_matrix</span><span class="p">,</span> <span class="n">transition_covariance</span><span class="p">,</span>
+                <span class="n">transition_offset</span><span class="p">,</span> <span class="n">filtered_state_mean</span><span class="p">,</span>
+                <span class="n">filtered_state_covariance</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># correct</span>
+        <span class="p">(</span><span class="n">next_filtered_state_mean</span><span class="p">,</span> <span class="n">next_filtered_state_covariance</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">_filter_correct</span><span class="p">(</span>
+                <span class="n">observation_matrix</span><span class="p">,</span> <span class="n">observation_covariance</span><span class="p">,</span>
+                <span class="n">observation_offset</span><span class="p">,</span> <span class="n">predicted_state_mean</span><span class="p">,</span>
+                <span class="n">predicted_state_covariance</span><span class="p">,</span> <span class="n">observation</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># reconstruct actual covariance</span>
+        <span class="n">next_filtered_state_covariance</span> <span class="o">=</span> <span class="p">(</span>
+           <span class="n">_reconstruct_covariances</span><span class="p">(</span><span class="n">next_filtered_state_covariance</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">next_filtered_state_mean</span><span class="p">,</span> <span class="n">next_filtered_state_covariance</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MyCholeskyKalmanFilter">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyCholeskyKalmanFilter">[docs]</a>
+<span class="k">class</span> <span class="nc">MyCholeskyKalmanFilter</span><span class="p">(</span><span class="n">CholeskyKalmanFilter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This module implements the Kalman Filter in &quot;Square Root&quot; form (Cholesky factorization).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="nf">_filter_correct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">observation_matrix</span><span class="p">,</span> <span class="n">observation_covariance2</span><span class="p">,</span>
+                        <span class="n">observation_offset</span><span class="p">,</span> <span class="n">predicted_state_mean</span><span class="p">,</span>
+                        <span class="n">predicted_state_covariance2</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Correct a predicted state with a Kalman Filter update</span>
+
+<span class="sd">        Incorporate observation `observation` from time `t` to turn</span>
+<span class="sd">        </span>
+<span class="sd">        :math:`P(x_t | z_{0:t-1})` into :math:`P(x_t | z_{0:t})`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            observation_matrix : [n_dim_obs, n_dim_state] array</span>
+<span class="sd">                observation matrix for time t</span>
+<span class="sd">            observation_covariance2 : [n_dim_obs, n_dim_obs] array</span>
+<span class="sd">                square root of the covariance matrix for observation at time t</span>
+<span class="sd">            observation_offset : [n_dim_obs] array</span>
+<span class="sd">                offset for observation at time t</span>
+<span class="sd">            predicted_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean of state at time t given observations from times</span>
+<span class="sd">                [0...t-1]</span>
+<span class="sd">            predicted_state_covariance2 : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                square root of the covariance of state at time t given observations</span>
+<span class="sd">                from times [0...t-1]</span>
+<span class="sd">            observation : [n_dim_obs] array</span>
+<span class="sd">                observation at time t.  If `observation` is a masked array and any of</span>
+<span class="sd">                its values are masked, the observation will be ignored.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            corrected_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean of state at time t given observations from times</span>
+<span class="sd">                [0...t]</span>
+<span class="sd">            corrected_state_covariance2 : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                square root of the covariance of state at time t given observations</span>
+<span class="sd">                from times [0...t]</span>
+
+<span class="sd">        References:</span>
+<span class="sd">            * Salzmann, M. A. Some Aspects of Kalman Filtering. August 1988. Page 31.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmask</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+            <span class="c1"># extract size of state space</span>
+            <span class="n">n_dim_state</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_state_mean</span><span class="p">)</span>
+            <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+
+            <span class="c1"># construct matrix M = [    R^{1/2}^{T},            0;</span>
+            <span class="c1">#                       (C S_{t|t-1})^T,  S_{t|t-1}^T]</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[</span><span class="n">n_dim_obs</span> <span class="o">+</span> <span class="n">n_dim_state</span><span class="p">])</span>
+            <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">]</span> <span class="o">=</span> <span class="n">observation_covariance2</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">n_dim_obs</span><span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">]</span> <span class="o">=</span> <span class="n">observation_matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">predicted_state_covariance2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">n_dim_obs</span><span class="p">:,</span> <span class="n">n_dim_obs</span><span class="p">:]</span> <span class="o">=</span> <span class="n">predicted_state_covariance2</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="c1"># solve for [((C P_{t|t-1} C^T + R)^{1/2})^T,         K^T;</span>
+            <span class="c1">#                                          0,   S_{t|t}^T] = QR(M)</span>
+            <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">S</span><span class="p">)</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+            <span class="n">kalman_gain</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">,</span>  <span class="n">n_dim_obs</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="c1"># correct mean</span>
+            <span class="n">predicted_observation_mean</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">observation_matrix</span><span class="p">,</span>
+                       <span class="n">predicted_state_mean</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">observation_offset</span>
+            <span class="p">)</span>
+            <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">predicted_state_mean</span>
+                <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">kalman_gain</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">N</span><span class="p">),</span>
+                                <span class="n">observation</span> <span class="o">-</span> <span class="n">predicted_observation_mean</span><span class="p">)</span>
+                  <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">corrected_state_covariance2</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">n_dim_obs</span><span class="p">:,</span> <span class="n">n_dim_obs</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span>
+            
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">mask</span><span class="o">==</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">n_dim_state</span> <span class="o">=</span> <span class="n">predicted_state_covariance2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="n">observation_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">kalman_gain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_dim_state</span><span class="p">,</span> <span class="n">n_dim_obs</span><span class="p">))</span>
+
+            <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="n">predicted_state_mean</span>
+            <span class="n">corrected_state_covariance2</span> <span class="o">=</span> <span class="n">predicted_state_covariance2</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            
+            <span class="n">n_dim_state</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_state_mean</span><span class="p">)</span>
+            <span class="n">ind_missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">MyCholeskyKalmanFilter</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">mask</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">]</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="p">[</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_dim_state</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ind_missing</span><span class="p">]</span>
+            
+            <span class="c1"># extract size of state space</span>
+            <span class="n">n_dim_state</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_state_mean</span><span class="p">)</span>
+            <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+
+            <span class="c1"># construct matrix M = [    R^{1/2}^{T},            0;</span>
+            <span class="c1">#                       (C S_{t|t-1})^T,  S_{t|t-1}^T]</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[</span><span class="n">n_dim_obs</span> <span class="o">+</span> <span class="n">n_dim_state</span><span class="p">])</span>
+            <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">]</span> <span class="o">=</span> <span class="n">observation_covariance2</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">n_dim_obs</span><span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">]</span> <span class="o">=</span> <span class="n">observation_matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">predicted_state_covariance2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">n_dim_obs</span><span class="p">:,</span> <span class="n">n_dim_obs</span><span class="p">:]</span> <span class="o">=</span> <span class="n">predicted_state_covariance2</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="c1"># solve for [((C P_{t|t-1} C^T + R)^{1/2})^T,         K^T;</span>
+            <span class="c1">#                                          0,   S_{t|t}^T] = QR(M)</span>
+            <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">S</span><span class="p">)</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+            <span class="n">kalman_gain</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">,</span>  <span class="n">n_dim_obs</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n_dim_obs</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="c1"># correct mean</span>
+            <span class="n">predicted_observation_mean</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">observation_matrix</span><span class="p">,</span>
+                       <span class="n">predicted_state_mean</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">observation_offset</span>
+            <span class="p">)</span>
+            <span class="n">corrected_state_mean</span> <span class="o">=</span> <span class="n">predicted_state_mean</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">observation</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span> <span class="o">-</span> <span class="n">predicted_observation_mean</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">])</span>
+            <span class="n">iN</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+            <span class="n">iN</span> <span class="o">=</span> <span class="n">iN</span><span class="p">[:,</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">iN</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">corrected_state_mean</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">predicted_state_mean</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">kalman_gain</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span><span class="o">~</span><span class="n">mask</span><span class="p">)],</span><span class="n">temp</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">])</span>
+            <span class="p">)</span>
+
+            <span class="n">corrected_state_covariance2</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">n_dim_obs</span><span class="p">:,</span> <span class="n">n_dim_obs</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span>
+            
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">corrected_state_mean</span><span class="p">,</span> <span class="n">corrected_state_covariance2</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="MyCholeskyKalmanFilter.filter_update">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyCholeskyKalmanFilter.filter_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">filter_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filtered_state_mean</span><span class="p">,</span> <span class="n">filtered_state_covariance</span><span class="p">,</span>
+                      <span class="n">observation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transition_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">transition_offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transition_covariance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">observation_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">observation_offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">observation_covariance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update a Kalman Filter state estimate.</span>
+
+<span class="sd">        Perform a one-step update to estimate the state at time :math:`t+1`</span>
+<span class="sd">        give an observation at time :math:`t+1` and the previous estimate for</span>
+<span class="sd">        time :math:`t` given observations from times :math:`[0...t]`.  This</span>
+<span class="sd">        method is useful if one wants to track an object with streaming</span>
+<span class="sd">        observations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filtered_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean estimate for state at time t given observations from times</span>
+<span class="sd">                [1...t]</span>
+<span class="sd">            filtered_state_covariance : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                covariance of estimate for state at time t given observations from</span>
+<span class="sd">                times [1...t]</span>
+<span class="sd">            observation : [n_dim_obs] array or None</span>
+<span class="sd">                observation from time t+1.  If `observation` is a masked array and</span>
+<span class="sd">                any of `observation`&#39;s components are masked or if `observation` is</span>
+<span class="sd">                None, then `observation` will be treated as a missing observation.</span>
+<span class="sd">            transition_matrix : optional, [n_dim_state, n_dim_state] array</span>
+<span class="sd">                state transition matrix from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_matrices` will be used.</span>
+<span class="sd">            transition_offset : optional, [n_dim_state] array</span>
+<span class="sd">                state offset for transition from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_offset` will be used.</span>
+<span class="sd">            transition_covariance : optional, [n_dim_state, n_dim_state] array</span>
+<span class="sd">                state transition covariance from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_covariance` will be used.</span>
+<span class="sd">            observation_matrix : optional, [n_dim_obs, n_dim_state] array</span>
+<span class="sd">                observation matrix at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_matrices` will be used.</span>
+<span class="sd">            observation_offset : optional, [n_dim_obs] array</span>
+<span class="sd">                observation offset at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_offset` will be used.</span>
+<span class="sd">            observation_covariance : optional, [n_dim_obs, n_dim_obs] array</span>
+<span class="sd">                observation covariance at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_covariance` will be used.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            next_filtered_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean estimate for state at time t+1 given observations from times</span>
+<span class="sd">                [1...t+1]</span>
+<span class="sd">            next_filtered_state_covariance : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                covariance of estimate for state at time t+1 given observations</span>
+<span class="sd">                from times [1...t+1]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="kn">from</span> <span class="nn">pykalman.standard</span> <span class="kn">import</span> <span class="n">_arg_or_default</span>
+        <span class="kn">from</span> <span class="nn">pykalman.sqrt.cholesky</span> <span class="kn">import</span> <span class="n">_filter_predict</span><span class="p">,</span><span class="n">_reconstruct_covariances</span>
+        
+        <span class="c1"># initialize matrices</span>
+        <span class="p">(</span><span class="n">transition_matrices</span><span class="p">,</span> <span class="n">transition_offsets</span><span class="p">,</span> <span class="n">transition_cov</span><span class="p">,</span>
+         <span class="n">observation_matrices</span><span class="p">,</span> <span class="n">observation_offsets</span><span class="p">,</span> <span class="n">observation_cov</span><span class="p">,</span>
+         <span class="n">initial_state_mean</span><span class="p">,</span> <span class="n">initial_state_covariance</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_parameters</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">transition_offset</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">transition_offset</span><span class="p">,</span> <span class="n">transition_offsets</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;transition_offset&quot;</span>
+        <span class="p">)</span>
+        <span class="n">observation_offset</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">observation_offset</span><span class="p">,</span> <span class="n">observation_offsets</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;observation_offset&quot;</span>
+        <span class="p">)</span>
+        <span class="n">transition_matrix</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">transition_matrix</span><span class="p">,</span> <span class="n">transition_matrices</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;transition_matrix&quot;</span>
+        <span class="p">)</span>
+        <span class="n">observation_matrix</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">observation_matrix</span><span class="p">,</span> <span class="n">observation_matrices</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;observation_matrix&quot;</span>
+        <span class="p">)</span>
+        <span class="n">transition_covariance</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">transition_covariance</span><span class="p">,</span> <span class="n">transition_cov</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;transition_covariance&quot;</span>
+        <span class="p">)</span>
+        <span class="n">observation_covariance</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">observation_covariance</span><span class="p">,</span> <span class="n">observation_cov</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;observation_covariance&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Make a masked observation if necessary</span>
+        <span class="k">if</span> <span class="n">observation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+           <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="n">observation_covariance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+           <span class="n">observation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim_obs</span><span class="p">))</span>
+           <span class="n">observation</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+           <span class="n">observation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+
+        <span class="c1"># turn covariance into cholesky factorizations</span>
+        <span class="n">transition_covariance2</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">transition_covariance</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">observation_covariance2</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">observation_covariance</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">filtered_state_covariance2</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">filtered_state_covariance</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># predict</span>
+        <span class="n">predicted_state_mean</span><span class="p">,</span> <span class="n">predicted_state_covariance2</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_filter_predict</span><span class="p">(</span>
+                <span class="n">transition_matrix</span><span class="p">,</span> <span class="n">transition_covariance2</span><span class="p">,</span>
+                <span class="n">transition_offset</span><span class="p">,</span> <span class="n">filtered_state_mean</span><span class="p">,</span>
+                <span class="n">filtered_state_covariance2</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># correct</span>
+        <span class="p">(</span><span class="n">next_filtered_state_mean</span><span class="p">,</span> <span class="n">next_filtered_state_covariance2</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filter_correct</span><span class="p">(</span>
+                <span class="n">observation_matrix</span><span class="p">,</span> <span class="n">observation_covariance2</span><span class="p">,</span>
+                <span class="n">observation_offset</span><span class="p">,</span> <span class="n">predicted_state_mean</span><span class="p">,</span>
+                <span class="n">predicted_state_covariance2</span><span class="p">,</span> <span class="n">observation</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">next_filtered_state_covariance</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_reconstruct_covariances</span><span class="p">(</span><span class="n">next_filtered_state_covariance2</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">next_filtered_state_mean</span><span class="p">,</span> <span class="n">next_filtered_state_covariance</span><span class="p">)</span></div>
+</div>
+
+    
+    
+<div class="viewcode-block" id="MyUnscentedKalmanFilter">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyUnscentedKalmanFilter">[docs]</a>
+<span class="k">class</span> <span class="nc">MyUnscentedKalmanFilter</span><span class="p">(</span><span class="n">UnscentedKalmanFilter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This module contains &quot;Square Root&quot; implementations to the Unscented Kalman</span>
+<span class="sd">    Filter.  Square Root implementations typically propagate the mean and Cholesky</span>
+<span class="sd">    factorization of the covariance matrix in order to prevent numerical error.</span>
+<span class="sd">    When possible, Square Root implementations should be preferred to their</span>
+<span class="sd">    standard counterparts.</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        </span>
+<span class="sd">    * Terejanu, G.A. Towards a Decision-Centric Framework for Uncertainty</span>
+<span class="sd">      Propagation and Data Assimilation. 2010. Page 108.</span>
+<span class="sd">    * Van Der Merwe, R. and Wan, E.A. The Square-Root Unscented Kalman Filter for</span>
+<span class="sd">      State and Parameter-Estimation. 2001.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="nf">_unscented_correct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">cross_sigma</span><span class="p">,</span> <span class="n">moments_pred</span><span class="p">,</span> <span class="n">obs_moments_pred</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Correct predicted state estimates with an observation</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cross_sigma : [n_dim_state, n_dim_obs] array</span>
+<span class="sd">                cross-covariance between the state at time t given all observations</span>
+<span class="sd">                from timesteps [0, t-1] and the observation at time t</span>
+<span class="sd">            moments_pred : [n_dim_state] Moments</span>
+<span class="sd">                mean and covariance of state at time t given observations from</span>
+<span class="sd">                timesteps [0, t-1]</span>
+<span class="sd">            obs_moments_pred : [n_dim_obs] Moments</span>
+<span class="sd">                mean and covariance of observation at time t given observations from</span>
+<span class="sd">                times [0, t-1]</span>
+<span class="sd">            z : [n_dim_obs] array</span>
+<span class="sd">                observation at time t</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            moments_filt : [n_dim_state] Moments</span>
+<span class="sd">                mean and covariance of state at time t given observations from time</span>
+<span class="sd">                steps [0, t]</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="kn">from</span> <span class="nn">pykalman.sqrt.unscented</span> <span class="kn">import</span> <span class="n">cholupdate</span>
+        <span class="kn">from</span> <span class="nn">pykalman.unscented</span> <span class="kn">import</span> <span class="n">Moments</span>
+        <span class="n">mu_pred</span><span class="p">,</span> <span class="n">sigma2_pred</span> <span class="o">=</span> <span class="n">moments_pred</span>
+        <span class="n">obs_mu_pred</span><span class="p">,</span> <span class="n">obs_sigma2_pred</span> <span class="o">=</span> <span class="n">obs_moments_pred</span>
+
+        <span class="c1">#n_dim_state = len(mu_pred)</span>
+        <span class="c1">#n_dim_obs = len(obs_mu_pred)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmask</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+            <span class="c1">##############################################</span>
+            <span class="c1"># Same as this, but more stable (supposedly) #</span>
+            <span class="c1">##############################################</span>
+            <span class="c1"># K = cross_sigma.dot(</span>
+            <span class="c1">#     linalg.pinv(</span>
+            <span class="c1">#         obs_sigma2_pred.T.dot(obs_sigma2_pred)</span>
+            <span class="c1">#     )</span>
+            <span class="c1"># )</span>
+            <span class="c1">##############################################</span>
+
+            <span class="c1"># equivalent to this MATLAB code</span>
+            <span class="c1"># K = (cross_sigma / obs_sigma2_pred.T) / obs_sigma2_pred</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">obs_sigma2_pred</span><span class="p">,</span> <span class="n">cross_sigma</span><span class="o">.</span><span class="n">T</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">obs_sigma2_pred</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">K</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="c1"># correct mu, sigma</span>
+            <span class="n">mu_filt</span> <span class="o">=</span> <span class="n">mu_pred</span> <span class="o">+</span> <span class="n">K</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">obs_mu_pred</span><span class="p">)</span>
+            <span class="n">U</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">obs_sigma2_pred</span><span class="p">)</span>
+            <span class="n">sigma2_filt</span> <span class="o">=</span> <span class="n">cholupdate</span><span class="p">(</span><span class="n">sigma2_pred</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">mask</span><span class="o">==</span><span class="kc">False</span><span class="p">):</span>
+            <span class="c1"># no corrections to be made</span>
+            <span class="n">mu_filt</span> <span class="o">=</span> <span class="n">mu_pred</span>
+            <span class="n">sigma2_filt</span> <span class="o">=</span> <span class="n">sigma2_pred</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_dim_state</span> <span class="o">=</span> <span class="n">sigma2_pred</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ind_missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">MyUnscentedKalmanFilter</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">mask</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">]</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="p">[</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_dim_state</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ind_missing</span><span class="p">]</span>
+            
+            <span class="n">K</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">obs_sigma2_pred</span><span class="p">,</span> <span class="n">cross_sigma</span><span class="o">.</span><span class="n">T</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">obs_sigma2_pred</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">K</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="c1"># correct mu, sigma</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span> <span class="o">-</span> <span class="n">obs_mu_pred</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+            <span class="n">mu_filt</span> <span class="o">=</span> <span class="n">mu_pred</span>
+            <span class="n">mu_filt</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">K</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">U</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">obs_sigma2_pred</span><span class="p">)</span>
+            <span class="n">sigma2_filt</span> <span class="o">=</span> <span class="n">cholupdate</span><span class="p">(</span><span class="n">sigma2_pred</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">Moments</span><span class="p">(</span><span class="n">mu_filt</span><span class="p">,</span> <span class="n">sigma2_filt</span><span class="p">)</span>
+    
+    
+<div class="viewcode-block" id="MyUnscentedKalmanFilter.unscented_filter_correct">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyUnscentedKalmanFilter.unscented_filter_correct">[docs]</a>
+    <span class="k">def</span> <span class="nf">unscented_filter_correct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">observation_function</span><span class="p">,</span> <span class="n">moments_pred</span><span class="p">,</span>
+                             <span class="n">points_pred</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span>
+                             <span class="n">points_observation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                             <span class="n">sigma2_observation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Integrate new observation to correct state estimates</span>
+<span class="sd">    </span>
+<span class="sd">        Args:</span>
+<span class="sd">            observation_function : function</span>
+<span class="sd">                function characterizing how the observation at time t+1 is generated</span>
+<span class="sd">            moments_pred : [n_dim_state] Moments</span>
+<span class="sd">                mean and covariance of state at time t+1 given observations from time</span>
+<span class="sd">                steps 0...t</span>
+<span class="sd">            points_pred : [2*n_dim_state+1, n_dim_state] SigmaPoints</span>
+<span class="sd">                sigma points corresponding to moments_pred</span>
+<span class="sd">            observation : [n_dim_state] array</span>
+<span class="sd">                observation at time t+1. If masked, treated as missing.</span>
+<span class="sd">            points_observation : [2*n_dim_state, n_dim_obs] SigmaPoints</span>
+<span class="sd">                sigma points corresponding to predicted observation at time t+1 given</span>
+<span class="sd">                observations from times 0...t, if available. If not, noise is assumed</span>
+<span class="sd">                to be additive.</span>
+<span class="sd">            sigma_observation : [n_dim_obs, n_dim_obs] array</span>
+<span class="sd">                covariance matrix corresponding to additive noise in observation at</span>
+<span class="sd">                time t+1, if available. If missing, noise is assumed to be non-linear.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            moments_filt : [n_dim_state] Moments</span>
+<span class="sd">            mean and covariance of state at time t+1 given observations from time steps 0...t+1</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">pykalman.sqrt.unscented</span> <span class="kn">import</span> <span class="n">_unscented_transform</span>
+        <span class="c1"># Calculate E[z_t | z_{0:t-1}], Var(z_t | z_{0:t-1})</span>
+        <span class="p">(</span><span class="n">obs_points_pred</span><span class="p">,</span> <span class="n">obs_moments_pred</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_unscented_transform</span><span class="p">(</span>
+                <span class="n">points_pred</span><span class="p">,</span> <span class="n">observation_function</span><span class="p">,</span>
+                <span class="n">points_noise</span><span class="o">=</span><span class="n">points_observation</span><span class="p">,</span> <span class="n">sigma2_noise</span><span class="o">=</span><span class="n">sigma2_observation</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    
+        <span class="c1"># Calculate Cov(x_t, z_t | z_{0:t-1})</span>
+        <span class="n">sigma_pair</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">((</span><span class="n">points_pred</span><span class="o">.</span><span class="n">points</span> <span class="o">-</span> <span class="n">moments_pred</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">points_pred</span><span class="o">.</span><span class="n">weights_mean</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">obs_points_pred</span><span class="o">.</span><span class="n">points</span> <span class="o">-</span> <span class="n">obs_moments_pred</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+        <span class="p">)</span>
+    
+        <span class="c1"># Calculate E[x_t | z_{0:t}], Var(x_t | z_{0:t})</span>
+        <span class="n">moments_filt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unscented_correct</span><span class="p">(</span><span class="n">sigma_pair</span><span class="p">,</span> <span class="n">moments_pred</span><span class="p">,</span> <span class="n">obs_moments_pred</span><span class="p">,</span> <span class="n">observation</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">moments_filt</span></div>
+
+    
+    
+<div class="viewcode-block" id="MyUnscentedKalmanFilter.filter_update">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.filters.html#snowdrop.src.numeric.filters.pykalman.MyUnscentedKalmanFilter.filter_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">filter_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">filtered_state_mean</span><span class="p">,</span> <span class="n">filtered_state_covariance</span><span class="p">,</span>
+                      <span class="n">observation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">transition_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transition_covariance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">observation_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">observation_covariance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Update a Kalman Filter state estimate</span>
+
+<span class="sd">        Perform a one-step update to estimate the state at time :math:`t+1`</span>
+<span class="sd">        give an observation at time :math:`t+1` and the previous estimate for</span>
+<span class="sd">        time :math:`t` given observations from times :math:`[0...t]`.  This</span>
+<span class="sd">        method is useful if one wants to track an object with streaming</span>
+<span class="sd">        observations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filtered_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean estimate for state at time t given observations from times</span>
+<span class="sd">                [1...t]</span>
+<span class="sd">            filtered_state_covariance : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                covariance of estimate for state at time t given observations from</span>
+<span class="sd">                times [1...t]</span>
+<span class="sd">            observation : [n_dim_obs] array or None</span>
+<span class="sd">                observation from time t+1.  If `observation` is a masked array and</span>
+<span class="sd">                any of `observation`&#39;s components are masked or if `observation` is</span>
+<span class="sd">                None, then `observation` will be treated as a missing observation.</span>
+<span class="sd">            transition_function : optional, function</span>
+<span class="sd">                state transition function from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_functions` will be used.</span>
+<span class="sd">            transition_covariance : optional, [n_dim_state, n_dim_state] array</span>
+<span class="sd">                state transition covariance from time t to t+1.  If unspecified,</span>
+<span class="sd">                `self.transition_covariance` will be used.</span>
+<span class="sd">            observation_function : optional, function</span>
+<span class="sd">                observation function at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_functions` will be used.</span>
+<span class="sd">            observation_covariance : optional, [n_dim_obs, n_dim_obs] array</span>
+<span class="sd">                observation covariance at time t+1.  If unspecified,</span>
+<span class="sd">                `self.observation_covariance` will be used.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            next_filtered_state_mean : [n_dim_state] array</span>
+<span class="sd">                mean estimate for state at time t+1 given observations from times</span>
+<span class="sd">                [1...t+1]</span>
+<span class="sd">            next_filtered_state_covariance : [n_dim_state, n_dim_state] array</span>
+<span class="sd">                covariance of estimate for state at time t+1 given observations</span>
+<span class="sd">                from times [1...t+1]</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">pykalman.standard</span> <span class="kn">import</span> <span class="n">_arg_or_default</span>
+        <span class="kn">from</span> <span class="nn">pykalman.sqrt.unscented</span> <span class="kn">import</span> <span class="n">unscented_filter_predict</span><span class="p">,</span><span class="n">moments2points</span><span class="p">,</span><span class="n">_reconstruct_covariances</span>
+        <span class="kn">from</span> <span class="nn">pykalman.unscented</span> <span class="kn">import</span> <span class="n">Moments</span>
+        <span class="c1"># initialize parameters</span>
+        <span class="p">(</span><span class="n">transition_functions</span><span class="p">,</span> <span class="n">observation_functions</span><span class="p">,</span>
+         <span class="n">transition_cov</span><span class="p">,</span> <span class="n">observation_cov</span><span class="p">,</span>
+         <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_parameters</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">default_function</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">arr</span><span class="p">):</span>
+           <span class="k">if</span> <span class="n">f</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+              <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+              <span class="n">f</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+           <span class="k">return</span> <span class="n">f</span>
+
+        <span class="n">transition_function</span> <span class="o">=</span> <span class="n">default_function</span><span class="p">(</span>
+            <span class="n">transition_function</span><span class="p">,</span> <span class="n">transition_functions</span>
+        <span class="p">)</span>
+        <span class="n">observation_function</span> <span class="o">=</span> <span class="n">default_function</span><span class="p">(</span>
+            <span class="n">observation_function</span><span class="p">,</span> <span class="n">observation_functions</span>
+        <span class="p">)</span>
+        <span class="n">transition_covariance</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">transition_covariance</span><span class="p">,</span> <span class="n">transition_cov</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;transition_covariance&quot;</span>
+        <span class="p">)</span>
+        <span class="n">observation_covariance</span> <span class="o">=</span> <span class="n">_arg_or_default</span><span class="p">(</span>
+            <span class="n">observation_covariance</span><span class="p">,</span> <span class="n">observation_cov</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;observation_covariance&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Make a masked observation if necessary</span>
+        <span class="k">if</span> <span class="n">observation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+           <span class="n">n_dim_obs</span> <span class="o">=</span> <span class="n">observation_covariance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+           <span class="n">observation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim_obs</span><span class="p">))</span>
+           <span class="n">observation</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+           <span class="n">observation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+
+        <span class="c1"># preprocess covariance matrices</span>
+        <span class="n">filtered_state_covariance2</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">filtered_state_covariance</span><span class="p">)</span>
+        <span class="n">transition_covariance2</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">transition_covariance</span><span class="p">)</span>
+        <span class="n">observation_covariance2</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">observation_covariance</span><span class="p">)</span>
+
+        <span class="c1"># make sigma points</span>
+        <span class="n">moments_state</span> <span class="o">=</span> <span class="n">Moments</span><span class="p">(</span><span class="n">filtered_state_mean</span><span class="p">,</span> <span class="n">filtered_state_covariance2</span><span class="p">)</span>
+        <span class="n">points_state</span> <span class="o">=</span> <span class="n">moments2points</span><span class="p">(</span><span class="n">moments_state</span><span class="p">)</span>
+
+        <span class="c1"># predict</span>
+        <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">moments_pred</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">unscented_filter_predict</span><span class="p">(</span>
+                <span class="n">transition_function</span><span class="p">,</span> <span class="n">points_state</span><span class="p">,</span>
+                <span class="n">sigma2_transition</span><span class="o">=</span><span class="n">transition_covariance2</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">points_pred</span> <span class="o">=</span> <span class="n">moments2points</span><span class="p">(</span><span class="n">moments_pred</span><span class="p">)</span>
+
+        <span class="c1"># correct</span>
+        <span class="p">(</span><span class="n">next_filtered_state_mean</span><span class="p">,</span> <span class="n">next_filtered_state_covariance2</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unscented_filter_correct</span><span class="p">(</span>
+                <span class="n">observation_function</span><span class="p">,</span> <span class="n">moments_pred</span><span class="p">,</span> <span class="n">points_pred</span><span class="p">,</span>
+                <span class="n">observation</span><span class="p">,</span> <span class="n">sigma2_observation</span><span class="o">=</span><span class="n">observation_covariance2</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">next_filtered_state_covariance</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_reconstruct_covariances</span><span class="p">(</span><span class="n">next_filtered_state_covariance2</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">next_filtered_state_mean</span><span class="p">,</span> <span class="n">next_filtered_state_covariance</span><span class="p">)</span></div>
+</div>
+
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test of unscented Kalman filter.&quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">pl</span>
+    
+    <span class="c1"># initialize parameters</span>
+    <span class="k">def</span> <span class="nf">transition_function</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">noise</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">state</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">noise</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">noise</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+    
+    <span class="k">def</span> <span class="nf">observation_function</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">noise</span><span class="p">):</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="n">noise</span>
+    
+    <span class="n">transition_covariance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">observation_covariance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">random_state</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
+    <span class="n">initial_state_mean</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">initial_state_covariance</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+    
+    <span class="c1"># sample from model</span>
+    <span class="n">kf</span> <span class="o">=</span> <span class="n">MyUnscentedKalmanFilter</span><span class="p">(</span>
+        <span class="n">transition_function</span><span class="p">,</span> <span class="n">observation_function</span><span class="p">,</span>
+        <span class="n">transition_covariance</span><span class="p">,</span> <span class="n">observation_covariance</span><span class="p">,</span>
+        <span class="n">initial_state_mean</span><span class="p">,</span> <span class="n">initial_state_covariance</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+    <span class="p">)</span>
+    <span class="n">states</span><span class="p">,</span> <span class="n">observations</span> <span class="o">=</span> <span class="n">kf</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="n">initial_state_mean</span><span class="p">)</span>
+    
+    <span class="c1"># estimate state with filtering and smoothing</span>
+    <span class="n">filtered_state_estimates</span> <span class="o">=</span> <span class="n">kf</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">observations</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">smoothed_state_estimates</span> <span class="o">=</span> <span class="n">kf</span><span class="o">.</span><span class="n">smooth</span><span class="p">(</span><span class="n">observations</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="c1"># draw estimates</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">lines_true</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+    <span class="n">lines_filt</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">filtered_state_estimates</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+    <span class="n">lines_smooth</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">smoothed_state_estimates</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;-.&#39;</span><span class="p">)</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">legend</span><span class="p">((</span><span class="n">lines_true</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lines_filt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lines_smooth</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+              <span class="p">(</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;filt&#39;</span><span class="p">,</span> <span class="s1">&#39;smooth&#39;</span><span class="p">),</span>
+              <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower left&#39;</span>
+    <span class="p">)</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

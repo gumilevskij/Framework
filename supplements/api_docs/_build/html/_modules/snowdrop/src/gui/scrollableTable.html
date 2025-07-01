@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.gui.scrollableTable &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.gui.scrollableTable</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Author: Miguel Martinez Lopez</span>
+<span class="c1"># Version: 0.20</span>
+
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">Frame</span><span class="p">,</span> <span class="n">Label</span><span class="p">,</span> <span class="n">Message</span><span class="p">,</span> <span class="n">StringVar</span><span class="p">,</span> <span class="n">Canvas</span>
+<span class="kn">from</span> <span class="nn">tkinter.ttk</span> <span class="kn">import</span> <span class="n">Scrollbar</span>
+<span class="kn">from</span> <span class="nn">tkinter.constants</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">import</span> <span class="nn">platform</span>
+
+<span class="n">OS</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Mousewheel_Support">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Mousewheel_Support">[docs]</a>
+<span class="k">class</span> <span class="nc">Mousewheel_Support</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>    
+
+    <span class="c1"># implemetation of singleton pattern</span>
+    <span class="n">_instance</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_instance</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_instance</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_instance</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">horizontal_factor</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">vertical_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_area</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">horizontal_factor</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">horizontal_factor</span> <span class="o">=</span> <span class="n">horizontal_factor</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Vertical factor must be an integer.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vertical_factor</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vertical_factor</span> <span class="o">=</span> <span class="n">vertical_factor</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Horizontal factor must be an integer.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">OS</span> <span class="o">==</span> <span class="s2">&quot;Linux&quot;</span> <span class="p">:</span>
+            <span class="n">root</span><span class="o">.</span><span class="n">bind_all</span><span class="p">(</span><span class="s1">&#39;&lt;4&gt;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_mousewheel</span><span class="p">,</span>  <span class="n">add</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+            <span class="n">root</span><span class="o">.</span><span class="n">bind_all</span><span class="p">(</span><span class="s1">&#39;&lt;5&gt;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_mousewheel</span><span class="p">,</span>  <span class="n">add</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Windows and MacOS</span>
+            <span class="n">root</span><span class="o">.</span><span class="n">bind_all</span><span class="p">(</span><span class="s2">&quot;&lt;MouseWheel&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_mousewheel</span><span class="p">,</span>  <span class="n">add</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_on_mousewheel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_area</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_active_area</span><span class="o">.</span><span class="n">onMouseWheel</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_mousewheel_bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_area</span> <span class="o">=</span> <span class="n">widget</span>
+
+    <span class="k">def</span> <span class="nf">_mousewheel_unbind</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_area</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Mousewheel_Support.add_support_to">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Mousewheel_Support.add_support_to">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_support_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xscrollbar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yscrollbar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="n">horizontal_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertical_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">xscrollbar</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">yscrollbar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">xscrollbar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">horizontal_factor</span> <span class="o">=</span> <span class="n">horizontal_factor</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizontal_factor</span>
+
+            <span class="n">xscrollbar</span><span class="o">.</span><span class="n">onMouseWheel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_mouse_wheel_handler</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizontal_factor</span><span class="p">,</span> <span class="n">what</span><span class="p">)</span>
+            <span class="n">xscrollbar</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Enter&gt;&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">event</span><span class="p">,</span> <span class="n">scrollbar</span><span class="o">=</span><span class="n">xscrollbar</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mousewheel_bind</span><span class="p">(</span><span class="n">scrollbar</span><span class="p">)</span> <span class="p">)</span>
+            <span class="n">xscrollbar</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Leave&gt;&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">event</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mousewheel_unbind</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">yscrollbar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vertical_factor</span> <span class="o">=</span> <span class="n">vertical_factor</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertical_factor</span>
+
+            <span class="n">yscrollbar</span><span class="o">.</span><span class="n">onMouseWheel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_mouse_wheel_handler</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertical_factor</span><span class="p">,</span> <span class="n">what</span><span class="p">)</span>
+            <span class="n">yscrollbar</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Enter&gt;&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">event</span><span class="p">,</span> <span class="n">scrollbar</span><span class="o">=</span><span class="n">yscrollbar</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mousewheel_bind</span><span class="p">(</span><span class="n">scrollbar</span><span class="p">)</span> <span class="p">)</span>
+            <span class="n">yscrollbar</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Leave&gt;&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">event</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mousewheel_unbind</span><span class="p">())</span>
+
+        <span class="n">main_scrollbar</span> <span class="o">=</span> <span class="n">yscrollbar</span> <span class="k">if</span> <span class="n">yscrollbar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">xscrollbar</span>
+        
+        <span class="k">if</span> <span class="n">widget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">list_of_widgets</span> <span class="o">=</span> <span class="n">widget</span>
+                <span class="k">for</span> <span class="n">widget</span> <span class="ow">in</span> <span class="n">list_of_widgets</span><span class="p">:</span>
+                    <span class="n">widget</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Enter&gt;&#39;</span><span class="p">,</span><span class="k">lambda</span> <span class="n">event</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mousewheel_bind</span><span class="p">(</span><span class="n">widget</span><span class="p">))</span>
+                    <span class="n">widget</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Leave&gt;&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">event</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mousewheel_unbind</span><span class="p">())</span>
+
+                    <span class="n">widget</span><span class="o">.</span><span class="n">onMouseWheel</span> <span class="o">=</span> <span class="n">main_scrollbar</span><span class="o">.</span><span class="n">onMouseWheel</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">widget</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Enter&gt;&#39;</span><span class="p">,</span><span class="k">lambda</span> <span class="n">event</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mousewheel_bind</span><span class="p">(</span><span class="n">widget</span><span class="p">))</span>
+                <span class="n">widget</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Leave&gt;&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">event</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mousewheel_unbind</span><span class="p">())</span>
+
+                <span class="n">widget</span><span class="o">.</span><span class="n">onMouseWheel</span> <span class="o">=</span> <span class="n">main_scrollbar</span><span class="o">.</span><span class="n">onMouseWheel</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_make_mouse_wheel_handler</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">orient</span><span class="p">,</span> <span class="n">factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">&quot;units&quot;</span><span class="p">):</span>
+        <span class="n">view_command</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">orient</span><span class="o">+</span><span class="s1">&#39;view&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">OS</span> <span class="o">==</span> <span class="s1">&#39;Linux&#39;</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">onMouseWheel</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">num</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                    <span class="n">view_command</span><span class="p">(</span><span class="s2">&quot;scroll&quot;</span><span class="p">,(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">factor</span><span class="p">,</span> <span class="n">what</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">num</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+                    <span class="n">view_command</span><span class="p">(</span><span class="s2">&quot;scroll&quot;</span><span class="p">,</span><span class="n">factor</span><span class="p">,</span> <span class="n">what</span><span class="p">)</span> 
+                
+        <span class="k">elif</span> <span class="n">OS</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">onMouseWheel</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>        
+                <span class="n">view_command</span><span class="p">(</span><span class="s2">&quot;scroll&quot;</span><span class="p">,(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="nb">int</span><span class="p">((</span><span class="n">event</span><span class="o">.</span><span class="n">delta</span><span class="o">/</span><span class="mi">120</span><span class="p">)</span><span class="o">*</span><span class="n">factor</span><span class="p">),</span> <span class="n">what</span><span class="p">)</span> 
+        
+        <span class="k">elif</span> <span class="n">OS</span> <span class="o">==</span> <span class="s1">&#39;Darwin&#39;</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">onMouseWheel</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>        
+                <span class="n">view_command</span><span class="p">(</span><span class="s2">&quot;scroll&quot;</span><span class="p">,</span><span class="n">event</span><span class="o">.</span><span class="n">delta</span><span class="p">,</span> <span class="n">what</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">onMouseWheel</span></div>
+
+
+<div class="viewcode-block" id="Scrolling_Area">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Scrolling_Area">[docs]</a>
+<span class="k">class</span> <span class="nc">Scrolling_Area</span><span class="p">(</span><span class="n">Frame</span><span class="p">,</span> <span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mousewheel_speed</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">scroll_horizontally</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xscrollbar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scroll_vertically</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">yscrollbar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outer_background</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inner_frame</span><span class="o">=</span><span class="n">Frame</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">Frame</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">class_</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">outer_background</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">background</span><span class="o">=</span><span class="n">outer_background</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid_columnconfigure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid_rowconfigure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">=</span> <span class="n">height</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span> <span class="o">=</span> <span class="n">Canvas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="n">outer_background</span><span class="p">,</span> <span class="n">highlightthickness</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">N</span><span class="o">+</span><span class="n">E</span><span class="o">+</span><span class="n">W</span><span class="o">+</span><span class="n">S</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">scroll_vertically</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">yscrollbar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">yscrollbar</span> <span class="o">=</span> <span class="n">yscrollbar</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">yscrollbar</span> <span class="o">=</span> <span class="n">Scrollbar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">VERTICAL</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">yscrollbar</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">N</span><span class="o">+</span><span class="n">S</span><span class="p">)</span>
+        
+            <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">yscrollcommand</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">yscrollbar</span><span class="o">.</span><span class="n">set</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yscrollbar</span><span class="p">[</span><span class="s1">&#39;command&#39;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">yview</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yscrollbar</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">scroll_horizontally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">xscrollbar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xscrollbar</span> <span class="o">=</span> <span class="n">xscrollbar</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xscrollbar</span> <span class="o">=</span> <span class="n">Scrollbar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">HORIZONTAL</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xscrollbar</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">E</span><span class="o">+</span><span class="n">W</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">xscrollcommand</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">xscrollbar</span><span class="o">.</span><span class="n">set</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xscrollbar</span><span class="p">[</span><span class="s1">&#39;command&#39;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">xview</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xscrollbar</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rowconfigure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">columnconfigure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">innerframe</span> <span class="o">=</span> <span class="n">inner_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">innerframe</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">anchor</span><span class="o">=</span><span class="n">anchor</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">create_window</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">innerframe</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s1">&#39;nw&#39;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="s2">&quot;inner_frame&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Configure&gt;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_canvas_configure</span><span class="p">)</span>
+
+        <span class="n">Mousewheel_Support</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">add_support_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="p">,</span> <span class="n">xscrollbar</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">xscrollbar</span><span class="p">,</span> <span class="n">yscrollbar</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">yscrollbar</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">winfo_width</span><span class="p">()</span>
+
+    <span class="nd">@width</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">width</span><span class="o">=</span> <span class="n">width</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">winfo_height</span><span class="p">()</span>
+        
+    <span class="nd">@height</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">height</span> <span class="o">=</span> <span class="n">height</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="Scrolling_Area.set_size">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Scrolling_Area.set_size">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">height</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_on_canvas_configure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">innerframe</span><span class="o">.</span><span class="n">winfo_reqwidth</span><span class="p">(),</span> <span class="n">event</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">innerframe</span><span class="o">.</span><span class="n">winfo_reqheight</span><span class="p">(),</span> <span class="n">event</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+
+        <span class="c1">#self.canvas.configure(scrollregion=&quot;0 0 %s %s&quot; % (width, height))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">scrollregion</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">bbox</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span><span class="s2">&quot;inner_frame&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Scrolling_Area.update_viewport">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Scrolling_Area.update_viewport">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_viewport</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+        <span class="n">window_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">innerframe</span><span class="o">.</span><span class="n">winfo_reqwidth</span><span class="p">()</span>
+        <span class="n">window_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">innerframe</span><span class="o">.</span><span class="n">winfo_reqheight</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">canvas_width</span> <span class="o">=</span> <span class="n">window_width</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">canvas_width</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="p">,</span> <span class="n">window_width</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">canvas_height</span> <span class="o">=</span> <span class="n">window_height</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">canvas_height</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_height</span><span class="p">,</span> <span class="n">window_height</span><span class="p">)</span>
+
+        <span class="c1">#ag self.canvas.configure(scrollregion=&quot;0 0 %s %s&quot; % (window_width, window_height), width=canvas_width, height=canvas_height)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">scrollregion</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">bbox</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="n">canvas_width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">canvas_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">itemconfigure</span><span class="p">(</span><span class="s2">&quot;inner_frame&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">window_width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">window_height</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Cell">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Cell">[docs]</a>
+<span class="k">class</span> <span class="nc">Cell</span><span class="p">(</span><span class="n">Frame</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for cells&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Data_Cell">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Data_Cell">[docs]</a>
+<span class="k">class</span> <span class="nc">Data_Cell</span><span class="p">(</span><span class="n">Cell</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">bordercolor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">borderwidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">foreground</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">Cell</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span> <span class="n">highlightbackground</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">highlightcolor</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">highlightthickness</span><span class="o">=</span><span class="n">borderwidth</span><span class="p">,</span> <span class="n">bd</span><span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_message_widget</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">textvariable</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">font</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span> <span class="n">foreground</span><span class="o">=</span><span class="n">foreground</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_message_widget</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="n">padx</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="n">pady</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">anchor</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Header_Cell">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Header_Cell">[docs]</a>
+<span class="k">class</span> <span class="nc">Header_Cell</span><span class="p">(</span><span class="n">Cell</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">bordercolor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">borderwidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">foreground</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">CENTER</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">Cell</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span> <span class="n">highlightbackground</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">highlightcolor</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">highlightthickness</span><span class="o">=</span><span class="n">borderwidth</span><span class="p">,</span> <span class="n">bd</span><span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pack_propagate</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header_label</span> <span class="o">=</span> <span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span> <span class="n">foreground</span><span class="o">=</span><span class="n">foreground</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">font</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header_label</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">padx</span><span class="o">=</span><span class="n">padx</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="n">pady</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">separator</span> <span class="ow">and</span> <span class="n">bordercolor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">separator</span> <span class="o">=</span> <span class="n">Frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">bd</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">highlightthickness</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">class_</span><span class="o">=</span><span class="s2">&quot;Separator&quot;</span><span class="p">)</span>
+            <span class="n">separator</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">fill</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">anchor</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_label</span><span class="o">.</span><span class="n">winfo_reqheight</span><span class="p">()</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">padx</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_label</span><span class="o">.</span><span class="n">winfo_reqwidth</span><span class="p">()</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">pady</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">)</span></div>
+
+        
+        
+<div class="viewcode-block" id="Table">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Table">[docs]</a>
+<span class="k">class</span> <span class="nc">Table</span><span class="p">(</span><span class="n">Frame</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">column_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">column_minwidths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">minwidth</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">minheight</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">cell_font</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cell_foreground</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">cell_background</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span> <span class="n">cell_anchor</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">header_font</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header_background</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span> <span class="n">header_foreground</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">header_anchor</span><span class="o">=</span><span class="n">CENTER</span><span class="p">,</span> <span class="n">bordercolor</span> <span class="o">=</span> <span class="s2">&quot;#999999&quot;</span><span class="p">,</span> <span class="n">innerborder</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">outerborder</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stripped_rows</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;#EEEEEE&quot;</span><span class="p">,</span> <span class="s2">&quot;white&quot;</span><span class="p">),</span> <span class="n">on_change_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mousewheel_speed</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">scroll_horizontally</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">scroll_vertically</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">outerborder_width</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">outerborder</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="n">Frame</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">master</span><span class="p">,</span> <span class="n">bd</span><span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cell_background</span> <span class="o">=</span> <span class="n">cell_background</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cell_foreground</span> <span class="o">=</span> <span class="n">cell_foreground</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cell_font</span> <span class="o">=</span> <span class="n">cell_font</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cell_anchor</span> <span class="o">=</span> <span class="n">cell_anchor</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span> <span class="o">=</span> <span class="n">stripped_rows</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_padx</span> <span class="o">=</span> <span class="n">padx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pady</span> <span class="o">=</span> <span class="n">pady</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bordercolor</span> <span class="o">=</span> <span class="n">bordercolor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_innerborder_width</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">innerborder</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="o">=</span> <span class="n">columns</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid_columnconfigure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid_rowconfigure</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head</span> <span class="o">=</span> <span class="n">Frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">highlightbackground</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">highlightcolor</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">highlightthickness</span><span class="o">=</span><span class="n">outerborder_width</span><span class="p">,</span> <span class="n">bd</span><span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">E</span><span class="o">+</span><span class="n">W</span><span class="p">)</span>
+
+        <span class="n">header_separator</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">outerborder</span> <span class="k">else</span> <span class="kc">True</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)):</span>
+            <span class="n">column_name</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+            <span class="n">header_cell</span> <span class="o">=</span> <span class="n">Header_Cell</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_head</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">column_name</span><span class="p">,</span> <span class="n">borderwidth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_innerborder_width</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">header_font</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="n">header_background</span><span class="p">,</span> <span class="n">foreground</span><span class="o">=</span><span class="n">header_foreground</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="n">padx</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="n">pady</span><span class="p">,</span> <span class="n">bordercolor</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">header_anchor</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="n">header_separator</span><span class="p">)</span>
+            <span class="n">header_cell</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="n">j</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">N</span><span class="o">+</span><span class="n">E</span><span class="o">+</span><span class="n">W</span><span class="o">+</span><span class="n">S</span><span class="p">)</span>
+
+        <span class="n">add_scrollbars</span> <span class="o">=</span> <span class="n">scroll_horizontally</span> <span class="ow">or</span> <span class="n">scroll_vertically</span>
+        <span class="k">if</span> <span class="n">add_scrollbars</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">scroll_horizontally</span><span class="p">:</span>
+                <span class="n">xscrollbar</span> <span class="o">=</span> <span class="n">Scrollbar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">HORIZONTAL</span><span class="p">)</span>
+                <span class="n">xscrollbar</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">E</span><span class="o">+</span><span class="n">W</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">xscrollbar</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">scroll_vertically</span><span class="p">:</span>
+                <span class="n">yscrollbar</span> <span class="o">=</span> <span class="n">Scrollbar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">VERTICAL</span><span class="p">)</span>
+                <span class="n">yscrollbar</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">N</span><span class="o">+</span><span class="n">S</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">yscrollbar</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">scrolling_area</span> <span class="o">=</span> <span class="n">Scrolling_Area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head</span><span class="o">.</span><span class="n">winfo_reqwidth</span><span class="p">(),</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span> <span class="n">scroll_horizontally</span><span class="o">=</span><span class="n">scroll_horizontally</span><span class="p">,</span> <span class="n">xscrollbar</span><span class="o">=</span><span class="n">xscrollbar</span><span class="p">,</span> <span class="n">scroll_vertically</span><span class="o">=</span><span class="n">scroll_vertically</span><span class="p">,</span> <span class="n">yscrollbar</span><span class="o">=</span><span class="n">yscrollbar</span><span class="p">)</span>
+            <span class="n">scrolling_area</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">E</span><span class="o">+</span><span class="n">W</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="n">Frame</span><span class="p">(</span><span class="n">scrolling_area</span><span class="o">.</span><span class="n">innerframe</span><span class="p">,</span> <span class="n">highlightbackground</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">highlightcolor</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">highlightthickness</span><span class="o">=</span><span class="n">outerborder_width</span><span class="p">,</span> <span class="n">bd</span><span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+            
+            <span class="k">def</span> <span class="nf">on_change_data</span><span class="p">():</span>
+                <span class="n">scrolling_area</span><span class="o">.</span><span class="n">update_viewport</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="n">Frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span> <span class="n">highlightbackground</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">highlightcolor</span><span class="o">=</span><span class="n">bordercolor</span><span class="p">,</span> <span class="n">highlightthickness</span><span class="o">=</span><span class="n">outerborder_width</span><span class="p">,</span> <span class="n">bd</span><span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">N</span><span class="o">+</span><span class="n">E</span><span class="o">+</span><span class="n">W</span><span class="o">+</span><span class="n">S</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">column_weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">grid_columnconfigure</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">column_weights</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">grid_columnconfigure</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">column_minwidths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">minwidth</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">column_minwidths</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">minwidth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">header_cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_head</span><span class="o">.</span><span class="n">grid_slaves</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="n">j</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">minwidth</span> <span class="o">=</span> <span class="n">header_cell</span><span class="o">.</span><span class="n">winfo_reqwidth</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">grid_columnconfigure</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">minsize</span><span class="o">=</span><span class="n">minwidth</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)):</span>
+                <span class="n">header_cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_head</span><span class="o">.</span><span class="n">grid_slaves</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="n">j</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">minwidth</span> <span class="o">=</span> <span class="n">header_cell</span><span class="o">.</span><span class="n">winfo_reqwidth</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">grid_columnconfigure</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">minsize</span><span class="o">=</span><span class="n">minwidth</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span> <span class="o">=</span> <span class="n">on_change_data</span>
+
+
+    <span class="k">def</span> <span class="nf">_append_n_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">number_of_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span>
+        <span class="n">number_of_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">,</span> <span class="n">number_of_rows</span><span class="o">+</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">list_of_vars</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_columns</span><span class="p">):</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="n">StringVar</span><span class="p">()</span>
+                <span class="n">list_of_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span><span class="p">:</span>
+                    <span class="n">cell</span> <span class="o">=</span> <span class="n">Data_Cell</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="p">,</span> <span class="n">borderwidth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_innerborder_width</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">bordercolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_bordercolor</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_padx</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pady</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="mi">2</span><span class="p">],</span> <span class="n">foreground</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_foreground</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_font</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_anchor</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cell</span> <span class="o">=</span> <span class="n">Data_Cell</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="p">,</span> <span class="n">borderwidth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_innerborder_width</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">bordercolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_bordercolor</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_padx</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pady</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_background</span><span class="p">,</span> <span class="n">foreground</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_foreground</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_font</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_anchor</span><span class="p">)</span>
+
+                <span class="n">cell</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="n">j</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">N</span><span class="o">+</span><span class="n">E</span><span class="o">+</span><span class="n">W</span><span class="o">+</span><span class="n">S</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_of_vars</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="n">number_of_rows</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_columns</span><span class="p">):</span>
+                <span class="n">header_cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_head</span><span class="o">.</span><span class="n">grid_slaves</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="n">j</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">data_cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">grid_slaves</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="n">j</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">data_cell</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Configure&gt;&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">event</span><span class="p">,</span> <span class="n">header_cell</span><span class="o">=</span><span class="n">header_cell</span><span class="p">:</span> <span class="n">header_cell</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">width</span><span class="p">),</span> <span class="n">add</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span> <span class="o">+=</span> <span class="n">n</span>
+
+
+    <span class="k">def</span> <span class="nf">_pop_n_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">number_of_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span>
+        <span class="n">number_of_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="o">-</span><span class="n">n</span><span class="p">,</span> <span class="n">number_of_rows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_columns</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">grid_slaves</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="n">j</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span> <span class="o">-=</span> <span class="n">n</span>
+
+
+<div class="viewcode-block" id="Table.set_data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Table.set_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">number_of_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span>
+
+        <span class="k">if</span> <span class="n">number_of_rows</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pop_n_rows</span><span class="p">(</span><span class="n">number_of_rows</span><span class="o">-</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">number_of_rows</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_append_n_rows</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">number_of_rows</span><span class="p">)</span>
+
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Table.get_data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Table.get_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">number_of_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span>
+        <span class="n">number_of_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_columns</span>
+        
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">row_of_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_columns</span><span class="p">):</span>
+                <span class="n">cell_data</span> <span class="o">=</span> <span class="n">row_of_vars</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cell_data</span><span class="p">)</span>
+            
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span>
+
+
+<div class="viewcode-block" id="Table.row">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Table.row">[docs]</a>
+    <span class="k">def</span> <span class="nf">row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">row_of_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_columns</span><span class="p">):</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_of_vars</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+                
+            <span class="k">return</span> <span class="n">row</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">number_of_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_columns</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="n">number_of_columns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data has no </span><span class="si">%d</span><span class="s2"> elements: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">number_of_columns</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+
+            <span class="n">row_of_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_columns</span><span class="p">):</span>
+                <span class="n">row_of_vars</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Table.column">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Table.column">[docs]</a>
+    <span class="k">def</span> <span class="nf">column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">number_of_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span>
+
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">column</span><span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+                <span class="n">column</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+                
+            <span class="k">return</span> <span class="n">column</span>
+        <span class="k">else</span><span class="p">:</span>            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="n">number_of_rows</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data has no </span><span class="si">%d</span><span class="s2"> elements: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_columns</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Table.clear">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Table.clear">[docs]</a>
+    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">number_of_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span>
+        <span class="n">number_of_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_rows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_columns</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Table.delete_row">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Table.delete_row">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span><span class="p">:</span>
+            <span class="n">row_of_vars_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">row_of_vars_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_columns</span><span class="p">:</span>
+                <span class="n">row_of_vars_1</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">row_of_vars_2</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pop_n_rows</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="Table.insert_row">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Table.insert_row">[docs]</a>
+    <span class="k">def</span> <span class="nf">insert_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">END</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_n_rows</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="n">END</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span> <span class="o">-</span> <span class="mi">1</span>
+        
+        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span><span class="o">-</span><span class="mi">1</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">index</span><span class="p">:</span>
+            <span class="n">row_of_vars_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">row_of_vars_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_columns</span><span class="p">:</span>
+                <span class="n">row_of_vars_2</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">row_of_vars_1</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">i</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="n">list_of_cell_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">cell_var</span><span class="p">,</span> <span class="n">cell_data</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">list_of_cell_vars</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+            <span class="n">cell_var</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cell_data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Table.cell">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Table.cell">[docs]</a>
+    <span class="k">def</span> <span class="nf">cell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the value of a table cell&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_vars</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">row</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="n">index</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Row and column indices are required&quot;</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">row</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="n">index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Row and column indices are required&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Table.on_change_data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.scrollableTable.Table.on_change_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_change_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_on_change_data</span> <span class="o">=</span> <span class="n">callback</span></div>
+</div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">Tkinter</span> <span class="kn">import</span> <span class="n">Tk</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">Tk</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Tk</span><span class="p">()</span>
+
+    <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;column A&quot;</span><span class="p">,</span> <span class="s2">&quot;column B&quot;</span><span class="p">,</span> <span class="s2">&quot;column C&quot;</span><span class="p">],</span> <span class="n">column_minwidths</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">padx</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="n">table</span><span class="o">.</span><span class="n">set_data</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">],</span> <span class="p">[</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">],[</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">18</span><span class="p">],</span> <span class="p">[</span><span class="mi">19</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">]])</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot; a fdas fasd fasdf asdf asdfasdf asdf asdfa sdfas asd sadf &quot;</span><span class="p">)</span>
+    
+    <span class="n">table</span><span class="o">.</span><span class="n">insert_row</span><span class="p">([</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">24</span><span class="p">])</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">insert_row</span><span class="p">([</span><span class="mi">25</span><span class="p">,</span><span class="mi">26</span><span class="p">,</span><span class="mi">27</span><span class="p">])</span>
+    
+    <span class="n">root</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">x</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">winfo_reqwidth</span><span class="p">(),</span><span class="mi">250</span><span class="p">))</span>
+
+    <span class="n">root</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

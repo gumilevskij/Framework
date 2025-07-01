@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.utils.table &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.utils.table</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu May  2 18:05:37 2019</span>
+
+<span class="sd">@author: AGoumilevski</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">reportlab.platypus.flowables</span> <span class="kn">import</span> <span class="n">Flowable</span>
+<span class="kn">from</span> <span class="nn">reportlab.lib</span> <span class="kn">import</span> <span class="n">colors</span>
+<span class="kn">from</span> <span class="nn">reportlab.lib.pagesizes</span> <span class="kn">import</span> <span class="n">letter</span><span class="p">,</span> <span class="n">inch</span>
+<span class="kn">from</span> <span class="nn">reportlab.platypus</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">Paragraph</span><span class="p">,</span> <span class="n">SimpleDocTemplate</span>
+<span class="kn">from</span> <span class="nn">reportlab.platypus</span> <span class="kn">import</span> <span class="n">Table</span><span class="p">,</span> <span class="n">TableStyle</span>
+<span class="kn">from</span> <span class="nn">reportlab.lib.styles</span> <span class="kn">import</span> <span class="n">getSampleStyleSheet</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+<span class="c1"># from reportlab.pdfbase import pdfmetrics</span>
+<span class="c1"># from reportlab.pdfbase.ttfonts import TTFont</span>
+
+<span class="c1">#pdfmetrics.registerFont(TTFont(&#39;DejaVuSerif&#39;, &#39;DejaVuSerif.ttf&#39;))</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    
+<div class="viewcode-block" id="TR">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.table.TR">[docs]</a>
+<span class="k">class</span> <span class="nc">TR</span><span class="p">(</span><span class="n">Flowable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rotate a text in a table cell.&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span> <span class="p">):</span>
+        <span class="n">Flowable</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="o">=</span><span class="n">text</span>
+        
+<div class="viewcode-block" id="TR.draw">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.table.TR.draw">[docs]</a>
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">canv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canv</span>
+        <span class="n">canv</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>
+        <span class="n">canv</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></div>
+</div>
+
+        
+            
+<div class="viewcode-block" id="TB">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.table.TB">[docs]</a>
+<span class="k">class</span> <span class="nc">TB</span><span class="p">(</span><span class="n">Flowable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use bold italic font for a text in a table cell.&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span> <span class="p">):</span>
+        <span class="n">Flowable</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="o">=</span><span class="n">text</span>
+        
+<div class="viewcode-block" id="TB.draw">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.table.TB.draw">[docs]</a>
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">canv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canv</span>
+        <span class="n">canv</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s1">&#39;Times-BoldItalic&#39;</span><span class="p">,</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">canv</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></div>
+</div>
+
+		
+<div class="viewcode-block" id="matrix_to_pdf">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.table.matrix_to_pdf">[docs]</a>
+<span class="k">def</span> <span class="nf">matrix_to_pdf</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span><span class="n">colNames</span><span class="p">,</span><span class="n">rowNames</span><span class="p">,</span><span class="n">matrices</span><span class="p">,</span><span class="n">fout</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a simple pdf document from a two-dimensional array.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param header: Header of a table.</span>
+<span class="sd">        :type header: str.</span>
+<span class="sd">        :param colNames: Names of table columns.</span>
+<span class="sd">        :type colNames: list.</span>
+<span class="sd">        :param rowNames: Names of table rows.</span>
+<span class="sd">        :type rowNames: list.</span>
+<span class="sd">        :param matrices: Two dimensional matrix.</span>
+<span class="sd">        :type matrices: np.array.</span>
+<span class="sd">        :param table_rng: Range of dates.</span>
+<span class="sd">        :type table_rng: list.</span>
+<span class="sd">        :param fout: Path to pdf document.</span>
+<span class="sd">        :type fout: str.</span>
+<span class="sd">        :returns: Simulation results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">styleSheet</span> <span class="o">=</span> <span class="n">getSampleStyleSheet</span><span class="p">()</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">SimpleDocTemplate</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">pagesize</span><span class="o">=</span><span class="p">(</span><span class="mi">800</span><span class="p">,</span><span class="mi">800</span><span class="p">))</span>
+	
+    <span class="c1"># container for the &#39;Flowable&#39; objects</span>
+    <span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">ncol</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">colNames</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">colNames</span><span class="p">:</span>
+        <span class="n">columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TR</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">headers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">nrow</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+        
+        <span class="n">data</span><span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">ncol</span><span class="p">),[</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">columns</span><span class="p">,[</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">ncol</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rowNames</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">matrix</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">r</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">ncol</span><span class="p">))</span>
+            
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;&lt;para align=center spaceb=3 size=16&gt;&lt;b&gt;</span><span class="si">{0}</span><span class="s1">&lt;/b&gt;&lt;/para&gt;&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Paragraph</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span><span class="n">styleSheet</span><span class="p">[</span><span class="s2">&quot;BodyText&quot;</span><span class="p">])</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Paragraph</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">styleSheet</span><span class="p">[</span><span class="s2">&quot;BodyText&quot;</span><span class="p">])</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">data</span><span class="p">,[</span><span class="mf">0.7</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="n">ncol</span><span class="o">*</span><span class="p">[</span><span class="mf">0.5</span><span class="o">*</span><span class="n">inch</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mf">0.01</span><span class="o">*</span><span class="n">inch</span><span class="p">,</span><span class="mf">0.35</span><span class="o">*</span><span class="n">inch</span><span class="p">,</span><span class="mf">0.01</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="mf">0.35</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">nrow</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mf">0.3</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="mf">0.35</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="mf">0.01</span><span class="o">*</span><span class="n">inch</span><span class="p">])</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">TableStyle</span><span class="p">([(</span><span class="s1">&#39;ALIGN&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;LEFT&#39;</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s1">&#39;ALIGN&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;CENTER&#39;</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s1">&#39;VALIGN&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s1">&#39;HALIGN&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;CENTER&#39;</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+    						   <span class="p">(</span><span class="s1">&#39;TEXTCOLOR&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+    						   <span class="p">(</span><span class="s1">&#39;FONTSIZE&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">12</span><span class="p">),</span>
+    						   <span class="p">(</span><span class="s1">&#39;FONTSIZE&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="mi">12</span><span class="p">),</span>
+    						   <span class="p">(</span><span class="s1">&#39;FONTSIZE&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="mi">10</span><span class="p">),</span>
+    						   <span class="p">]))</span>
+    
+        <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Paragraph</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">styleSheet</span><span class="p">[</span><span class="s2">&quot;BodyText&quot;</span><span class="p">])</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    
+	<span class="c1"># write the document to disk</span>
+    <span class="n">doc</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span></div>
+
+
+        
+<div class="viewcode-block" id="table_to_pdf">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.table.table_to_pdf">[docs]</a>
+<span class="k">def</span> <span class="nf">table_to_pdf</span><span class="p">(</span><span class="n">header</span><span class="p">,</span><span class="n">colNames</span><span class="p">,</span><span class="n">rowNames</span><span class="p">,</span><span class="n">matrix</span><span class="p">,</span><span class="n">table_rng</span><span class="p">,</span><span class="n">fout</span><span class="p">,</span><span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a pdf document from a two-dimensional matrix.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param header: Header of a table.</span>
+<span class="sd">        :type header: str.</span>
+<span class="sd">        :param colNames: Names of table columns.</span>
+<span class="sd">        :type colNames: list.</span>
+<span class="sd">        :param rowNames: Names of table rows.</span>
+<span class="sd">        :type rowNames: list.</span>
+<span class="sd">        :param matrix: Two dimensional matrix.</span>
+<span class="sd">        :type matrix: np.array.</span>
+<span class="sd">        :param table_rng: Range of dates.</span>
+<span class="sd">        :type table_rng: list.</span>
+<span class="sd">        :param fout: Path to pdf document.</span>
+<span class="sd">        :type fout: str.</span>
+<span class="sd">        :param date: Date at which vertical line in a table is drawn.</span>
+<span class="sd">        :type date: datetime.date. </span>
+<span class="sd">        :returns: Simulation results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">styleSheet</span> <span class="o">=</span> <span class="n">getSampleStyleSheet</span><span class="p">()</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">SimpleDocTemplate</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">pagesize</span><span class="o">=</span><span class="p">(</span><span class="mi">1200</span><span class="p">,</span><span class="mi">850</span><span class="p">))</span>
+	
+    <span class="c1"># Container for the &#39;Flowable&#39; objects</span>
+    <span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ncol</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">colNames</span><span class="p">)</span>
+    <span class="n">nrow</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rowNames</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">table_rng</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="o">==</span><span class="n">date</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span><span class="o">+</span><span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">black</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">white</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">colNames</span><span class="p">))</span>
+    
+    <span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rowNames</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+            
+    <span class="n">data</span><span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">ncol</span><span class="p">),[</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">m</span><span class="o">+</span><span class="n">colNames</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">colNames</span><span class="p">[</span><span class="n">n</span><span class="p">:],[</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">ncol</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rowNames</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">ncol</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">TB</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span><span class="o">+</span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="n">ncol</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>    
+                    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">TB</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">TB</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span><span class="o">+</span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="o">+</span><span class="n">ncol</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">mt</span> <span class="o">=</span> <span class="p">[</span><span class="n">mat</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">mat</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">table_rng</span><span class="p">]</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="mi">1</span><span class="p">))</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">mt</span><span class="p">]</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">{0: &gt;5}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">m</span><span class="o">+</span><span class="n">s</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span><span class="o">+</span><span class="n">s</span><span class="p">[</span><span class="n">n</span><span class="p">:])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mt</span> <span class="o">=</span> <span class="p">[</span><span class="n">mat</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">mat</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">table_rng</span><span class="p">]</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="mi">1</span><span class="p">))</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">mt</span><span class="p">]</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">{0: &gt;5}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">+</span><span class="p">(</span><span class="n">m</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">))</span><span class="o">*</span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span><span class="o">+</span><span class="n">s</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span><span class="o">+</span><span class="n">s</span><span class="p">[</span><span class="n">n</span><span class="p">:])</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;table_to_pdf: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            
+    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="n">ncol</span><span class="p">))</span>
+        
+    <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;&lt;para align=center spaceb=3 size=22&gt;&lt;b&gt;</span><span class="si">{0}</span><span class="s1">&lt;/b&gt;&lt;/para&gt;&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Paragraph</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span><span class="n">styleSheet</span><span class="p">[</span><span class="s2">&quot;BodyText&quot;</span><span class="p">])</span>
+    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Paragraph</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">styleSheet</span><span class="p">[</span><span class="s2">&quot;BodyText&quot;</span><span class="p">])</span>
+    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            
+    <span class="n">t</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">data</span><span class="p">,[</span><span class="mi">2</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="n">n</span><span class="o">*</span><span class="p">[</span><span class="mf">0.8</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="mf">0.01</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">ncol</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mf">0.8</span><span class="o">*</span><span class="n">inch</span><span class="p">],</span>
+              <span class="p">[</span><span class="mf">0.01</span><span class="o">*</span><span class="n">inch</span><span class="p">,</span><span class="mf">0.4</span><span class="o">*</span><span class="n">inch</span><span class="p">,</span><span class="mf">0.01</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="mf">0.4</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">nrow</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mf">0.23</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="mf">0.4</span><span class="o">*</span><span class="n">inch</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="mf">0.01</span><span class="o">*</span><span class="n">inch</span><span class="p">])</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">TableStyle</span><span class="p">([(</span><span class="s1">&#39;ALIGN&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;LEFT&#39;</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s1">&#39;ALIGN&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;CENTER&#39;</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s1">&#39;VALIGN&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;MIDDLE&#39;</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s1">&#39;VALIGN&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s1">&#39;HALIGN&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;CENTER&#39;</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,(</span><span class="n">n</span><span class="o">+</span><span class="n">m</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="n">n</span><span class="o">+</span><span class="n">m</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">col</span><span class="p">),</span>
+						   <span class="p">(</span><span class="s1">&#39;TEXTCOLOR&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+						   <span class="p">(</span><span class="s1">&#39;FONTSIZE&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">16</span><span class="p">),</span>
+						   <span class="p">(</span><span class="s1">&#39;FONTSIZE&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="mi">14</span><span class="p">),</span>
+						   <span class="p">(</span><span class="s1">&#39;FONTSIZE&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="mi">14</span><span class="p">)</span>
+						   <span class="p">]))</span>
+
+    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Paragraph</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">styleSheet</span><span class="p">[</span><span class="s2">&quot;BodyText&quot;</span><span class="p">])</span>
+    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    
+	<span class="c1"># write the document to disk</span>
+    <span class="n">doc</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="test">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.table.test">[docs]</a>
+<span class="k">def</span> <span class="nf">test</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a sample pdf document with complex cell values.&quot;&quot;&quot;</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">SimpleDocTemplate</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">..</span><span class="se">\\</span><span class="s2">..</span><span class="se">\\</span><span class="s2">results</span><span class="se">\\</span><span class="s2">complex_cell_values.pdf&quot;</span><span class="p">,</span> <span class="n">pagesize</span><span class="o">=</span><span class="n">letter</span><span class="p">)</span>
+	<span class="c1"># container for the &#39;Flowable&#39; objects</span>
+    <span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">styleSheet</span> <span class="o">=</span> <span class="n">getSampleStyleSheet</span><span class="p">()</span>
+
+    <span class="n">I</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">..</span><span class="se">\\</span><span class="s2">..</span><span class="se">\\</span><span class="s2">img</span><span class="se">\\</span><span class="s2">replogo.gif&quot;</span><span class="p">)</span>
+    <span class="n">I</span><span class="o">.</span><span class="n">drawHeight</span> <span class="o">=</span> <span class="mf">1.25</span><span class="o">*</span><span class="n">inch</span><span class="o">*</span><span class="n">I</span><span class="o">.</span><span class="n">drawHeight</span> <span class="o">/</span> <span class="n">I</span><span class="o">.</span><span class="n">drawWidth</span>
+    <span class="n">I</span><span class="o">.</span><span class="n">drawWidth</span> <span class="o">=</span> <span class="mf">1.25</span><span class="o">*</span><span class="n">inch</span>
+    <span class="n">P0</span> <span class="o">=</span> <span class="n">Paragraph</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">				   &lt;b&gt;A pa&lt;font color=red&gt;r&lt;/font&gt;a&lt;i&gt;graph&lt;/i&gt;&lt;/b&gt;</span>
+<span class="s1">				   &lt;super&gt;&lt;font color=yellow&gt;1&lt;/font&gt;&lt;/super&gt;&#39;&#39;&#39;</span><span class="p">,</span>
+				   <span class="n">styleSheet</span><span class="p">[</span><span class="s2">&quot;BodyText&quot;</span><span class="p">])</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">Paragraph</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">		&lt;para align=center spaceb=3&gt;The &lt;b&gt;ReportLab Left</span>
+<span class="s1">		&lt;font color=red&gt;Logo&lt;/font&gt;&lt;/b&gt;</span>
+<span class="s1">		Image&lt;/para&gt;&#39;&#39;&#39;</span><span class="p">,</span>
+		<span class="n">styleSheet</span><span class="p">[</span><span class="s2">&quot;BodyText&quot;</span><span class="p">])</span>
+    <span class="n">data</span><span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="n">P0</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">],</span>
+		   <span class="p">[</span><span class="s1">&#39;00&#39;</span><span class="p">,</span> <span class="s1">&#39;01&#39;</span><span class="p">,</span> <span class="s1">&#39;02&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">I</span><span class="p">,</span><span class="n">P</span><span class="p">],</span> <span class="s1">&#39;04&#39;</span><span class="p">],</span>
+		   <span class="p">[</span><span class="s1">&#39;10&#39;</span><span class="p">,</span> <span class="s1">&#39;11&#39;</span><span class="p">,</span> <span class="s1">&#39;12&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">P</span><span class="p">,</span><span class="n">I</span><span class="p">],</span> <span class="s1">&#39;14&#39;</span><span class="p">],</span>
+		   <span class="p">[</span><span class="s1">&#39;20&#39;</span><span class="p">,</span> <span class="s1">&#39;21&#39;</span><span class="p">,</span> <span class="s1">&#39;22&#39;</span><span class="p">,</span> <span class="s1">&#39;23&#39;</span><span class="p">,</span> <span class="s1">&#39;24&#39;</span><span class="p">],</span>
+		   <span class="p">[</span><span class="s1">&#39;30&#39;</span><span class="p">,</span> <span class="s1">&#39;31&#39;</span><span class="p">,</span> <span class="s1">&#39;32&#39;</span><span class="p">,</span> <span class="s1">&#39;33&#39;</span><span class="p">,</span> <span class="s1">&#39;34&#39;</span><span class="p">]]</span>
+
+    <span class="n">t</span><span class="o">=</span><span class="n">Table</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">style</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;GRID&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="n">colors</span><span class="o">.</span><span class="n">green</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;BOX&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="mi">2</span><span class="p">,</span><span class="n">colors</span><span class="o">.</span><span class="n">red</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;LINEABOVE&#39;</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="n">colors</span><span class="o">.</span><span class="n">blue</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;LINEBEFORE&#39;</span><span class="p">,(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="n">colors</span><span class="o">.</span><span class="n">pink</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">pink</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">lavender</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">orange</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;BOX&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="mi">2</span><span class="p">,</span><span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;GRID&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="mf">0.5</span><span class="p">,</span><span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;VALIGN&#39;</span><span class="p">,(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="s1">&#39;BOTTOM&#39;</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">colors</span><span class="o">.</span><span class="n">limegreen</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="n">colors</span><span class="o">.</span><span class="n">khaki</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;ALIGN&#39;</span><span class="p">,(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;CENTER&#39;</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="n">colors</span><span class="o">.</span><span class="n">beige</span><span class="p">),</span>
+						<span class="p">(</span><span class="s1">&#39;ALIGN&#39;</span><span class="p">,(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="s1">&#39;LEFT&#39;</span><span class="p">),</span>
+	<span class="p">])</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">_argW</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">=</span><span class="mf">1.5</span><span class="o">*</span><span class="n">inch</span>
+
+    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+	<span class="c1"># write the document to disk</span>
+    <span class="n">doc</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="test2">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.table.test2">[docs]</a>
+<span class="k">def</span> <span class="nf">test2</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a sample pdf document with some values.&quot;&quot;&quot;</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">.02</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">.02</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">.02</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">.02</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">headers</span>  <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;YoY Inflation&#39;</span><span class="p">,</span><span class="s1">&#39;QoQ Core Inflation&#39;</span><span class="p">,</span><span class="s1">&#39;Nom. Exch. Rate, 100*log&#39;</span><span class="p">,</span><span class="s1">&#39;Policy Rate&#39;</span><span class="p">,</span><span class="s1">&#39;Output Gap&#39;</span><span class="p">]</span>
+    <span class="n">colNames</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;t+1&#39;</span><span class="p">,</span><span class="s1">&#39;t+2&#39;</span><span class="p">,</span><span class="s1">&#39;t+3&#39;</span><span class="p">,</span><span class="s1">&#39;t+4&#39;</span><span class="p">,</span><span class="s1">&#39;t+5&#39;</span><span class="p">,</span><span class="s1">&#39;t+6&#39;</span><span class="p">]</span>
+    <span class="n">rowNames</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Mean&#39;</span><span class="p">,</span><span class="s1">&#39;Median&#39;</span><span class="p">,</span><span class="s1">&#39;Std&#39;</span><span class="p">,</span><span class="s1">&#39;SE&#39;</span><span class="p">]</span>
+    <span class="n">fout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">..</span><span class="se">\\</span><span class="s2">..</span><span class="se">\\</span><span class="s2">graphs</span><span class="se">\\</span><span class="s2">statistics.pdf&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">headers</span><span class="p">)):</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    
+    <span class="n">matrix_to_pdf</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span><span class="n">colNames</span><span class="p">,</span><span class="n">rowNames</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">fout</span><span class="p">)</span></div>
+
+    
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main program</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">test2</span><span class="p">()</span>
+        
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

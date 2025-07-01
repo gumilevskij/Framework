@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.preprocessor.codegen &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.preprocessor.codegen</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Extension to ast that allow ast -&gt; python code generation.</span>
+
+<span class="sd">:copyright: Copyright 2008 by Armin Ronacher.</span>
+<span class="sd">:license: BSD.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">Add</span><span class="p">,</span><span class="n">Sub</span><span class="p">,</span><span class="n">Mult</span><span class="p">,</span><span class="n">Div</span><span class="p">,</span><span class="n">Mod</span><span class="p">,</span><span class="n">Pow</span>
+<span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">LShift</span><span class="p">,</span><span class="n">RShift</span><span class="p">,</span><span class="n">BitOr</span><span class="p">,</span><span class="n">BitXor</span><span class="p">,</span><span class="n">BitAnd</span><span class="p">,</span><span class="n">FloorDiv</span>
+<span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span><span class="n">NotEq</span><span class="p">,</span><span class="n">Lt</span><span class="p">,</span><span class="n">LtE</span><span class="p">,</span><span class="n">Gt</span><span class="p">,</span><span class="n">GtE</span><span class="p">,</span><span class="n">Is</span><span class="p">,</span><span class="n">IsNot</span><span class="p">,</span><span class="n">In</span><span class="p">,</span><span class="n">NotIn</span><span class="p">,</span><span class="n">If</span>
+<span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">And</span><span class="p">,</span><span class="n">Or</span><span class="p">,</span><span class="n">Invert</span><span class="p">,</span><span class="n">Not</span><span class="p">,</span><span class="n">UAdd</span><span class="p">,</span><span class="n">USub</span>
+<span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">NodeVisitor</span><span class="p">,</span><span class="n">Name</span>
+
+<span class="n">BINOP_SYMBOLS</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">Add</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">Sub</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">Mult</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">Div</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">Mod</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;%&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">Pow</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;**&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">LShift</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&lt;&lt;&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">RShift</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&gt;&gt;&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">BitOr</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">BitXor</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;^&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">BitAnd</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&amp;&#39;</span>
+<span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="n">FloorDiv</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;//&#39;</span>
+
+<span class="n">BOOLOP_SYMBOLS</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">BOOLOP_SYMBOLS</span><span class="p">[</span><span class="n">And</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;and&#39;</span>
+<span class="n">BOOLOP_SYMBOLS</span><span class="p">[</span><span class="n">Or</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;or&#39;</span>
+
+<span class="n">CMPOP_SYMBOLS</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="n">Eq</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;==&#39;</span>
+<span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="n">NotEq</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;!=&#39;</span>
+<span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="n">Lt</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&lt;&#39;</span>
+<span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="n">LtE</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&lt;=&#39;</span>
+<span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="n">Gt</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&gt;&#39;</span>
+<span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="n">GtE</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&gt;=&#39;</span>
+<span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="n">Is</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;is&#39;</span>
+<span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="n">IsNot</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;is not&#39;</span>
+<span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="n">In</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;in&#39;</span>
+<span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="n">NotIn</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;not in&#39;</span>
+
+<span class="n">UNARYOP_SYMBOLS</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">UNARYOP_SYMBOLS</span><span class="p">[</span><span class="n">Invert</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;~&#39;</span>
+<span class="n">UNARYOP_SYMBOLS</span><span class="p">[</span><span class="n">Not</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;not&#39;</span>
+<span class="n">UNARYOP_SYMBOLS</span><span class="p">[</span><span class="n">UAdd</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span>
+<span class="n">UNARYOP_SYMBOLS</span><span class="p">[</span><span class="n">USub</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
+
+
+<div class="viewcode-block" id="to_source">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.to_source">[docs]</a>
+<span class="k">def</span> <span class="nf">to_source</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">indent_with</span><span class="o">=</span><span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">add_line_information</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a node tree back into python source code.</span>
+<span class="sd">    </span>
+<span class="sd">    This function is useful for debugging purposes, especially if you&#39;re dealing with</span>
+<span class="sd">    custom asts not generated by python itself.</span>
+
+<span class="sd">    It could be that the source code is evaluable when the AST itself is not</span>
+<span class="sd">    compilable / evaluable.  The reason for this is that the AST contains some</span>
+<span class="sd">    more data than regular sourcecode does, which is dropped during</span>
+<span class="sd">    conversion.</span>
+
+<span class="sd">    Each level of indentation is replaced with `indent_with`.  Per default this</span>
+<span class="sd">    parameter is equal to four spaces as suggested by PEP 8, but it might be</span>
+<span class="sd">    adjusted to match the application&#39;s styleguide.</span>
+
+<span class="sd">    If `add_line_information` is set to `True` comments for the line numbers</span>
+<span class="sd">    of the nodes are added to the output.  This can be used to spot wrong line</span>
+<span class="sd">    number information of statement nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">SourceGenerator</span><span class="p">(</span><span class="n">indent_with</span><span class="p">,</span> <span class="n">add_line_information</span><span class="p">)</span>
+    <span class="n">generator</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">generator</span><span class="o">.</span><span class="n">result</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator">[docs]</a>
+<span class="k">class</span> <span class="nc">SourceGenerator</span><span class="p">(</span><span class="n">NodeVisitor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This visitor is able to transform a well formed syntax tree into python source code.</span>
+<span class="sd">    </span>
+<span class="sd">    For more details have a look at the docstring of the</span>
+<span class="sd">    `node_to_source` function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent_with</span><span class="p">,</span> <span class="n">add_line_information</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indent_with</span> <span class="o">=</span> <span class="n">indent_with</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_line_information</span> <span class="o">=</span> <span class="n">add_line_information</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indentation</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_lines</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="SourceGenerator.write">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.write">[docs]</a>
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_lines</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_lines</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indent_with</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">indentation</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">new_lines</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.newline">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.newline">[docs]</a>
+    <span class="k">def</span> <span class="nf">newline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_lines</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_lines</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">extra</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_line_information</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;# line: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">new_lines</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.body">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.body">[docs]</a>
+    <span class="k">def</span> <span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statements</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_line</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indentation</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">stmt</span> <span class="ow">in</span> <span class="n">statements</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indentation</span> <span class="o">-=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.body_or_else">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.body_or_else">[docs]</a>
+    <span class="k">def</span> <span class="nf">body_or_else</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;else:&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.signature">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.signature">[docs]</a>
+    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">want_comma</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">def</span> <span class="nf">write_comma</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">want_comma</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">want_comma</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">padding</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">defaults</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">default</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">padding</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">defaults</span><span class="p">):</span>
+            <span class="n">write_comma</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">vararg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">write_comma</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*&#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">vararg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">kwarg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">write_comma</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**&#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">kwarg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.decorators">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.decorators">[docs]</a>
+    <span class="k">def</span> <span class="nf">decorators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">decorator</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">decorator_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">decorator</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">decorator</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Statements</span>
+
+<div class="viewcode-block" id="SourceGenerator.visit_Assert">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Assert">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Assert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;assert &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">msg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Assign">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Assign">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">targets</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; = &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_AugAssign">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_AugAssign">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_AugAssign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)]</span> <span class="o">+</span> <span class="s1">&#39;= &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_ImportFrom">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_ImportFrom">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_ImportFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;from </span><span class="si">%s%s</span><span class="s1"> import &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s1">&#39;.&#39;</span> <span class="o">*</span> <span class="n">node</span><span class="o">.</span><span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Import">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Import">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Import</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;import &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Expr">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Expr">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Expr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_FunctionDef">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_FunctionDef">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_FunctionDef</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decorators</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;def </span><span class="si">%s</span><span class="s1">(&#39;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;):&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_ClassDef">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_ClassDef">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_ClassDef</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">have_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">def</span> <span class="nf">paren_or_comma</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">have_args</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">have_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decorators</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;class </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">bases</span><span class="p">:</span>
+            <span class="n">paren_or_comma</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="c1"># XXX: the if here is used to keep this module compatible</span>
+        <span class="c1">#      with python 2.6.</span>
+        <span class="c1"># if hasattr(node, &#39;keywords&#39;):</span>
+        <span class="c1">#     for keyword in node.keywords:</span>
+        <span class="c1">#         paren_or_comma()</span>
+        <span class="c1">#         self.write(keyword.arg + &#39;=&#39;)</span>
+        <span class="c1">#         self.visit(keyword.value)</span>
+        <span class="c1">#     if node.starargs is not None:</span>
+        <span class="c1">#         paren_or_comma()</span>
+        <span class="c1">#         self.write(&#39;*&#39;)</span>
+        <span class="c1">#         self.visit(node.starargs)</span>
+        <span class="c1">#     if node.kwargs is not None:</span>
+        <span class="c1">#         paren_or_comma()</span>
+        <span class="c1">#         self.write(&#39;**&#39;)</span>
+        <span class="c1">#         self.visit(node.kwargs)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">have_args</span> <span class="ow">and</span> <span class="s1">&#39;):&#39;</span> <span class="ow">or</span> <span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_If">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_If">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_If</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;if &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">else_</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">orelse</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">else_</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">else_</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">else_</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">If</span><span class="p">):</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">else_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;elif &#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;else:&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">else_</span><span class="p">)</span>
+                <span class="k">break</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_For">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_For">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_For</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;for &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; in &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body_or_else</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_While">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_While">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_While</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;while &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body_or_else</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_With">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_With">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_With</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;with &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">context_expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">optional_vars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; as &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">optional_vars</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Pass">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Pass">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;pass&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Print">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Print">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># XXX: python 2.6 only</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;print &#39;</span><span class="p">)</span>
+        <span class="n">want_comma</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">dest</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &gt;&gt; &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">dest</span><span class="p">)</span>
+            <span class="n">want_comma</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">want_comma</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">want_comma</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">nl</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Delete">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Delete">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;del &#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">target</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_TryExcept">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_TryExcept">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_TryExcept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;try:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">handlers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_TryFinally">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_TryFinally">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_TryFinally</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;try:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;finally:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">finalbody</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Global">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Global">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Global</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;global &#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Nonlocal">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Nonlocal">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Nonlocal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;nonlocal &#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Return">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Return">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;return&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;return &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Break">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Break">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Break</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;break&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Continue">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Continue">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Continue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;continue&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Raise">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Raise">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Raise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># XXX: Python 2.6 / 3.0 compatibility</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;raise&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;exc&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">exc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">cause</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; from &#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">cause</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">inst</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">inst</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">tback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">tback</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Expressions</span>
+
+<div class="viewcode-block" id="SourceGenerator.visit_Attribute">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Attribute">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">attr</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Call">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Call">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">want_comma</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">def</span> <span class="nf">write_comma</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">want_comma</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">want_comma</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">write_comma</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="c1"># for keyword in node.keywords:</span>
+        <span class="c1">#     write_comma()</span>
+        <span class="c1">#     self.write(keyword.arg + &#39;=&#39;)</span>
+        <span class="c1">#     self.visit(keyword.value)</span>
+        <span class="c1"># if node.starargs is not None:</span>
+        <span class="c1">#     write_comma()</span>
+        <span class="c1">#     self.write(&#39;*&#39;)</span>
+        <span class="c1">#     self.visit(node.starargs)</span>
+        <span class="c1"># if node.kwargs is not None:</span>
+        <span class="c1">#     write_comma()</span>
+        <span class="c1">#     self.write(&#39;**&#39;)</span>
+        <span class="c1">#     self.visit(node.kwargs)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Name">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Name">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Str">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Str">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">s</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Bytes">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Bytes">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">s</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Num">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Num">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Num</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">n</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Tuple">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Tuple">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">elts</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">idx</span> <span class="ow">and</span> <span class="s1">&#39;)&#39;</span> <span class="ow">or</span> <span class="s1">&#39;,)&#39;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">sequence_visit</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">elts</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">idx</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">visit</span>
+
+    <span class="n">visit_List</span> <span class="o">=</span> <span class="n">sequence_visit</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">,</span> <span class="s1">&#39;]&#39;</span><span class="p">)</span>
+    <span class="n">visit_Set</span> <span class="o">=</span> <span class="n">sequence_visit</span><span class="p">(</span><span class="s1">&#39;{&#39;</span><span class="p">,</span> <span class="s1">&#39;}&#39;</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">sequence_visit</span>
+
+<div class="viewcode-block" id="SourceGenerator.visit_Dict">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;{&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">keys</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;: &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_BinOp">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_BinOp">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_BinOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">with_parentheses</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="p">(</span><span class="n">Pow</span><span class="p">,</span> <span class="n">Mult</span><span class="p">,</span> <span class="n">Div</span><span class="p">,</span> <span class="n">Sub</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">with_parentheses</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">with_parentheses</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span> <span class="n">BINOP_SYMBOLS</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)])</span>
+        <span class="k">if</span> <span class="n">with_parentheses</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">with_parentheses</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_BoolOp">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_BoolOp">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_BoolOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span> <span class="n">BOOLOP_SYMBOLS</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Compare">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Compare">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># self.write(&#39;(&#39;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">op</span><span class="p">,</span> <span class="n">right</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ops</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">comparators</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span> <span class="n">CMPOP_SYMBOLS</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">op</span><span class="p">)])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">)</span></div>
+
+        <span class="c1"># self.write(&#39;)&#39;)</span>
+
+<div class="viewcode-block" id="SourceGenerator.visit_UnaryOp">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_UnaryOp">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_UnaryOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">UNARYOP_SYMBOLS</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">op</span> <span class="o">==</span> <span class="s1">&#39;not&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">operand</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Subscript">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Subscript">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Subscript</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">slice</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;]&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Slice">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Slice">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">lower</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">upper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s1">&#39;None&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">step</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_ExtSlice">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_ExtSlice">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_ExtSlice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">dims</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">idx</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+
+    <span class="c1"># def visit_ExtSlice(self, node):</span>
+    <span class="c1">#     for idx, item in node.dims:</span>
+    <span class="c1">#         if idx:</span>
+    <span class="c1">#             self.write(&#39;, &#39;)</span>
+    <span class="c1">#         self.visit(item)</span>
+
+<div class="viewcode-block" id="SourceGenerator.visit_Yield">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Yield">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Yield</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;yield &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Lambda">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Lambda">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Lambda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;lambda &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;: &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Ellipsis">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Ellipsis">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Ellipsis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;...&#39;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">generator_visit</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">elt</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">comprehension</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">comprehension</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">visit</span>
+
+    <span class="n">visit_ListComp</span> <span class="o">=</span> <span class="n">generator_visit</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">,</span> <span class="s1">&#39;]&#39;</span><span class="p">)</span>
+    <span class="n">visit_GeneratorExp</span> <span class="o">=</span> <span class="n">generator_visit</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">,</span> <span class="s1">&#39;)&#39;</span><span class="p">)</span>
+    <span class="n">visit_SetComp</span> <span class="o">=</span> <span class="n">generator_visit</span><span class="p">(</span><span class="s1">&#39;{&#39;</span><span class="p">,</span> <span class="s1">&#39;}&#39;</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">generator_visit</span>
+
+<div class="viewcode-block" id="SourceGenerator.visit_DictComp">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_DictComp">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_DictComp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;{&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;: &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">comprehension</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">comprehension</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_IfExp">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_IfExp">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_IfExp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; if &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; else &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Starred">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Starred">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Starred</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_Repr">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_Repr">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Repr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># XXX: python 2.6 only</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;`&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;`&#39;</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Helper Nodes</span>
+
+<div class="viewcode-block" id="SourceGenerator.visit_alias">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_alias">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">asname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; as &#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">asname</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_comprehension">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_comprehension">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_comprehension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; for &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; in &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iter</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">ifs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">if_</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">ifs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; if &#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">if_</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_excepthandler">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_excepthandler">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_excepthandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">newline</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;except&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; as &#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_arguments">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceGenerator.visit_arg">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.SourceGenerator.visit_arg">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_arg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span></div>
+</div>
+
+
+<span class="c1"># tests</span>
+
+<div class="viewcode-block" id="test_generation">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.codegen.test_generation">[docs]</a>
+<span class="k">def</span> <span class="nf">test_generation</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">ast</span>
+    <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">exp</span>
+    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Max</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
+
+    <span class="n">expressions</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;-(a)&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;exp(-Max(a,b))&#39;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Testing ast to source&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">expressions</span><span class="p">:</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">new_s</span> <span class="o">=</span> <span class="n">to_source</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> -&gt; </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">new_s</span><span class="p">))</span>
+        <span class="n">lhs</span> <span class="o">=</span> <span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">d</span><span class="p">))</span>
+        <span class="n">rhs</span> <span class="o">=</span> <span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">new_s</span><span class="p">,</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">d</span><span class="p">))</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">lhs</span><span class="o">==</span><span class="n">rhs</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="n">rhs</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="n">test_generation</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.samples.modelproperties &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.samples.modelproperties</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thursday May 7, 2020</span>
+<span class="sd">@author: Alexei Goumilevski</span>
+
+<span class="sd">Reproduces results of  https://www.edx.org Monetary Policy Analysis and Forecasting course.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">working_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span><span class="s2">&quot;../../..&quot;</span><span class="p">))</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">working_dir</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">snowdrop.src.driver</span> <span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">simulate</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.driver</span> <span class="kn">import</span> <span class="n">importModel</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.graphs.util</span> <span class="kn">import</span> <span class="n">plotTimeSeries</span>
+
+
+<div class="viewcode-block" id="modelproperties">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.samples.html#snowdrop.src.samples.modelproperties.modelproperties">[docs]</a>
+<span class="k">def</span> <span class="nf">modelproperties</span><span class="p">(</span><span class="n">Plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simulates a set of basic shocks. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;model.yaml&#39;</span>
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s1">&#39;supplements/models/MPAF/&#39;</span><span class="o">+</span><span class="n">fname</span><span class="p">))</span>
+
+    <span class="c1"># Create model</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">importModel</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span><span class="n">Solver</span><span class="o">=</span><span class="s2">&quot;Klein&quot;</span><span class="p">)</span>
+    
+    <span class="n">var_names</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span>
+    <span class="c1"># Set starting values</span>
+    <span class="n">hist</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">working_dir</span> <span class="o">+</span> <span class="s2">&quot;/supplements/data/MPAF/history.xlsx&quot;</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">setStartingValues</span><span class="p">(</span><span class="n">hist</span><span class="o">=</span><span class="n">hist</span><span class="p">)</span>
+    
+    <span class="n">path_to_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s2">&quot;graphs&quot;</span><span class="p">))</span>
+    <span class="c1"># List of shocks</span>
+    <span class="c1"># One period unexpected shocks: inflation, output, exchange rate, interest rate</span>
+    <span class="n">list_shocks</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SHK_DLA_CPI&#39;</span><span class="p">,</span><span class="s1">&#39;SHK_L_GDP_GAP&#39;</span><span class="p">,</span><span class="s1">&#39;SHK_L_S&#39;</span><span class="p">,</span><span class="s1">&#39;SHK_RS&#39;</span><span class="p">]</span>
+    <span class="n">list_headers</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Inflationary (cost-push) Shock&#39;</span><span class="p">,</span><span class="s1">&#39;Aggregate Demand Shock&#39;</span><span class="p">,</span> 
+                   <span class="s1">&#39;Exchange Rate Shock&#39;</span><span class="p">,</span> <span class="s1">&#39;Interest Rate (monetary policy) Shock&#39;</span><span class="p">]</span>
+
+    
+    <span class="c1"># Sets the time frame for the simulation </span>
+    <span class="n">model</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;periods&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1">#model.options[&quot;range&quot;] = [[2000,1,1],[2005,1,1]] # fiver-years simulation horizon</span>
+    <span class="n">shock_names</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;shocks&quot;</span><span class="p">]</span>
+    <span class="n">n_shocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shock_names</span><span class="p">)</span>
+    
+    <span class="c1"># Fills the respective databases with the shocks&#39; values for the starting</span>
+    <span class="c1"># point of the simulation (startsim). For simplicity, all shocks are set to</span>
+    <span class="c1"># 1 percent</span>
+    <span class="c1">################################################################### Graphs</span>
+    
+    
+    <span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CPI Inflation QoQ (</span><span class="si">% a</span><span class="s1">r)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Nominal Interest Rate (</span><span class="si">% a</span><span class="s1">r)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Nominal ER Deprec. QoQ (</span><span class="si">% a</span><span class="s1">r)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Output Gap (%)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Real Interest Rate Gap (%)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Real Exchange Rate Gap (%)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Real Monetary Condition Index (%)&#39;</span><span class="p">]</span>
+        
+    <span class="n">shocks</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">num_shocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_shocks</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_shocks</span><span class="p">):</span>
+        <span class="c1"># Set shocks</span>
+        <span class="n">shock_name</span> <span class="o">=</span> <span class="n">list_shocks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">shock_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">shock_name</span><span class="p">)</span>
+        <span class="n">shock_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_shocks</span><span class="p">)</span>
+        <span class="n">shock_values</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">shocks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;shock_values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shock_values</span>
+        
+        <span class="c1"># Find solution</span>
+        <span class="n">results</span><span class="p">,</span><span class="n">dates</span> <span class="o">=</span> <span class="n">simulate</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">irf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">rows</span><span class="p">,</span><span class="n">columns</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">shape</span>
+        
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">var_names</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">results</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span> 
+            <span class="n">ts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dates</span><span class="p">)</span>
+            <span class="n">ts</span> <span class="o">=</span> <span class="n">ts</span><span class="p">[:</span><span class="s1">&#39;2004-1-1&#39;</span><span class="p">]</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">ts</span>
+    
+    
+        <span class="c1"># Create separate page with IRFs for each shock</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="p">[[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;DLA_CPI&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;RS&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;DLA_S&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_GAP&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;RR_GAP&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_Z_GAP&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;MCI&quot;</span><span class="p">]]</span>
+                 <span class="p">]</span>
+        
+        <span class="n">header</span> <span class="o">=</span> <span class="n">list_headers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">labels</span><span class="o">=</span><span class="p">[[]]</span>
+        <span class="n">plotTimeSeries</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span><span class="n">titles</span><span class="o">=</span><span class="n">titles</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">,</span><span class="n">sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+    
+    
+    <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.utils.merge</span> <span class="kn">import</span> <span class="n">merge</span>
+        <span class="n">outputFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s2">&quot;results/MPAF_Report_Shocks.pdf&quot;</span><span class="p">))</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">list_headers</span><span class="p">:</span>
+            <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">((</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s2">&quot;graphs/&quot;</span><span class="o">+</span><span class="n">f</span><span class="o">+</span><span class="s2">&quot;.pdf&quot;</span><span class="p">))))</span>
+        <span class="n">merge</span><span class="p">(</span><span class="n">outputFile</span><span class="p">,</span><span class="n">files</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Done!&#39;</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main program</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">modelproperties</span><span class="p">(</span><span class="n">Plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

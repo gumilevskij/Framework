@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.preprocessor.language &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.preprocessor.language</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Defines structure of LanguageElement class. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">ruamel.yaml</span> <span class="k">as</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Max</span><span class="p">,</span><span class="n">Min</span><span class="p">,</span><span class="n">Heaviside</span><span class="p">,</span><span class="n">Abs</span><span class="p">,</span><span class="n">sign</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.util</span> <span class="kn">import</span> <span class="n">IfThen</span><span class="p">,</span> <span class="n">IfThenElse</span><span class="p">,</span> <span class="n">Positive</span><span class="p">,</span> <span class="n">Negative</span>
+<span class="c1">#from snowdrop.src.preprocessor.util import PNORM</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor</span> <span class="kn">import</span> <span class="n">objects</span>
+
+<span class="n">version</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">__version__</span>
+
+<span class="n">functions</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;abs&#39;</span><span class="p">:</span>        <span class="nb">abs</span><span class="p">,</span>
+    <span class="s1">&#39;log&#39;</span><span class="p">:</span>        <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">,</span>
+    <span class="s1">&#39;exp&#39;</span><span class="p">:</span>        <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span>
+    <span class="s1">&#39;sin&#39;</span><span class="p">:</span>        <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">,</span>
+    <span class="s1">&#39;cos&#39;</span><span class="p">:</span>        <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">,</span>
+    <span class="s1">&#39;tan&#39;</span><span class="p">:</span>        <span class="n">math</span><span class="o">.</span><span class="n">tan</span><span class="p">,</span>
+    <span class="s1">&#39;Max&#39;</span><span class="p">:</span>        <span class="n">Max</span><span class="p">,</span>
+    <span class="s1">&#39;Min&#39;</span><span class="p">:</span>        <span class="n">Min</span><span class="p">,</span>
+    <span class="s1">&#39;sign&#39;</span><span class="p">:</span>       <span class="n">sign</span><span class="p">,</span>
+    <span class="s1">&#39;Heaviside&#39;</span><span class="p">:</span>  <span class="n">Heaviside</span><span class="p">,</span>
+    <span class="s1">&#39;Abs&#39;</span><span class="p">:</span>        <span class="n">Abs</span><span class="p">,</span>
+    <span class="s1">&#39;IfThen&#39;</span><span class="p">:</span>     <span class="n">IfThen</span><span class="p">,</span>
+    <span class="s1">&#39;IfThenElse&#39;</span><span class="p">:</span> <span class="n">IfThenElse</span><span class="p">,</span>
+    <span class="s1">&#39;Positive&#39;</span><span class="p">:</span>   <span class="n">Positive</span><span class="p">,</span>
+    <span class="s1">&#39;Negative&#39;</span><span class="p">:</span>   <span class="n">Negative</span>
+<span class="c1">#    &#39;PNORM&#39;:      PNORM</span>
+<span class="p">}</span>
+
+<span class="n">constants</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;pi&#39;</span><span class="p">:</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="p">}</span>
+
+<div class="viewcode-block" id="LanguageElement">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.LanguageElement">[docs]</a>
+<span class="k">class</span> <span class="nc">LanguageElement</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class LanguageElement.</span>
+<span class="sd">    </span>
+<span class="sd">    .. currentmodule: preprocessor</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="LanguageElement.constructor">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.LanguageElement.constructor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">constructor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="s1">&#39;0.18&#39;</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="n">maptyp</span><span class="o">=</span><span class="s1">&#39;rt&#39;</span><span class="p">,</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LanguageElement.check">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.LanguageElement.check">[docs]</a>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Inspect call signature of a callable object and its return annotation.&quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">inspect</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseclass</span><span class="p">)</span>
+        <span class="n">sig</span><span class="o">.</span><span class="n">bind_partial</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LanguageElement.eval">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.LanguageElement.eval">[docs]</a>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate Numeric node.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.symbolic_eval</span> <span class="kn">import</span> <span class="n">NumericEval</span>
+        <span class="n">ne</span> <span class="o">=</span> <span class="n">NumericEval</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">eval_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseclass</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return object representation.&quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseclass</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">(**</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Human readable object representation.&quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseclass</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">(</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Domain">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.Domain">[docs]</a>
+<span class="k">class</span> <span class="nc">Domain</span><span class="p">(</span><span class="n">LanguageElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Domain class.&quot;&quot;&quot;</span>
+    <span class="n">baseclass</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">Domain</span></div>
+
+  
+<div class="viewcode-block" id="Normal">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.Normal">[docs]</a>
+<span class="k">class</span> <span class="nc">Normal</span><span class="p">(</span><span class="n">LanguageElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normal distribution class.&quot;&quot;&quot;</span>
+    <span class="n">baseclass</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">Normal</span></div>
+
+    
+<div class="viewcode-block" id="MvNormal">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.MvNormal">[docs]</a>
+<span class="k">class</span> <span class="nc">MvNormal</span><span class="p">(</span><span class="n">LanguageElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Multivariate normal distribution class.&quot;&quot;&quot;</span>
+    <span class="n">baseclass</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">MvNormal</span></div>
+
+    
+<div class="viewcode-block" id="LogNormal">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.LogNormal">[docs]</a>
+<span class="k">class</span> <span class="nc">LogNormal</span><span class="p">(</span><span class="n">LanguageElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lognormal distribution class.&quot;&quot;&quot;</span>
+    <span class="n">baseclass</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">LogNormal</span></div>
+
+    
+<div class="viewcode-block" id="Beta">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.Beta">[docs]</a>
+<span class="k">class</span> <span class="nc">Beta</span><span class="p">(</span><span class="n">LanguageElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Beta distribution class.&quot;&quot;&quot;</span>
+    <span class="n">baseclass</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">Beta</span></div>
+
+    
+<div class="viewcode-block" id="Binomial">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.Binomial">[docs]</a>
+<span class="k">class</span> <span class="nc">Binomial</span><span class="p">(</span><span class="n">LanguageElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Binomial distribution class.&quot;&quot;&quot;</span>
+    <span class="n">baseclass</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">Binomial</span></div>
+
+    
+<div class="viewcode-block" id="Gamma">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.Gamma">[docs]</a>
+<span class="k">class</span> <span class="nc">Gamma</span><span class="p">(</span><span class="n">LanguageElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gamma distribution class.&quot;&quot;&quot;</span>
+    <span class="n">baseclass</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">Gamma</span></div>
+
+    
+<div class="viewcode-block" id="Logistic">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.Logistic">[docs]</a>
+<span class="k">class</span> <span class="nc">Logistic</span><span class="p">(</span><span class="n">LanguageElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Logistic distribution class.&quot;&quot;&quot;</span>
+    <span class="n">baseclass</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">Logistic</span></div>
+
+    
+<div class="viewcode-block" id="Uniform">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.Uniform">[docs]</a>
+<span class="k">class</span> <span class="nc">Uniform</span><span class="p">(</span><span class="n">LanguageElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uniform distribution class.&quot;&quot;&quot;</span>
+    <span class="n">baseclass</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">Uniform</span></div>
+
+    
+<div class="viewcode-block" id="Cartesian">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.language.Cartesian">[docs]</a>
+<span class="k">class</span> <span class="nc">Cartesian</span><span class="p">(</span><span class="n">LanguageElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cartesian grid class.&quot;&quot;&quot;</span>
+    <span class="n">baseclass</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">Cartesian</span></div>
+
+
+<span class="n">minilang</span> <span class="o">=</span> <span class="p">[</span><span class="n">MvNormal</span><span class="p">,</span><span class="n">Normal</span><span class="p">,</span><span class="n">LogNormal</span><span class="p">,</span><span class="n">Beta</span><span class="p">,</span><span class="n">Binomial</span><span class="p">,</span><span class="n">Gamma</span><span class="p">,</span><span class="n">Logistic</span><span class="p">,</span><span class="n">Uniform</span><span class="p">,</span><span class="n">Domain</span><span class="p">,</span><span class="n">Cartesian</span><span class="p">]</span>
+
+<span class="n">types</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">minilang</span><span class="p">:</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="vm">__name__</span>
+    <span class="n">types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Entry point.&quot;&quot;&quot;</span>
+    
+    <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">minilang</span><span class="p">:</span>
+         <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="vm">__name__</span>
+         <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;!</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span>
+         <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">constructor</span><span class="p">)</span>
+ 
+    <span class="n">txt</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    distribution: !MvNormal</span>
+<span class="s2">       mean: [0.1]</span>
+<span class="s2">       cov:  [[0.3]]</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="s1">&#39;0.18&#39;</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAML</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">Loader</span><span class="p">)</span>
+    <span class="n">dis</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;distribution&#39;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">dis</span><span class="p">)</span>
+      
+    <span class="c1"># txt = &quot;&quot;&quot;</span>
+    <span class="c1"># distribution: !Normal</span>
+    <span class="c1">#     mean: 0.0</span>
+    <span class="c1">#     scale: 0.1</span>
+    <span class="c1"># &quot;&quot;&quot;</span>
+    <span class="c1"># if version &gt;= &#39;0.18&#39;:</span>
+    <span class="c1">#    data = yaml.YAML(typ=&#39;safe&#39;).load(txt)</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#    data = yaml.load(txt, Loader=yaml.Loader)</span>
+    <span class="c1"># dis = data[&#39;distribution&#39;]</span>
+    <span class="c1"># print(dis)</span>
+
+    <span class="c1"># dis.__repr__()</span>
+     
+    <span class="c1"># from snowdrop.src.preprocessor.symbolic_eval import NumericEval</span>
+    <span class="c1"># txt = &quot;&quot;&quot;</span>
+    <span class="c1"># grid: !Cartesian</span>
+    <span class="c1"># a: [x,10]</span>
+    <span class="c1"># b: [y,20]</span>
+    <span class="c1"># orders: [50,50]</span>
+    <span class="c1"># &quot;&quot;&quot;</span>
+    <span class="c1"># if version &gt;= &#39;0.18&#39;:</span>
+    <span class="c1">#    data = yaml.YAML(typ=&#39;safe&#39;).load(txt)</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#    data = yaml.load(txt, Loader=yaml.Loader)</span>
+    <span class="c1"># grid = data[&#39;grid&#39;]</span>
+
+    <span class="c1"># d = dict(x=20, y=30, sig_z=0.001)</span>
+    <span class="c1"># ne = NumericEval(d, minilang=minilang)</span>
+    <span class="c1"># ne.eval(d)</span>
+    
+    <span class="c1"># cart = grid.eval(d)</span>
+    <span class="c1"># dd = dis.eval(d)</span>
+    <span class="c1"># ne.eval(data[&#39;grid&#39;])</span>
+    <span class="c1"># ndata = ne.eval(data)</span>
+    <span class="c1"># data[&#39;grid&#39;]</span>
+    <span class="c1"># ndata[&#39;grid&#39;]</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

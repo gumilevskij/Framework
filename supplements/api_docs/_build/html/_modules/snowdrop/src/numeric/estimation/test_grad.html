@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.estimation.test_grad &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.estimation.test_grad</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">sys</span><span class="o">,</span><span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">autograd.numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">autograd</span> <span class="kn">import</span> <span class="n">grad</span><span class="p">,</span> <span class="n">jacobian</span><span class="p">,</span> <span class="n">hessian</span>
+<span class="kn">from</span> <span class="nn">autograd.scipy.stats</span> <span class="kn">import</span> <span class="n">norm</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+<span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="k">as</span> <span class="nn">sm</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">working_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">..</span><span class="se">\\</span><span class="s2">..</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># suppose values for x and y are as follows</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span>
+    
+<div class="viewcode-block" id="f">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.f">[docs]</a>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mf">.8</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="p">(</span><span class="mf">.2</span><span class="p">)</span></div>
+
+
+<span class="c1"># first derivatives - for f(x,y), x is position 0 (default)  </span>
+<span class="c1">#                         and y is position 1</span>
+<span class="n">dfdx</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="n">dfdy</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<span class="c1"># evaluate the gradiant at x, y</span>
+<span class="n">derivs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dfdx</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">dfdy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Gradiant: &quot;</span><span class="p">,</span> <span class="n">derivs</span><span class="p">)</span>
+
+<span class="c1"># analytical derivatives</span>
+<span class="n">a_dfdx</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="mf">.8</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">.2</span><span class="p">)</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="p">(</span><span class="mf">.2</span><span class="p">)</span>
+<span class="n">a_dfdy</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="mf">.2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mf">.8</span><span class="p">)</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">.8</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Analytical Gradient: &quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">a_dfdx</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">a_dfdy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)]))</span> 
+
+<span class="c1"># second derivates</span>
+<span class="n">d2fdxdx</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">dfdx</span><span class="p">)</span>
+<span class="n">d2fdydy</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">dfdy</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">d2fdxdy</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">dfdx</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">d2fdydx</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">dfdy</span><span class="p">)</span>
+
+<span class="c1"># number of observations</span>
+<span class="n">N</span> <span class="o">=</span> <span class="mi">5000</span>
+<span class="c1"># number of parameters</span>
+<span class="n">K</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="c1"># true parameter values</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>
+<span class="c1"># true error std deviation</span>
+<span class="n">sigma</span> <span class="o">=</span>  <span class="mi">2</span>
+
+<div class="viewcode-block" id="datagen">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.datagen">[docs]</a>
+<span class="k">def</span> <span class="nf">datagen</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates data for OLS regression.</span>
+<span class="sd">    Inputs:</span>
+<span class="sd">    N: Number of observations</span>
+<span class="sd">    beta: K x 1 true parameter values</span>
+<span class="sd">    sigma: std dev of error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">x_</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">K</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># x is the N x K data matrix with column of ones</span>
+    <span class="c1">#   in the first position for estimating a constant</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">N</span><span class="p">),</span><span class="n">x_</span><span class="p">]</span>
+    <span class="c1"># y is the N x 1 vector of dependent variables</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span> <span class="o">+</span> <span class="n">sigma</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span></div>
+
+
+<span class="n">y</span><span class="p">,</span> <span class="n">x</span>  <span class="o">=</span> <span class="n">datagen</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+
+<div class="viewcode-block" id="neg_loglike_">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.neg_loglike_">[docs]</a>
+<span class="k">def</span> <span class="nf">neg_loglike_</span><span class="p">(</span><span class="n">theta</span><span class="p">):</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">beta</span><span class="p">)</span>
+    <span class="n">ll</span> <span class="o">=</span> <span class="o">-</span><span class="n">N</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">ll</span></div>
+
+
+<div class="viewcode-block" id="neg_loglike">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.neg_loglike">[docs]</a>
+<span class="k">def</span> <span class="nf">neg_loglike</span><span class="p">(</span><span class="n">theta</span><span class="p">):</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># transform theta[-1]</span>
+    <span class="c1"># so that sigma &gt; 0</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">theta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">beta</span><span class="p">)</span>
+    <span class="n">ll</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">ll</span></div>
+
+
+<div class="viewcode-block" id="test">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.estimation.html#snowdrop.src.numeric.estimation.test_grad.test">[docs]</a>
+<span class="k">def</span> <span class="nf">test</span><span class="p">():</span>
+    <span class="c1"># derivates of neg_loglike</span>
+    <span class="n">jacobian_</span>  <span class="o">=</span> <span class="n">jacobian</span><span class="p">(</span><span class="n">neg_loglike</span><span class="p">)</span>
+    <span class="n">hessian_</span> <span class="o">=</span> <span class="n">hessian</span><span class="p">(</span><span class="n">neg_loglike</span><span class="p">)</span>
+    
+    <span class="c1"># evaluate the gradiant at true theta</span>
+    <span class="c1"># theta = [beta log(sigma)]</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sigma</span><span class="p">))</span>
+    
+    <span class="n">theta_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">beta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">res1</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">neg_loglike</span><span class="p">,</span> <span class="n">theta_start</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;BFGS&#39;</span><span class="p">,</span> \
+    	       <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span> <span class="n">jac</span> <span class="o">=</span> <span class="n">jacobian_</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Convergence Achieved: &quot;</span><span class="p">,</span> <span class="n">res1</span><span class="o">.</span><span class="n">success</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of Function Evaluations: &quot;</span><span class="p">,</span> <span class="n">res1</span><span class="o">.</span><span class="n">nfev</span><span class="p">)</span>
+    
+    <span class="c1"># estimated parameters</span>
+    <span class="n">theta_autograd</span> <span class="o">=</span> <span class="n">res1</span><span class="o">.</span><span class="n">x</span>
+    
+    <span class="c1"># for std errors, calculate the information matrix</span>
+    <span class="c1"># using the autograd hessian</span>
+    <span class="n">information1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">hessian_</span><span class="p">(</span><span class="n">theta_autograd</span><span class="p">))</span>
+    <span class="n">se1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">information1</span><span class="p">)))</span> 
+    
+    <span class="c1"># Put Results in a DataFrame</span>
+    <span class="n">results_a</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;Parameter&#39;</span><span class="p">:</span><span class="n">theta_autograd</span><span class="p">,</span><span class="s1">&#39;Std Err&#39;</span><span class="p">:</span><span class="n">se1</span><span class="p">})</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;beta_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">)]</span>
+    <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;log(Sigma)&#39;</span><span class="p">)</span>
+    <span class="n">results_a</span><span class="p">[</span><span class="s1">&#39;Variable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span>
+    <span class="n">results_a</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;MLE Autograd&quot;</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="n">jacobian_</span><span class="p">(</span><span class="n">theta_autograd</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">jacobian_</span><span class="p">(</span><span class="n">theta</span><span class="p">))</span>
+    
+    <span class="c1">## Comparison with OLS and Non-Autograd MLE</span>
+    
+    <span class="c1"># Using scipy OLS</span>
+    <span class="n">res_ols</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+    
+    <span class="c1"># Put Results in a DataFrame</span>
+    <span class="n">results_o</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;Parameter&#39;</span><span class="p">:</span><span class="n">res_ols</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+    			  <span class="s1">&#39;Std Err&#39;</span><span class="p">:</span><span class="n">res_ols</span><span class="o">.</span><span class="n">HC0_se</span><span class="p">})</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;beta_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">)]</span>
+    <span class="n">results_o</span><span class="p">[</span><span class="s1">&#39;Variable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span>
+    <span class="n">results_o</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;OLS&quot;</span>
+    
+    <span class="n">res2</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">neg_loglike</span><span class="p">,</span> <span class="n">theta_start</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;BFGS&#39;</span><span class="p">,</span> \
+    	       <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span> 
+    <span class="n">se2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">res2</span><span class="o">.</span><span class="n">hess_inv</span><span class="p">))</span>
+    <span class="n">theta2</span> <span class="o">=</span> <span class="n">res2</span><span class="o">.</span><span class="n">x</span>
+    
+    <span class="c1"># Put Results in a DataFrame</span>
+    <span class="n">results_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;Parameter&#39;</span><span class="p">:</span><span class="n">theta2</span><span class="p">,</span><span class="s1">&#39;Std Err&#39;</span><span class="p">:</span><span class="n">se2</span><span class="p">})</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;beta_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">)]</span>
+    <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;log(Sigma)&#39;</span><span class="p">)</span>
+    <span class="n">results_</span><span class="p">[</span><span class="s1">&#39;Variable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span>
+    <span class="n">results_</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;MLE&quot;</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Convergence Achieved: &quot;</span><span class="p">,</span> <span class="n">res1</span><span class="o">.</span><span class="n">success</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of Function Iterations: &quot;</span><span class="p">,</span> <span class="n">res2</span><span class="o">.</span><span class="n">nfev</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Gradiant: &quot;</span><span class="p">,</span> <span class="n">jacobian_</span><span class="p">(</span><span class="n">res2</span><span class="o">.</span><span class="n">x</span><span class="p">))</span>
+    
+    <span class="c1"># combine results and print</span>
+    <span class="n">results_a</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;Variable&#39;</span><span class="p">,</span><span class="s1">&#39;Model&#39;</span><span class="p">],</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">results_o</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;Variable&#39;</span><span class="p">,</span><span class="s1">&#39;Model&#39;</span><span class="p">],</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">results_</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;Variable&#39;</span><span class="p">,</span><span class="s1">&#39;Model&#39;</span><span class="p">],</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df_</span> <span class="o">=</span> <span class="n">results_o</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results_a</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results_</span><span class="p">)</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Parameters&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">df_</span><span class="p">[</span><span class="s1">&#39;Parameter&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">K</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    
+    <span class="c1"># combine results and print</span>
+    <span class="c1"># results_a.set_index([&#39;Variable&#39;,&#39;Model&#39;],inplace=True)</span>
+    <span class="c1"># results_o.set_index([&#39;Variable&#39;,&#39;Model&#39;],inplace=True)</span>
+    <span class="c1"># results_.set_index([&#39;Variable&#39;,&#39;Model&#39;],inplace=True)</span>
+    <span class="n">df_</span> <span class="o">=</span> <span class="n">results_o</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results_a</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results_</span><span class="p">)</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Parameters&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">df_</span><span class="p">[</span><span class="s1">&#39;Parameter&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">K</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    
+    <span class="c1">##Speed Up</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">]:</span>
+         <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+         <span class="n">theta_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span>
+         <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">datagen</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time for &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span><span class="s2">&quot; Parameters&quot;</span><span class="p">)</span>
+         <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+         <span class="n">minimize</span><span class="p">(</span><span class="n">neg_loglike</span><span class="p">,</span> <span class="n">theta_start</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;BFGS&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span> <span class="n">jac</span> <span class="o">=</span> <span class="n">jacobian_</span><span class="p">)</span>
+         <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start</span>
+         <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+         <span class="n">minimize</span><span class="p">(</span><span class="n">neg_loglike</span><span class="p">,</span> <span class="n">theta_start</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;BFGS&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>   
+         <span class="n">t2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start</span>
+         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; </span><span class="si">%s</span><span class="s2"> seconds   vs   </span><span class="si">%s</span><span class="s2"> seconds  -  performance increase: </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t1</span><span class="p">,</span><span class="n">t2</span><span class="p">,</span><span class="n">t2</span><span class="o">/</span><span class="n">t1</span><span class="p">))</span>
+    		
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="mf">.001</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[[</span><span class="mi">214</span><span class="p">,</span> <span class="mi">573</span><span class="p">,</span> <span class="mi">1190</span><span class="p">],[</span><span class="mi">961</span><span class="p">,</span> <span class="mi">12000</span><span class="p">,</span> <span class="mi">46600</span><span class="p">]],</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;With Autograd&#39;</span><span class="p">,</span><span class="s1">&#39;Without Autograd&#39;</span><span class="p">],</span><span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Speed Up&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Without Autograd&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;With Autograd&#39;</span><span class="p">]</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;K&quot;</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">test</span><span class="p">()</span>
+
+		
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

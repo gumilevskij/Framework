@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.numeric.bayes package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.numeric.dp package" href="snowdrop.src.numeric.dp.html" />
+    <link rel="prev" title="snowdrop.src.numeric package" href="snowdrop.src.numeric.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-numeric-bayes-package">
+<h1>snowdrop.src.numeric.bayes package<a class="headerlink" href="#snowdrop-src-numeric-bayes-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.numeric.bayes.mcmc">
+<span id="snowdrop-src-numeric-bayes-mcmc-module"></span><h2>snowdrop.src.numeric.bayes.mcmc module<a class="headerlink" href="#module-snowdrop.src.numeric.bayes.mcmc" title="Link to this heading">¶</a></h2>
+<p>Created on Fri Apr  5 13:09:34 2019</p>
+<p>Curently implemented for linear models only.</p>
+<p>&#64;author: A.Goumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.bayes.mcmc.func_likelihood">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.bayes.mcmc.</span></span><span class="sig-name descname"><span class="pre">func_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/bayes/mcmc.html#func_likelihood"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.bayes.mcmc.func_likelihood" title="Link to this definition">¶</a></dt>
+<dd><p>Custom function defining log of likelihood.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.bayes.mcmc.func_prior">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.bayes.mcmc.</span></span><span class="sig-name descname"><span class="pre">func_prior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/bayes/mcmc.html#func_prior"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.bayes.mcmc.func_prior" title="Link to this definition">¶</a></dt>
+<dd><p>Custom function defining log of prior probability.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.bayes.mcmc.gelman_rubin">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.bayes.mcmc.</span></span><span class="sig-name descname"><span class="pre">gelman_rubin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/bayes/mcmc.html#gelman_rubin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.bayes.mcmc.gelman_rubin" title="Link to this definition">¶</a></dt>
+<dd><p>The Gelman-Rubin Test.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.bayes.mcmc.likelihood_logp">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.bayes.mcmc.</span></span><span class="sig-name descname"><span class="pre">likelihood_logp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/bayes/mcmc.html#likelihood_logp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.bayes.mcmc.likelihood_logp" title="Link to this definition">¶</a></dt>
+<dd><p>Function defining log of likelihood.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.bayes.mcmc.logp">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.bayes.mcmc.</span></span><span class="sig-name descname"><span class="pre">logp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/bayes/mcmc.html#logp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.bayes.mcmc.logp" title="Link to this definition">¶</a></dt>
+<dd><p>Custom function defining log of posterioir probability.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.bayes.mcmc.prior_logp">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.bayes.mcmc.</span></span><span class="sig-name descname"><span class="pre">prior_logp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/bayes/mcmc.html#prior_logp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.bayes.mcmc.prior_logp" title="Link to this definition">¶</a></dt>
+<dd><p>Function defining log of prior probability.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.bayes.mcmc.sample">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.bayes.mcmc.</span></span><span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Qm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Hm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'emcee'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steady_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">burn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ndraws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">310</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind_non_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resetParameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/bayes/mcmc.html#sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.bayes.mcmc.sample" title="Link to this definition">¶</a></dt>
+<dd><p>Draw model parameters samples by using MCMC sampler.</p>
+<p>The variants of MC2 sampler are:</p>
+<ul>
+<li><dl class="simple">
+<dt>Affine Invariant Markov Chain Monte Carlo (MCMC) Ensemble sampler (emcee package). </dt><dd><ul class="simple">
+<li><p>Emcee is a Python ensemble sampling toolkit for affine-invariant MCMC.</p></li>
+<li><p>For references on emcee package please see <a class="reference external" href="http://dfm.io/emcee/current/">http://dfm.io/emcee/current/</a></p></li>
+<li><p>The algorithm is based on 2010 paper of Jonathan Goodman and Jonathan Weare’s paper, “Ensemble Samplers with Affine Invariance”, <a class="reference external" href="https://projecteuclid.org/download/pdf_1/euclid.camcos/1513731992">https://projecteuclid.org/download/pdf_1/euclid.camcos/1513731992</a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Markov Chain Monte Carlo (MCMC) sampler includes different Metropolis based sampling techniques:</dt><dd><ul class="simple">
+<li><p>Metropolis-Hastings (MH): Primary sampling method.</p></li>
+<li><p>Adaptive-Metropolis (AM): Adapts covariance matrix at specified intervals.</p></li>
+<li><p>Delayed-Rejection (DR): Delays rejection by sampling from a narrower distribution. Capable of n-stage delayed rejection.</p></li>
+<li><p>Delayed Rejection Adaptive Metropolis (DRAM): DR + AM</p></li>
+</ul>
+<p>Please see <a class="reference external" href="https://pymcmcstat.readthedocs.io/_/downloads/en/latest/pdf/">https://pymcmcstat.readthedocs.io/_/downloads/en/latest/pdf/</a></p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Markov Chain Monte Carlo (MCMC) sampler with “particles” package</dt><dd><p>Please see <a class="reference external" href="https://pypi.org/project/particles">https://pypi.org/project/particles</a> ,
+<a class="reference external" href="https://github.com/nchopin/particles">https://github.com/nchopin/particles</a> ,</p>
+<p>Nicolas, Chopin and Omiros, Papaspiliopoulos, 2020, “An Introduction to Sequential
+Monte Carlo”, Springer Series in Statistics.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param model<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model object.</p>
+</dd>
+<dt class="field-even">type model<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model.</p>
+</dd>
+<dt class="field-odd">param n<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of endogenous variables.</p>
+</dd>
+<dt class="field-even">type n<span class="colon">:</span></dt>
+<dd class="field-even"><p>int.</p>
+</dd>
+<dt class="field-odd">param obs<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Measurement data.</p>
+</dd>
+<dt class="field-even">type obs<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.array.</p>
+</dd>
+<dt class="field-odd">param Qm<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Covariance matrix of errors of endogenous variables.</p>
+</dd>
+<dt class="field-even">type Qm<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.array.</p>
+</dd>
+<dt class="field-odd">param Hm<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Covariance matrix of errors of measurement variables.</p>
+</dd>
+<dt class="field-even">type Hm<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.array.</p>
+</dd>
+<dt class="field-odd">param y0<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Starting values of endogenous variables.</p>
+</dd>
+<dt class="field-even">type y0<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param method<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sampler algorithm.</p>
+</dd>
+<dt class="field-even">type method<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of model parameters.</p>
+</dd>
+<dt class="field-even">type parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param steady_state<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of steady states.</p>
+</dd>
+<dt class="field-even">type steady_state<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param burn<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of samples to discard.</p>
+</dd>
+<dt class="field-even">type burn<span class="colon">:</span></dt>
+<dd class="field-even"><p>int.</p>
+</dd>
+<dt class="field-odd">param Ndraws<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of draws.</p>
+</dd>
+<dt class="field-even">type Ndraws<span class="colon">:</span></dt>
+<dd class="field-even"><p>int.</p>
+</dd>
+<dt class="field-odd">param Niter<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of iterations.</p>
+</dd>
+<dt class="field-even">type Niter<span class="colon">:</span></dt>
+<dd class="field-even"><p>int.</p>
+</dd>
+<dt class="field-odd">param ind_non_missing<span class="colon">:</span></dt>
+<dd class="field-odd"><p>indices of non-missing observations.</p>
+</dd>
+<dt class="field-even">type ind_non_missing<span class="colon">:</span></dt>
+<dd class="field-even"><p>list.</p>
+</dd>
+<dt class="field-odd">param Parallel<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If True runs parallel parameters sampling.</p>
+</dd>
+<dt class="field-even">type Parallel<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">param resetParameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If True resets parameters to the samples mean values.</p>
+</dd>
+<dt class="field-even">type resetParameters<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">param debug<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If True print chain statistics information for pymcmcstat method.</p>
+</dd>
+<dt class="field-even">type debug<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.bayes">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.numeric.bayes" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+  <li><a href="snowdrop.src.numeric.html">snowdrop.src.numeric package</a><ul>
+      <li>Previous: <a href="snowdrop.src.numeric.html" title="previous chapter">snowdrop.src.numeric package</a></li>
+      <li>Next: <a href="snowdrop.src.numeric.dp.html" title="next chapter">snowdrop.src.numeric.dp package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.numeric.bayes.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

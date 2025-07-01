@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.solver.solver &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.solver.solver</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">zeros_like</span><span class="p">,</span> <span class="n">zeros</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">solve</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">guvectorize</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">solve</span> <span class="k">as</span> <span class="n">linalg_solve</span>
+
+
+<div class="viewcode-block" id="my_solve">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solver.my_solve">[docs]</a>
+<span class="k">def</span> <span class="nf">my_solve</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">sol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve system of algebraic equations by elimination method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h</span><span class="p">,</span><span class="n">w</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">h</span><span class="p">):</span>
+        <span class="n">maxrow</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="k">for</span> <span class="n">y2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">h</span><span class="p">):</span>    <span class="c1"># Find max pivot</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="n">y2</span><span class="p">,</span><span class="n">y</span><span class="p">])</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="n">maxrow</span><span class="p">,</span><span class="n">y</span><span class="p">]):</span>
+                <span class="n">maxrow</span> <span class="o">=</span> <span class="n">y2</span>
+        <span class="k">for</span> <span class="n">y2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">w</span><span class="p">):</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">y2</span><span class="p">]</span>
+            <span class="n">m</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">y2</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">maxrow</span><span class="p">,</span><span class="n">y2</span><span class="p">]</span>
+            <span class="n">m</span><span class="p">[</span><span class="n">maxrow</span><span class="p">,</span><span class="n">y2</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
+
+        <span class="k">for</span> <span class="n">y2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">h</span><span class="p">):</span>    <span class="c1"># Eliminate column y</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">y2</span><span class="p">,</span><span class="n">y</span><span class="p">]</span> <span class="o">/</span> <span class="n">m</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">y</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+                <span class="n">m</span><span class="p">[</span><span class="n">y2</span><span class="p">,</span><span class="n">x</span><span class="p">]</span> <span class="o">-=</span> <span class="n">m</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">]</span> <span class="o">*</span> <span class="n">c</span>
+
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">h</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>   <span class="c1"># Backsubstitute</span>
+        <span class="n">c</span>  <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">y</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">y2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">w</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">m</span><span class="p">[</span><span class="n">y2</span><span class="p">,</span><span class="n">x</span><span class="p">]</span> <span class="o">-=</span>  <span class="n">m</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">]</span> <span class="o">*</span> <span class="n">m</span><span class="p">[</span><span class="n">y2</span><span class="p">,</span><span class="n">y</span><span class="p">]</span> <span class="o">/</span> <span class="n">c</span>
+        <span class="n">m</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">y</span><span class="p">]</span> <span class="o">/=</span> <span class="n">c</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>       <span class="c1"># Normalize row y</span>
+          <span class="n">m</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">]</span> <span class="o">/=</span> <span class="n">c</span>
+
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">h</span><span class="p">):</span>
+        <span class="n">sol</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">w</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="serial_solve">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solver.serial_solve">[docs]</a>
+<span class="k">def</span> <span class="nf">serial_solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">diagnose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve matrix equation.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">diagnose</span><span class="p">:</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">zeros_like</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sol</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">linalg_solve</span><span class="p">(</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,:,:],</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">,:])</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="c1"># Should be a special type of exception</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Error solving point </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">J</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,:,:]</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="k">raise</span> <span class="n">a</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">[:,:,</span><span class="kc">None</span><span class="p">]],</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+        <span class="n">serial_solve_numba</span> <span class="o">=</span> <span class="n">guvectorize</span><span class="p">(</span><span class="s1">&#39;void(f8[:,:], f8[:])&#39;</span><span class="p">,</span> <span class="s1">&#39;(m,n)-&gt;(m)&#39;</span><span class="p">)(</span><span class="n">solve</span><span class="p">)</span>
+        <span class="n">serial_solve_numba</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">sol</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sol</span></div>
+
+
+
+<div class="viewcode-block" id="newton">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solver.newton">[docs]</a>
+<span class="k">def</span> <span class="nf">newton</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">maxit</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">jactype</span><span class="o">=</span><span class="s1">&#39;serial&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve nonlinear system using safeguarded Newton iterations</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">txt</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">txt</span><span class="p">:</span> <span class="kc">None</span>
+
+    <span class="n">it</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">converged</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">maxbacksteps</span> <span class="o">=</span> <span class="mi">30</span>
+
+    <span class="k">if</span> <span class="n">jactype</span> <span class="o">==</span> <span class="s1">&#39;sparse&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">scipy.sparse.linalg</span> <span class="kn">import</span> <span class="n">spsolve</span> <span class="k">as</span> <span class="n">solve</span>
+    <span class="k">elif</span> <span class="n">jactype</span> <span class="o">==</span> <span class="s1">&#39;full&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">solve</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">solve</span> <span class="o">=</span> <span class="n">serial_solve</span>
+
+    <span class="k">while</span> <span class="n">it</span><span class="o">&lt;</span><span class="n">maxit</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">converged</span><span class="p">:</span>
+        <span class="p">[</span><span class="n">v</span><span class="p">,</span><span class="n">dv</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># TODO: rewrite starting here</span>
+        <span class="n">error_0</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">error_0</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; System was solved after iteration </span><span class="si">{}</span><span class="s2">. Residual=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">it</span><span class="p">,</span><span class="n">error_0</span><span class="p">))</span>
+            <span class="n">converged</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">dv</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="c1"># norm_dx = abs(dx).max()</span>
+
+            <span class="k">for</span> <span class="n">bck</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxbacksteps</span><span class="p">):</span>
+                <span class="n">xx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">dx</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">bck</span><span class="p">))</span>
+                <span class="n">vm</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">xx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">vm</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">err</span> <span class="o">&lt;</span> <span class="n">error_0</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">xx</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&gt; </span><span class="si">{}</span><span class="s2"> | </span><span class="si">{}</span><span class="s2"> | </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">bck</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">converged</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">warnings</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Did not converge&quot;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">it</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="SerialDifferentiableFunction">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solver.SerialDifferentiableFunction">[docs]</a>
+<span class="k">def</span> <span class="nf">SerialDifferentiableFunction</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Finite difference of function.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">df</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">v0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">n_v</span> <span class="o">=</span> <span class="n">v0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">N</span><span class="p">)</span>
+        <span class="n">n_x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">dv</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span> <span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">n_v</span><span class="p">,</span> <span class="n">n_x</span><span class="p">)</span> <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_x</span><span class="p">):</span>
+            <span class="n">xi</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">xi</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">epsilon</span>
+            <span class="n">vi</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+            <span class="n">dv</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">vi</span> <span class="o">-</span> <span class="n">v0</span><span class="p">)</span><span class="o">/</span><span class="n">epsilon</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">v0</span><span class="p">,</span> <span class="n">dv</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+
+<div class="viewcode-block" id="test_serial_solve">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.solver.test_serial_solve">[docs]</a>
+<span class="k">def</span> <span class="nf">test_serial_solve</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test serial solve metod.&quot;&quot;&quot;</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span> <span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span> <span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">serial_solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;out&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">,:,:],</span> <span class="n">B</span><span class="p">[</span><span class="mi">0</span><span class="p">,:])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">test_serial_solve</span><span class="p">()</span>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

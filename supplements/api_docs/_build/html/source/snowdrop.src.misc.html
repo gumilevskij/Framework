@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.misc package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.model package" href="snowdrop.src.model.html" />
+    <link rel="prev" title="snowdrop.src.info package" href="snowdrop.src.info.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-misc-package">
+<h1>snowdrop.src.misc package<a class="headerlink" href="#snowdrop-src-misc-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.misc.display">
+<span id="snowdrop-src-misc-display-module"></span><h2>snowdrop.src.misc.display module<a class="headerlink" href="#module-snowdrop.src.misc.display" title="Link to this heading">¶</a></h2>
+<p>Display content of a model file.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.display.model_to_html">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.display.</span></span><span class="sig-name descname"><span class="pre">model_to_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/display.html#model_to_html"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.display.model_to_html" title="Link to this definition">¶</a></dt>
+<dd><p>Display model file.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param filename<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path to model file</p>
+</dd>
+<dt class="field-even">type filename<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>HTML representation of model file</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.misc.info">
+<span id="snowdrop-src-misc-info-module"></span><h2>snowdrop.src.misc.info module<a class="headerlink" href="#module-snowdrop.src.misc.info" title="Link to this heading">¶</a></h2>
+<p>Prints model object in pdf file format.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.info.print_model">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.info.</span></span><span class="sig-name descname"><span class="pre">print_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/info.html#print_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.info.print_model" title="Link to this definition">¶</a></dt>
+<dd><p>Create PDF from .tex file.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>model_name<span class="classifier">str</span></dt><dd><p>Name of model file</p>
+</dd>
+<dt>fout<span class="classifier">str</span></dt><dd><p>Outtput file path</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.misc.latex">
+<span id="snowdrop-src-misc-latex-module"></span><h2>snowdrop.src.misc.latex module<a class="headerlink" href="#module-snowdrop.src.misc.latex" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.Apply">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">Apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fun</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#Apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.Apply" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.misc.latex.ExprVisitor" title="snowdrop.src.misc.latex.ExprVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExprVisitor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.Apply.visit_Variable">
+<span class="sig-name descname"><span class="pre">visit_Variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tvar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#Apply.visit_Variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.Apply.visit_Variable" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.ExprTransformer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">ExprTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#ExprTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.ExprTransformer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NodeTransformer</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.ExprTransformer.visit_Call">
+<span class="sig-name descname"><span class="pre">visit_Call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#ExprTransformer.visit_Call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.ExprTransformer.visit_Call" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.ExprTransformer.visit_Name">
+<span class="sig-name descname"><span class="pre">visit_Name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cname</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#ExprTransformer.visit_Name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.ExprTransformer.visit_Name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.ExprVisitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">ExprVisitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#ExprVisitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.ExprVisitor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NodeVisitor</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.ExprVisitor.visit_Call">
+<span class="sig-name descname"><span class="pre">visit_Call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#ExprVisitor.visit_Call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.ExprVisitor.visit_Call" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.ExprVisitor.visit_Name">
+<span class="sig-name descname"><span class="pre">visit_Name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cname</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#ExprVisitor.visit_Name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.ExprVisitor.visit_Name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.ExprVisitor.visit_RCall">
+<span class="sig-name descname"><span class="pre">visit_RCall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#ExprVisitor.visit_RCall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.ExprVisitor.visit_RCall" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.ExprVisitor.visit_RName">
+<span class="sig-name descname"><span class="pre">visit_RName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#ExprVisitor.visit_RName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.ExprVisitor.visit_RName" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">LatexVisitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.misc.latex.ExprVisitor" title="snowdrop.src.misc.latex.ExprVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExprVisitor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.generic_prec">
+<span class="sig-name descname"><span class="pre">generic_prec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.generic_prec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.generic_prec" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.generic_visit">
+<span class="sig-name descname"><span class="pre">generic_visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.generic_visit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.generic_visit" title="Link to this definition">¶</a></dt>
+<dd><p>Called if no explicit visitor function exists for a node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec">
+<span class="sig-name descname"><span class="pre">prec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Add">
+<span class="sig-name descname"><span class="pre">prec_Add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Add" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_BinOp">
+<span class="sig-name descname"><span class="pre">prec_BinOp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_BinOp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_BinOp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Call">
+<span class="sig-name descname"><span class="pre">prec_Call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Call" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Div">
+<span class="sig-name descname"><span class="pre">prec_Div</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Div"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Div" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_FloorDiv">
+<span class="sig-name descname"><span class="pre">prec_FloorDiv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_FloorDiv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_FloorDiv" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Invert">
+<span class="sig-name descname"><span class="pre">prec_Invert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Invert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Invert" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Mod">
+<span class="sig-name descname"><span class="pre">prec_Mod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Mod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Mod" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Mult">
+<span class="sig-name descname"><span class="pre">prec_Mult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Mult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Mult" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Name">
+<span class="sig-name descname"><span class="pre">prec_Name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Not">
+<span class="sig-name descname"><span class="pre">prec_Not</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Not"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Not" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Num">
+<span class="sig-name descname"><span class="pre">prec_Num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Num"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Num" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Pow">
+<span class="sig-name descname"><span class="pre">prec_Pow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Pow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Pow" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_RCall">
+<span class="sig-name descname"><span class="pre">prec_RCall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_RCall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_RCall" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_RName">
+<span class="sig-name descname"><span class="pre">prec_RName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_RName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_RName" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_Sub">
+<span class="sig-name descname"><span class="pre">prec_Sub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_Sub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_Sub" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_UAdd">
+<span class="sig-name descname"><span class="pre">prec_UAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_UAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_UAdd" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_USub">
+<span class="sig-name descname"><span class="pre">prec_USub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_USub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_USub" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.prec_UnaryOp">
+<span class="sig-name descname"><span class="pre">prec_UnaryOp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.prec_UnaryOp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.prec_UnaryOp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_Add">
+<span class="sig-name descname"><span class="pre">visit_Add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_Add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_Add" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_BinOp">
+<span class="sig-name descname"><span class="pre">visit_BinOp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_BinOp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_BinOp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_BitAnd">
+<span class="sig-name descname"><span class="pre">visit_BitAnd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_BitAnd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_BitAnd" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_BitOr">
+<span class="sig-name descname"><span class="pre">visit_BitOr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_BitOr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_BitOr" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_BitXor">
+<span class="sig-name descname"><span class="pre">visit_BitXor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_BitXor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_BitXor" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_Invert">
+<span class="sig-name descname"><span class="pre">visit_Invert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_Invert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_Invert" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_LShift">
+<span class="sig-name descname"><span class="pre">visit_LShift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_LShift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_LShift" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_Mod">
+<span class="sig-name descname"><span class="pre">visit_Mod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_Mod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_Mod" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_Mult">
+<span class="sig-name descname"><span class="pre">visit_Mult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_Mult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_Mult" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_Not">
+<span class="sig-name descname"><span class="pre">visit_Not</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_Not"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_Not" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_Num">
+<span class="sig-name descname"><span class="pre">visit_Num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_Num"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_Num" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_RCall">
+<span class="sig-name descname"><span class="pre">visit_RCall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_RCall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_RCall" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_RName">
+<span class="sig-name descname"><span class="pre">visit_RName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_RName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_RName" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_RShift">
+<span class="sig-name descname"><span class="pre">visit_RShift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_RShift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_RShift" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_Sub">
+<span class="sig-name descname"><span class="pre">visit_Sub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_Sub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_Sub" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_UAdd">
+<span class="sig-name descname"><span class="pre">visit_UAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_UAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_UAdd" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_USub">
+<span class="sig-name descname"><span class="pre">visit_USub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_USub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_USub" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_UnaryOp">
+<span class="sig-name descname"><span class="pre">visit_UnaryOp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_UnaryOp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_UnaryOp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.LatexVisitor.visit_Variable">
+<span class="sig-name descname"><span class="pre">visit_Variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tvar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#LatexVisitor.visit_Variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.LatexVisitor.visit_Variable" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.TimeShift">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">TimeShift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#TimeShift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.TimeShift" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.misc.latex.ExprVisitor" title="snowdrop.src.misc.latex.ExprVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExprVisitor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.TimeShift.visit_Variable">
+<span class="sig-name descname"><span class="pre">visit_Variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tvar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#TimeShift.visit_Variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.TimeShift.visit_Variable" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.eq2tex">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">eq2tex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#eq2tex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.eq2tex" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.expr2tex">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">expr2tex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#expr2tex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.expr2tex" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.greekify">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">greekify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#greekify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.greekify" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.name_to_latex">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">name_to_latex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#name_to_latex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.name_to_latex" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.parse">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.parse" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.latex.split_name_into_parts">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.latex.</span></span><span class="sig-name descname"><span class="pre">split_name_into_parts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/latex.html#split_name_into_parts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.latex.split_name_into_parts" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.misc.linter">
+<span id="snowdrop-src-misc-linter-module"></span><h2>snowdrop.src.misc.linter module<a class="headerlink" href="#module-snowdrop.src.misc.linter" title="Link to this heading">¶</a></h2>
+<p>Set of utilities to check correctness of model file syntax.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.ModelException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">ModelException</span></span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#ModelException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.ModelException" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Model exception class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.ModelException.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'error'</span></em><a class="headerlink" href="#snowdrop.src.misc.linter.ModelException.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.check_all">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">check_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#check_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.check_all" title="Link to this definition">¶</a></dt>
+<dd><p>Check correctness of model file.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model content.</p>
+</dd>
+<dt class="field-even">type data<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of exceptions if any.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.check_calibration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">check_calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#check_calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.check_calibration" title="Link to this definition">¶</a></dt>
+<dd><p>Check correctness of model calibration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model content.</p>
+</dd>
+<dt class="field-even">type data<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of exceptions if any.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.check_definitions">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">check_definitions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#check_definitions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.check_definitions" title="Link to this definition">¶</a></dt>
+<dd><p>Check correctness of model definitions.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model content.</p>
+</dd>
+<dt class="field-even">type data<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of exceptions if any.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.check_equations">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">check_equations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#check_equations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.check_equations" title="Link to this definition">¶</a></dt>
+<dd><p>Check correctness of model equations.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model content.</p>
+</dd>
+<dt class="field-even">type data<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of exceptions if any.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.check_extra_symbols">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">check_extra_symbols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#check_extra_symbols"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.check_extra_symbols" title="Link to this definition">¶</a></dt>
+<dd><p>Check extra variables declaration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model content.</p>
+</dd>
+<dt class="field-even">type data<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of exceptions if any.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.check_infos">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">check_infos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#check_infos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.check_infos" title="Link to this definition">¶</a></dt>
+<dd><p>Check model info.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model info.</p>
+</dd>
+<dt class="field-even">type data<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of exceptions if any.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.check_symbol_validity">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">check_symbol_validity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#check_symbol_validity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.check_symbol_validity" title="Link to this definition">¶</a></dt>
+<dd><p>Check symbol validity.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param s<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Symbol</p>
+</dd>
+<dt class="field-even">type s<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.check_symbols">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">check_symbols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#check_symbols"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.check_symbols" title="Link to this definition">¶</a></dt>
+<dd><p>Check model symbols validity.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model content.</p>
+</dd>
+<dt class="field-even">type data<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of exceptions if any.</p>
+</dd>
+</dl>
+</dd>
+<dt>Can raise three types of exceptions:</dt><dd><ul class="simple">
+<li><p>unknown symbol</p></li>
+<li><p>invalid symbol</p></li>
+<li><p>already declared</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.check_variables">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">check_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#check_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.check_variables" title="Link to this definition">¶</a></dt>
+<dd><p>Check number of endogenous variables.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param data<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model content.</p>
+</dd>
+<dt class="field-even">type data<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of exceptions if any.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.human_format">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">human_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">err</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#human_format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.human_format" title="Link to this definition">¶</a></dt>
+<dd><p>Highlights exceptions represntation by red color if it is an error and by yellow color if it is warning..</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param err<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Error.</p>
+</dd>
+<dt class="field-even">type err<span class="colon">:</span></dt>
+<dd class="field-even"><p>ModelException.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.linter.lint">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.linter.</span></span><span class="sig-name descname"><span class="pre">lint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;string&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'human'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/linter.html#lint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.linter.lint" title="Link to this definition">¶</a></dt>
+<dd><p>Convert model file text to Python objects. Check syntax of model file for any errors.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param txt<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model file content.</p>
+</dd>
+<dt class="field-even">type txt<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param source<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Source type.</p>
+</dd>
+<dt class="field-even">type source<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param format<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Format of exceptions display.</p>
+</dd>
+<dt class="field-even">type format<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Exceptions if any, otherwise a ruamel.yaml object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.misc.termcolor">
+<span id="snowdrop-src-misc-termcolor-module"></span><h2>snowdrop.src.misc.termcolor module<a class="headerlink" href="#module-snowdrop.src.misc.termcolor" title="Link to this heading">¶</a></h2>
+<p>ANSII Color formatting for output in terminal.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.termcolor.colored">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.termcolor.</span></span><span class="sig-name descname"><span class="pre">colored</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/termcolor.html#colored"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.termcolor.colored" title="Link to this definition">¶</a></dt>
+<dd><p>Colorize text.</p>
+<dl class="simple">
+<dt>Available text colors:</dt><dd><p>red, green, yellow, blue, magenta, cyan, white.</p>
+</dd>
+<dt>Available text highlights:</dt><dd><p>on_red, on_green, on_yellow, on_blue, on_magenta, on_cyan, on_white.</p>
+</dd>
+<dt>Available attributes:</dt><dd><p>bold, dark, underline, blink, reverse, concealed.</p>
+</dd>
+<dt>Example:</dt><dd><p>colored(‘Hello, World!’, ‘red’, ‘on_grey’, [‘blue’, ‘blink’])
+colored(‘Hello, World!’, ‘green’)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.termcolor.cprint">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.termcolor.</span></span><span class="sig-name descname"><span class="pre">cprint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/termcolor.html#cprint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.termcolor.cprint" title="Link to this definition">¶</a></dt>
+<dd><p>Print colorize text.</p>
+<p>It accepts arguments of print function.</p>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.misc.text2latex">
+<span id="snowdrop-src-misc-text2latex-module"></span><h2>snowdrop.src.misc.text2latex module<a class="headerlink" href="#module-snowdrop.src.misc.text2latex" title="Link to this heading">¶</a></h2>
+<p>Simple Text to Latex converter.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<dl class="simple">
+<dt>Please see: </dt><dd><p><a class="reference external" href="https://github.com/rivermont/txt-to-tex">https://github.com/rivermont/txt-to-tex</a>
+<a class="reference external" href="https://stackoverflow.com/questions/8085520/generating-pdf-latex-with-python-script">https://stackoverflow.com/questions/8085520/generating-pdf-latex-with-python-script</a></p>
+</dd>
+</dl>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.text2latex.fill_document">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.text2latex.</span></span><span class="sig-name descname"><span class="pre">fill_document</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paragraphs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/text2latex.html#fill_document"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.text2latex.fill_document" title="Link to this definition">¶</a></dt>
+<dd><p>Add a section, a subsection and some text to the document.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>doc</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">pylatex.document.Document</span></code> instance) – the document</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.text2latex.getDocElements">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.text2latex.</span></span><span class="sig-name descname"><span class="pre">getDocElements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/text2latex.html#getDocElements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.text2latex.getDocElements" title="Link to this definition">¶</a></dt>
+<dd><p>Get document elements.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>model : Model object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.text2latex.getLatexDocument">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.text2latex.</span></span><span class="sig-name descname"><span class="pre">getLatexDocument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/text2latex.html#getLatexDocument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.text2latex.getLatexDocument" title="Link to this definition">¶</a></dt>
+<dd><p>Convert text to latex format.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>model : Model object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.misc.text2latex.saveDocument">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.misc.text2latex.</span></span><span class="sig-name descname"><span class="pre">saveDocument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/misc/text2latex.html#saveDocument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.misc.text2latex.saveDocument" title="Link to this definition">¶</a></dt>
+<dd><p>Save model document.</p>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.misc">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.misc" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+      <li>Previous: <a href="snowdrop.src.info.html" title="previous chapter">snowdrop.src.info package</a></li>
+      <li>Next: <a href="snowdrop.src.model.html" title="next chapter">snowdrop.src.model package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.misc.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

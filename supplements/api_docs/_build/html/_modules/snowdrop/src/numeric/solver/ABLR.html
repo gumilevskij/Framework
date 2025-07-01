@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.solver.ABLR &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.solver.ABLR</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Nov 1, 2019</span>
+
+<span class="sd">@author: agoumilevski</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="k">as</span> <span class="nn">la</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.model.settings</span> <span class="kn">import</span> <span class="n">BoundaryConditions</span><span class="p">,</span><span class="n">BoundaryCondition</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.function</span> <span class="kn">import</span> <span class="n">get_function_and_jacobian</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pypardiso</span> <span class="k">as</span> <span class="nn">sla</span>
+    <span class="n">bPardiso</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">sla</span>
+    <span class="n">bPardiso</span> <span class="o">=</span> <span class="kc">False</span>
+    
+<span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="c1">#@jit(parallel=True,fastmath=True,nopython=True,target=&quot;cpu&quot;)</span>
+<div class="viewcode-block" id="ABLRsolver">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.ABLR.ABLRsolver">[docs]</a>
+<span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">ABLRsolver</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve nonlinear model by direct method.</span>
+<span class="sd">    </span>
+<span class="sd">    Solver uses Newton&#39;s method to update the numerical solution.  </span>
+<span class="sd">    It employs ABLR stacked matrices method to solve equations.  </span>
+<span class="sd">    If number of equations greater is large, it uses sparse matrices spsolver algorithm.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param model: Model object.</span>
+<span class="sd">        :type model: Model.</span>
+<span class="sd">        :param T: Time span.</span>
+<span class="sd">        :type T: int.</span>
+<span class="sd">        :param n: Number of endogenous variables.</span>
+<span class="sd">        :type n: int.</span>
+<span class="sd">        :param y: array of endogenous variables for current iteration.</span>
+<span class="sd">        :type y: numpy.ndarray.</span>
+<span class="sd">        :param params: array of parameters.</span>
+<span class="sd">        :type params: numpy.ndarray.</span>
+<span class="sd">        :param shocks: Array of shock values.</span>
+<span class="sd">        :type shocks: numpy.ndarray.</span>
+<span class="sd">        :returns: Numerical solution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="k">global</span> <span class="n">count</span>
+    <span class="n">bSparse</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Always use sparse algebra matrix calulations </span>
+    <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;ABLR solver&quot;</span><span class="p">,</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bSparse</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;Sparse matrices algebra&quot;</span><span class="p">,</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;Dense matrices algebra&quot;</span><span class="p">,</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+    
+    <span class="n">bDenseHasAttr</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dense_Fstack</span><span class="p">,</span><span class="s2">&quot;py_func&quot;</span><span class="p">)</span>
+    <span class="n">bSparseHasAttr</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sparse_Fstack</span><span class="p">,</span><span class="s2">&quot;py_func&quot;</span><span class="p">)</span>
+        
+    <span class="n">n_shk</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">])</span>
+    <span class="n">n_shk</span> <span class="o">*=</span> <span class="mi">1</span><span class="o">+</span><span class="n">model</span><span class="o">.</span><span class="n">max_lead_shock</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">min_lag_shock</span>
+    <span class="k">if</span> <span class="n">shocks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">shocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_shk</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">bSparse</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">bSparseHasAttr</span><span class="p">:</span>
+            <span class="n">Fn</span><span class="p">,</span><span class="n">Jac</span> <span class="o">=</span> <span class="n">parallel_sparse_Fstack</span><span class="o">.</span><span class="n">py_func</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Fn</span><span class="p">,</span><span class="n">Jac</span> <span class="o">=</span> <span class="n">parallel_sparse_Fstack</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">bDenseHasAttr</span><span class="p">:</span>
+            <span class="n">Fn</span><span class="p">,</span><span class="n">Jac</span> <span class="o">=</span> <span class="n">dense_Fstack</span><span class="o">.</span><span class="n">py_func</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Fn</span><span class="p">,</span><span class="n">Jac</span> <span class="o">=</span> <span class="n">dense_Fstack</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">)</span>
+                                
+    <span class="k">if</span> <span class="n">bSparse</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">bPardiso</span><span class="p">:</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="o">-</span><span class="n">sla</span><span class="o">.</span><span class="n">spsolve</span><span class="p">(</span><span class="n">Jac</span><span class="p">,</span><span class="n">Fn</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#dy = -sla.spsolve(Jac,Fn)</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="n">sla</span><span class="o">.</span><span class="n">splu</span><span class="p">(</span><span class="n">Jac</span><span class="p">,</span><span class="n">permc_spec</span><span class="o">=</span><span class="s1">&#39;COLAMD&#39;</span><span class="p">)</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="o">-</span><span class="n">B</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">Fn</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="o">-</span><span class="n">la</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">Jac</span><span class="p">,</span><span class="n">Fn</span><span class="p">)</span>
+              
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">dy</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">y</span> <span class="o">+=</span> <span class="n">dy</span>
+    
+    <span class="k">del</span> <span class="n">Fn</span><span class="p">,</span><span class="n">Jac</span>
+    <span class="k">return</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="dense_Fstack">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.ABLR.dense_Fstack">[docs]</a>
+<span class="nd">@njit</span>     
+<span class="k">def</span> <span class="nf">dense_Fstack</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute values of functions and partial derivatives of model equations.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param model: Model object.</span>
+<span class="sd">        :type model: Model.</span>
+<span class="sd">        :param T: Time span.</span>
+<span class="sd">        :type T: int.</span>
+<span class="sd">        :param y: array of endogenous variables.</span>
+<span class="sd">        :type y: numpy.ndarray.</span>
+<span class="sd">        :param n: Number of endogenous variables.</span>
+<span class="sd">        :type n: int.</span>
+<span class="sd">        :param params: array of parameters.</span>
+<span class="sd">        :type params: numpy.ndarray.</span>
+<span class="sd">        :param n_shocks: Number of shock variables.</span>
+<span class="sd">        :type n_shocks: int.</span>
+<span class="sd">        :returns: Stacked matrices of functions and jacobian values.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">I</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+    
+    <span class="n">Jacobian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">Fn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">Jacobian</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">I</span>
+    <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span>  <span class="n">I</span>
+        
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">shk</span> <span class="o">=</span> <span class="n">shocks</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">nd</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">par</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">par</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:,</span><span class="nb">min</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="n">func</span><span class="p">,</span><span class="n">jacob</span> <span class="o">=</span> <span class="n">get_function_and_jacobian</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">par</span><span class="p">,</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">,:],</span><span class="n">shock</span><span class="o">=</span><span class="n">shk</span><span class="p">)</span>
+        <span class="n">Fn</span><span class="p">[</span><span class="n">t</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">jacob</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">jacob</span><span class="p">[:,</span><span class="n">n</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">jacob</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">:</span><span class="mi">3</span><span class="o">*</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">L</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">C</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">F</span>
+
+    <span class="k">if</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">Condition</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span>  <span class="n">BoundaryConditions</span><span class="o">.</span><span class="n">ZeroDerivativeBoundaryCondition</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>        
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="n">T</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="n">I</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">I</span>
+        
+    <span class="n">Fn</span> <span class="o">=</span> <span class="n">Fn</span><span class="o">.</span><span class="n">reshape</span><span class="p">(((</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+ 
+    <span class="k">return</span> <span class="n">Fn</span><span class="p">,</span><span class="n">Jacobian</span></div>
+
+
+<div class="viewcode-block" id="sparse_Fstack">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.ABLR.sparse_Fstack">[docs]</a>
+<span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">sparse_Fstack</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute values of functions and partial derivatives of model equations.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param model: Model object.</span>
+<span class="sd">        :type model: Model.</span>
+<span class="sd">        :param T: Time span.</span>
+<span class="sd">        :type T: int.</span>
+<span class="sd">        :param y: array of endogenous variables.</span>
+<span class="sd">        :type y: numpy.ndarray.</span>
+<span class="sd">        :param n: Number of endogenous variables.</span>
+<span class="sd">        :type n: int.</span>
+<span class="sd">        :param params: array of parameters.</span>
+<span class="sd">        :type params: numpy.ndarray.</span>
+<span class="sd">        :param n_shocks: Number of shock variables.</span>
+<span class="sd">        :type n_shocks: int.</span>
+<span class="sd">        :returns: Stacked matrices of functions and jacobian.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csc_matrix</span><span class="p">,</span><span class="n">lil_matrix</span><span class="p">,</span><span class="n">identity</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.util</span> <span class="kn">import</span> <span class="n">getIndicesAndData</span>
+    
+    <span class="n">nd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">identity</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="n">zero</span><span class="o">.</span><span class="n">tolil</span><span class="p">()</span>
+    
+    <span class="n">Jacobian</span> <span class="o">=</span> <span class="n">lil_matrix</span><span class="p">((</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">Fn</span> <span class="o">=</span> <span class="n">lil_matrix</span><span class="p">((</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">Jacobian</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">I</span>
+    <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span>  <span class="n">I</span>
+        
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">shk</span> <span class="o">=</span> <span class="n">shocks</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">nd</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">par</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">par</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:,</span><span class="nb">min</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+            
+        <span class="n">func</span><span class="p">,</span><span class="n">jacob</span><span class="p">,</span><span class="n">row_ind</span><span class="p">,</span><span class="n">col_ind</span> <span class="o">=</span> <span class="n">get_function_and_jacobian</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">,:],</span><span class="n">params</span><span class="o">=</span><span class="n">par</span><span class="p">,</span><span class="n">shock</span><span class="o">=</span><span class="n">shk</span><span class="p">,</span><span class="n">bSparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">lead_row</span><span class="p">,</span><span class="n">lead_col</span><span class="p">,</span><span class="n">lead_data</span><span class="p">,</span><span class="n">current_row</span><span class="p">,</span><span class="n">current_col</span><span class="p">,</span><span class="n">current_data</span><span class="p">,</span><span class="n">lag_row</span><span class="p">,</span><span class="n">lag_col</span><span class="p">,</span><span class="n">lag_data</span> <span class="o">=</span> \
+            <span class="n">getIndicesAndData</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">row_ind</span><span class="p">,</span><span class="n">col_ind</span><span class="p">,</span><span class="n">jacob</span><span class="p">)</span> 
+        
+        <span class="n">Fn</span><span class="p">[</span><span class="n">t</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">((</span><span class="n">lead_data</span><span class="p">,(</span><span class="n">lead_row</span><span class="p">,</span><span class="n">lead_col</span><span class="p">)),</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">((</span><span class="n">current_data</span><span class="p">,(</span><span class="n">current_row</span><span class="p">,</span><span class="n">current_col</span><span class="p">)),</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">((</span><span class="n">lag_data</span><span class="p">,(</span><span class="n">lag_row</span><span class="p">,</span><span class="n">lag_col</span><span class="p">)),</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>    
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">L</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">C</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">F</span>
+
+    <span class="k">if</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">Condition</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span>  <span class="n">BoundaryConditions</span><span class="o">.</span><span class="n">ZeroDerivativeBoundaryCondition</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>        
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),:]</span> <span class="o">=</span> <span class="n">zero</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="n">T</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="n">I</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">I</span>
+        
+    <span class="n">Fn</span> <span class="o">=</span> <span class="n">Fn</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(((</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">Fn</span><span class="p">,</span><span class="n">Jacobian</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="parallel_sparse_Fstack">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.ABLR.parallel_sparse_Fstack">[docs]</a>
+<span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">parallel_sparse_Fstack</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">use_thread_pool</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute values of functions and partial derivatives of model equations.</span>
+<span class="sd">    </span>
+<span class="sd">    Asynchronous run.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param model: Model object.</span>
+<span class="sd">        :type model: Model.</span>
+<span class="sd">        :param T: Time span.</span>
+<span class="sd">        :type T: int.</span>
+<span class="sd">        :param y: array of endogenous variables.</span>
+<span class="sd">        :type y: numpy.ndarray.</span>
+<span class="sd">        :param n: Number of endogenous variables.</span>
+<span class="sd">        :type n: int.</span>
+<span class="sd">        :param params: array of parameters.</span>
+<span class="sd">        :type params: numpy.ndarray.</span>
+<span class="sd">        :param n_shocks: Number of shock variables.</span>
+<span class="sd">        :type n_shocks: int.</span>
+<span class="sd">        :returns: Stacked matrices of functions and jacobian.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+    <span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">as_completed</span>
+    <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csc_matrix</span><span class="p">,</span><span class="n">lil_matrix</span><span class="p">,</span><span class="n">identity</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.util</span> <span class="kn">import</span> <span class="n">getIndicesAndData</span>
+    
+    <span class="k">if</span> <span class="n">use_thread_pool</span><span class="p">:</span>
+        <span class="n">max_workers</span> <span class="o">=</span> <span class="n">T</span><span class="o">+</span><span class="mi">1</span>
+        <span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span> <span class="k">as</span> <span class="n">PoolExecutor</span> 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">max_workers</span><span class="o">=</span><span class="n">mp</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+        <span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ProcessPoolExecutor</span> <span class="k">as</span> <span class="n">PoolExecutor</span> 
+
+    <span class="n">nd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">identity</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="n">zero</span><span class="o">.</span><span class="n">tolil</span><span class="p">()</span>
+    
+    <span class="n">Jacobian</span> <span class="o">=</span> <span class="n">lil_matrix</span><span class="p">((</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">Fn</span>       <span class="o">=</span> <span class="n">lil_matrix</span><span class="p">((</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">Jacobian</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">I</span>
+    <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span>  <span class="n">I</span>
+        
+    <span class="n">lst</span> <span class="o">=</span> <span class="p">[(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">,:],</span><span class="n">shocks</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">params</span> <span class="k">if</span> <span class="n">nd</span><span class="o">==</span><span class="mi">1</span> <span class="k">else</span> <span class="n">params</span><span class="p">[:,</span><span class="nb">min</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">runJob</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+        <span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">shk</span><span class="p">,</span><span class="n">p</span> <span class="o">=</span> <span class="n">lst</span>
+        <span class="n">func</span><span class="p">,</span><span class="n">jacob</span><span class="p">,</span><span class="n">row_ind</span><span class="p">,</span><span class="n">col_ind</span> <span class="o">=</span> <span class="n">get_function_and_jacobian</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">x</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">shock</span><span class="o">=</span><span class="n">shk</span><span class="p">,</span><span class="n">bSparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">lead_row</span><span class="p">,</span><span class="n">lead_col</span><span class="p">,</span><span class="n">lead_data</span><span class="p">,</span><span class="n">current_row</span><span class="p">,</span><span class="n">current_col</span><span class="p">,</span><span class="n">current_data</span><span class="p">,</span><span class="n">lag_row</span><span class="p">,</span><span class="n">lag_col</span><span class="p">,</span><span class="n">lag_data</span> <span class="o">=</span> \
+            <span class="n">getIndicesAndData</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">row_ind</span><span class="p">,</span><span class="n">col_ind</span><span class="p">,</span><span class="n">jacob</span><span class="p">)</span> 
+        
+        <span class="n">Fn</span><span class="p">[</span><span class="n">t</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">((</span><span class="n">lag_data</span><span class="p">,(</span><span class="n">lag_row</span><span class="p">,</span><span class="n">lag_col</span><span class="p">)),</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">))</span> 
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">((</span><span class="n">current_data</span><span class="p">,(</span><span class="n">current_row</span><span class="p">,</span><span class="n">current_col</span><span class="p">)),</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">((</span><span class="n">lead_data</span><span class="p">,(</span><span class="n">lead_row</span><span class="p">,</span><span class="n">lead_col</span><span class="p">)),</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+        
+        <span class="c1">#return Fn,Jacobian</span>
+    
+    <span class="c1"># Run over time span</span>
+    <span class="k">with</span> <span class="n">PoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+        <span class="n">futures</span> <span class="o">=</span> <span class="p">{</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">runJob</span><span class="p">,</span><span class="n">x</span><span class="p">):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">futures</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="c1">#Fn,Jacobian = results</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%r</span><span class="s1"> Generated an exception: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">exc</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">Condition</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span>  <span class="n">BoundaryConditions</span><span class="o">.</span><span class="n">ZeroDerivativeBoundaryCondition</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>        
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),:]</span> <span class="o">=</span> <span class="n">zero</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="n">T</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="n">I</span>
+        <span class="n">Jacobian</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">I</span>
+        
+    <span class="n">Fn</span> <span class="o">=</span> <span class="n">Fn</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(((</span><span class="n">T</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">Fn</span><span class="p">,</span><span class="n">Jacobian</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span></div>
+
+
+
+
+            
+   
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

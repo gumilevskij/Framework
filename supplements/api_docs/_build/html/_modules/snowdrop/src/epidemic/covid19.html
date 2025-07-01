@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.epidemic.covid19 &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.epidemic.covid19</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Jun 12 18:50:05 2018</span>
+<span class="sd">Compares results of a baseline and an alternative scenarios runs.</span>
+<span class="sd">@author: agoumilevski</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="k">as</span> <span class="nn">sm</span>
+<span class="kn">import</span> <span class="nn">matplotlib.style</span> <span class="k">as</span> <span class="nn">style</span>
+
+<span class="n">working_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span><span class="s2">&quot;../../..&quot;</span><span class="p">))</span>
+<span class="n">path_to_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s2">&quot;graphs&quot;</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="readData">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.epidemic.html#snowdrop.src.epidemic.covid19.readData">[docs]</a>
+<span class="k">def</span> <span class="nf">readData</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read csv file and returns pandas dataframe.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param file_path: Path to excel file.</span>
+<span class="sd">        :type file_path: str.</span>
+<span class="sd">        :returns:  pandas dataframe.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">infer_datetime_format</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+
+<div class="viewcode-block" id="plot">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.epidemic.html#snowdrop.src.epidemic.covid19.plot">[docs]</a>
+<span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">df1</span><span class="p">,</span><span class="n">df2</span><span class="p">,</span><span class="n">countries</span><span class="p">,</span><span class="n">titles</span><span class="p">,</span><span class="n">labels</span><span class="p">,</span><span class="n">fname</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot 1D graphs.&quot;&quot;&quot;</span>
+    <span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;seaborn-v0_8-whitegrid&quot;</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">df1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">titles</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+    <span class="c1">#ax.set_xlabel(&quot;Date&quot;)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">ymin</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">df2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">titles</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+    <span class="c1">#ax.set_xlabel(&quot;Date&quot;)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">ymin</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span> 
+    
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">fname</span><span class="p">))</span></div>
+
+             
+    
+<div class="viewcode-block" id="div">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.epidemic.html#snowdrop.src.epidemic.covid19.div">[docs]</a>
+<span class="k">def</span> <span class="nf">div</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">/=</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+
+<div class="viewcode-block" id="hp">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.epidemic.html#snowdrop.src.epidemic.covid19.hp">[docs]</a>
+<span class="k">def</span> <span class="nf">hp</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">cycle</span><span class="p">,</span><span class="n">trend</span> <span class="o">=</span>  <span class="n">sm</span><span class="o">.</span><span class="n">tsa</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">hpfilter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">lamb</span><span class="o">=</span><span class="mi">1600</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">trend</span></div>
+
+    
+
+<div class="viewcode-block" id="run">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.epidemic.html#snowdrop.src.epidemic.covid19.run">[docs]</a>
+<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">f1</span><span class="p">,</span><span class="n">f2</span><span class="p">,</span><span class="n">countries</span><span class="p">,</span><span class="n">population</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare results.&quot;&quot;&quot;</span>
+    <span class="n">file_path1</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">working_dir</span><span class="o">+</span><span class="s1">&#39;/supplements/data/&#39;</span> <span class="o">+</span> <span class="n">f1</span><span class="p">)</span>
+    <span class="n">file_path2</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">working_dir</span> <span class="o">+</span> <span class="s1">&#39;/supplements/data/&#39;</span> <span class="o">+</span> <span class="n">f2</span><span class="p">)</span>
+    
+    <span class="n">df1</span> <span class="o">=</span> <span class="n">readData</span><span class="p">(</span><span class="n">file_path1</span><span class="p">)</span>
+    <span class="c1">#df1.set_index(&quot;Country/Region&quot;,inplace=True)</span>
+    <span class="n">df1</span> <span class="o">=</span> <span class="n">df1</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">countries</span><span class="p">]</span>
+    <span class="c1">#df1 = df1.groupby(&quot;Country/Region&quot;).sum()</span>
+    <span class="c1">#df1.drop(columns=[&#39;Lat&#39;,&#39;Long&#39;],inplace=True)</span>
+    <span class="n">df1</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Country&quot;</span>
+    <span class="n">df1</span> <span class="o">=</span> <span class="n">df1</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">df1</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df1</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">df1</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">div</span><span class="p">(</span><span class="n">df1</span><span class="p">,</span><span class="n">population</span><span class="p">)</span>
+    
+    <span class="n">df2</span> <span class="o">=</span> <span class="n">readData</span><span class="p">(</span><span class="n">file_path2</span><span class="p">)</span>
+    <span class="c1">#df2.set_index(&quot;Country/Region&quot;, inplace=True)</span>
+    <span class="n">df2</span> <span class="o">=</span> <span class="n">df2</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">countries</span><span class="p">]</span>
+    <span class="c1">#df2 = df2.groupby(&quot;Country/Region&quot;).sum()</span>
+    <span class="c1">#df2.drop(columns=[&#39;Lat&#39;,&#39;Long&#39;],inplace=True)</span>
+    <span class="n">df2</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Country&quot;</span>
+    <span class="n">df2</span> <span class="o">=</span> <span class="n">df2</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">df2</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df2</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">df2</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">div</span><span class="p">(</span><span class="n">df2</span><span class="p">,</span><span class="n">population</span><span class="p">)</span>
+    
+    <span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Infected&#39;</span><span class="p">,</span><span class="s1">&#39;Deaths&#39;</span><span class="p">]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Percent of Population&#39;</span><span class="p">,</span><span class="s1">&#39;Percent of Population&#39;</span><span class="p">]</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">df1</span><span class="p">,</span><span class="n">df2</span><span class="p">,</span><span class="n">countries</span><span class="p">,</span><span class="n">titles</span><span class="p">,</span><span class="n">labels</span><span class="p">,</span><span class="n">fname</span><span class="o">=</span><span class="s1">&#39;Covid.png&#39;</span><span class="p">)</span>
+    
+    <span class="n">df3</span> <span class="o">=</span> <span class="mf">0.01</span><span class="o">*</span><span class="n">df1</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">/</span><span class="p">(</span><span class="mf">0.01</span><span class="o">*</span><span class="n">df1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mf">0.01</span><span class="o">*</span><span class="n">df1</span><span class="p">)</span>
+    <span class="n">df3</span> <span class="o">=</span> <span class="n">df3</span><span class="p">[</span><span class="s1">&#39;6-1-2020&#39;</span><span class="p">:]</span>
+    <span class="n">df3</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">df3</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">hp</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">df4</span> <span class="o">=</span> <span class="n">df2</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">/</span><span class="n">df1</span>
+    <span class="n">df4</span> <span class="o">=</span> <span class="n">df4</span><span class="p">[</span><span class="s1">&#39;6-1-2020&#39;</span><span class="p">:]</span>
+    <span class="n">df4</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">df4</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">hp</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> 
+    
+    <span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Daily Infection Rate&#39;</span><span class="p">,</span><span class="s1">&#39;Daily Death Rate&#39;</span><span class="p">]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">r</span><span class="s1">&#39;$\beta$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$\gamma$&#39;</span><span class="p">]</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">df3</span><span class="p">,</span><span class="n">df4</span><span class="p">,</span><span class="n">countries</span><span class="p">,</span><span class="n">titles</span><span class="p">,</span><span class="n">labels</span><span class="p">,</span><span class="n">fname</span><span class="o">=</span><span class="s1">&#39;CovidNewCases.png&#39;</span><span class="p">)</span></div>
+
+
+        
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The main entry point.&quot;&quot;&quot;</span>
+    <span class="n">fi</span><span class="p">,</span><span class="n">fd</span> <span class="o">=</span> <span class="s1">&#39;COVID19/infected.csv&#39;</span><span class="p">,</span><span class="s1">&#39;COVID19/deaths.csv&#39;</span>
+    <span class="n">countries</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;US&quot;</span><span class="p">,</span><span class="s2">&quot;Germany&quot;</span><span class="p">,</span><span class="s2">&quot;France&quot;</span><span class="p">,</span><span class="s2">&quot;Italy&quot;</span><span class="p">,</span><span class="s2">&quot;Spain&quot;</span><span class="p">]</span> <span class="c1">#,&quot;Russia&quot;,&quot;Brazil&quot;,&quot;United Kingdom&quot;]</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;US&quot;</span><span class="p">:</span><span class="mf">310.e6</span><span class="p">,</span> <span class="s2">&quot;Germany&quot;</span><span class="p">:</span><span class="mf">83.e6</span><span class="p">,</span><span class="s2">&quot;France&quot;</span><span class="p">:</span><span class="mf">67.e6</span><span class="p">,</span><span class="s2">&quot;Italy&quot;</span><span class="p">:</span><span class="mf">60.e6</span><span class="p">,</span><span class="s2">&quot;Spain&quot;</span><span class="p">:</span><span class="mf">47.e6</span><span class="p">}</span>
+    <span class="n">run</span><span class="p">(</span><span class="n">fi</span><span class="p">,</span><span class="n">fd</span><span class="p">,</span><span class="n">countries</span><span class="p">,</span><span class="n">population</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.model.settings &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.model.settings</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu Dec  5 11:35:18 2019</span>
+
+<span class="sd">@author: A.Goumilevski</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">unique</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+
+<div class="viewcode-block" id="SolverMethod">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.settings.SolverMethod">[docs]</a>
+<span class="nd">@unique</span>
+<span class="k">class</span> <span class="nc">SolverMethod</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solver algorithms.&quot;&quot;&quot;</span>
+    <span class="n">LBJ</span>               <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Juillard, Laxton, McAdam, Pioro algorithm</span>
+    <span class="n">ABLR</span>              <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># Armstrong, Black, Laxton, Rose algorithm</span>
+    <span class="n">Villemot</span>          <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># Villemot Sebastien  (DYNARE Toolbox algorithm)</span>
+    <span class="n">Klein</span>             <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># Paul Klein (IRIS Toolbox algorithm)</span>
+    <span class="n">BinderPesaran</span>     <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># Binder and Pesaran algorithm</span>
+    <span class="n">AndersonMoore</span>     <span class="o">=</span> <span class="mi">6</span>  <span class="c1"># Anderson and Moore algorithm</span></div>
+
+    
+<div class="viewcode-block" id="FilterAlgorithm">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.settings.FilterAlgorithm">[docs]</a>
+<span class="nd">@unique</span>
+<span class="k">class</span> <span class="nc">FilterAlgorithm</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Kalman filter algorithms.&quot;&quot;&quot;</span>
+    <span class="n">Diffuse</span>            <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Diffuse Kalman filter (multivariate and univariate) with missing observations</span>
+    <span class="n">Durbin_Koopman</span>     <span class="o">=</span> <span class="mi">2</span> <span class="c1"># Non-diffuse variant of Kalman filter</span>
+    <span class="n">Non_Diffuse_Filter</span> <span class="o">=</span> <span class="mi">3</span> <span class="c1"># Non Diffuse variant of Durbin-Koopman Kalman filter</span>
+    <span class="n">Particle</span>           <span class="o">=</span> <span class="mi">4</span> <span class="c1"># Particle filter</span>
+    <span class="n">Unscented</span>          <span class="o">=</span> <span class="mi">5</span> <span class="c1"># Unscented Kalman filter</span></div>
+
+     
+    
+<div class="viewcode-block" id="SmootherAlgorithm">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.settings.SmootherAlgorithm">[docs]</a>
+<span class="nd">@unique</span>
+<span class="k">class</span> <span class="nc">SmootherAlgorithm</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Kalman smoother algorithms.&quot;&quot;&quot;</span>
+    <span class="n">BrysonFrazier</span>        <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Bryson, Frazier    </span>
+    <span class="n">Diffuse</span>              <span class="o">=</span> <span class="mi">2</span> <span class="c1"># Diffuse Kalman Smoother (multivariate and univariate) with missing observations</span>
+    <span class="n">Durbin_Koopman</span>       <span class="o">=</span> <span class="mi">3</span> <span class="c1"># Non-diffuse variant of Kalman smoother</span></div>
+
+
+
+<div class="viewcode-block" id="InitialCondition">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.settings.InitialCondition">[docs]</a>
+<span class="nd">@unique</span>
+<span class="k">class</span> <span class="nc">InitialCondition</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Endogenous variables starting values algorithms.&quot;&quot;&quot;</span>
+    <span class="n">StartingValues</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Starting values are used</span>
+    <span class="n">SteadyState</span>    <span class="o">=</span> <span class="mi">2</span> <span class="c1"># Steady-state values are used as starting values</span>
+    <span class="n">History</span>        <span class="o">=</span> <span class="mi">3</span> <span class="c1"># Starting values are read from a history file</span></div>
+
+    
+<div class="viewcode-block" id="PriorAssumption">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.settings.PriorAssumption">[docs]</a>
+<span class="nd">@unique</span>
+<span class="k">class</span> <span class="nc">PriorAssumption</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Assumptions about starting value of error covariance matrix.&quot;&quot;&quot;</span>
+    <span class="n">Diffuse</span>        <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Diffuse prior for covariance matrices (Pinf and Pstar)</span>
+    <span class="n">StartingValues</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1"># Starting values for covariance matrices (Pinf with diagonal values of 1.E6 on diagonl and Pstar=TQT&#39;)</span>
+    <span class="n">Equilibrium</span>    <span class="o">=</span> <span class="mi">3</span> <span class="c1"># Equilibrium error covariance matrices obtained by discrete Lyapunov solver by using stable part ot transition and shock matrices</span>
+    <span class="n">Asymptotic</span>     <span class="o">=</span> <span class="mi">4</span> <span class="c1"># Asymptotic values for error covariance matrices; it is obtained by solving discrete Riccati equation. </span></div>
+
+  
+        
+<div class="viewcode-block" id="SamplingAlgorithm">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.settings.SamplingAlgorithm">[docs]</a>
+<span class="nd">@unique</span>
+<span class="k">class</span> <span class="nc">SamplingAlgorithm</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Assumptions about sampling methods.&quot;&quot;&quot;</span>
+    <span class="n">Emcee</span>                <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Affine Invariant Markov chain Monte Carlo Ensemble sampler</span>
+    <span class="n">Pymcmcstat</span>           <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># Adaptive Metropolis based sampling techniques include:</span>
+    <span class="n">Pymcmcstat_mh</span>        <span class="o">=</span> <span class="mi">21</span> <span class="c1"># Metropolis-Hastings (MH): Primary sampling method.</span>
+    <span class="n">Pymcmcstat_am</span>        <span class="o">=</span> <span class="mi">22</span> <span class="c1"># Adaptive-Metropolis (AM): Adapts covariance matrix at specified intervals.</span>
+    <span class="n">Pymcmcstat_dr</span>        <span class="o">=</span> <span class="mi">23</span> <span class="c1"># Delayed-Rejection (DR): Delays rejection by sampling from a narrower distribution. Capable of n-stage delayed rejection.</span>
+    <span class="n">Pymcmcstat_dram</span>      <span class="o">=</span> <span class="mi">24</span> <span class="c1"># Delayed Rejection Adaptive Metropolis (DRAM): DR + AM</span>
+    <span class="n">Pymc3</span>                <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># Markov Chain Monte Carlo (MCMC) and variational inference (VI) algorithms</span>
+    <span class="n">Particle_pmmh</span>        <span class="o">=</span> <span class="mi">41</span> <span class="c1"># Particle Marginal Metropolis Hastings sampling    </span>
+    <span class="n">Particle_smc</span>         <span class="o">=</span> <span class="mi">42</span> <span class="c1"># Particle Sequential Quasi-Monte Carlo sampling</span>
+    <span class="n">Particle_gibbs</span>       <span class="o">=</span> <span class="mi">43</span> <span class="c1"># Particle Generic Gibbs sampling</span></div>
+
+  
+<div class="viewcode-block" id="BoundaryConditions">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.settings.BoundaryConditions">[docs]</a>
+<span class="nd">@unique</span>
+<span class="k">class</span> <span class="nc">BoundaryConditions</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Boundary Conditions.&quot;&quot;&quot;</span>
+    <span class="n">FixedBoundaryCondition</span>           <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Fixed condition at right boundary</span>
+    <span class="n">ZeroDerivativeBoundaryCondition</span>  <span class="o">=</span> <span class="mi">2</span> <span class="c1"># Zero derivative condition at right boundary</span></div>
+
+    
+<div class="viewcode-block" id="BoundaryCondition">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.settings.BoundaryCondition">[docs]</a>
+<span class="k">class</span> <span class="nc">BoundaryCondition</span><span class="p">:</span>
+    <span class="n">Condition</span> <span class="o">=</span> <span class="n">BoundaryConditions</span><span class="o">.</span><span class="n">ZeroDerivativeBoundaryCondition</span></div>
+
+    <span class="c1">#Condition = BoundaryConditions.FixedBoundaryCondition</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

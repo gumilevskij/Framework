@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.utils.load &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.utils.load</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Nov 12 19:27:09 2018</span>
+
+<span class="sd">@author: agoumilevski</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+<span class="kn">import</span> <span class="nn">ruamel.yaml</span> <span class="k">as</span> <span class="nn">yaml</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">__version__</span>
+
+
+<div class="viewcode-block" id="read_file_or_url">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.read_file_or_url">[docs]</a>
+<span class="k">def</span> <span class="nf">read_file_or_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="p">{},</span><span class="n">conditions</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns content of file or url.</span>
+<span class="sd">    </span>
+<span class="sd">        :param url: Path to file or URL address.</span>
+<span class="sd">        :type url: str.</span>
+<span class="sd">        :returns:  File or URL content.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">request</span>
+    
+    <span class="n">substVars</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="s1">&#39;http&#39;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">)</span> <span class="c1"># not very robust</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># must be a file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>  <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">bEquations</span> <span class="o">=</span> <span class="n">bVariables</span> <span class="o">=</span> <span class="n">bParameters</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="s2">&quot;@include&quot;</span> <span class="ow">in</span> <span class="n">txt</span><span class="p">:</span>
+                <span class="n">dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+                <span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+                        <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="s2">&quot;@include&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="n">ind</span>  <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;@include&quot;</span><span class="p">)</span>
+                        <span class="n">fl</span>   <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; |,&quot;</span><span class="p">,</span><span class="n">line</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">8</span><span class="p">:])))[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span><span class="n">fl</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+                            <span class="n">incl</span><span class="p">,</span><span class="n">lbls</span> <span class="o">=</span> <span class="n">read_file_or_url</span><span class="p">(</span><span class="n">file</span><span class="p">,</span><span class="n">labels</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">incl</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                        <span class="c1"># Remove lines with comments</span>
+                        <span class="n">section</span> <span class="o">=</span> <span class="n">incl</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">section</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[:</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;//&quot;</span><span class="p">)]</span> <span class="k">if</span> <span class="s2">&quot;//&quot;</span> <span class="ow">in</span> <span class="n">x</span> <span class="k">else</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">section</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;//&quot;</span><span class="p">)]</span>
+                        <span class="n">incl</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+                        <span class="c1"># Special treatment for Dynare/Iris model files</span>
+                        <span class="k">if</span> <span class="n">fl</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.mod&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">fl</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.model&quot;</span><span class="p">):</span>
+                            <span class="n">keyWords</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;in&quot;</span><span class="p">,</span><span class="s2">&quot;lambda&quot;</span><span class="p">]</span>
+                            <span class="n">bVariables</span> <span class="o">=</span> <span class="s2">&quot;variables:&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                            <span class="n">bParameters</span> <span class="o">=</span> <span class="s2">&quot;parameters:&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                            <span class="n">bEquations</span> <span class="o">=</span> <span class="s2">&quot;equations:&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">bVariables</span> <span class="ow">and</span> <span class="s2">&quot;;&quot;</span> <span class="ow">in</span> <span class="n">incl</span><span class="p">:</span>
+                                <span class="n">incl</span> <span class="o">=</span> <span class="n">incl</span><span class="p">[:</span><span class="n">incl</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)]</span>
+                            <span class="n">incl</span><span class="p">,</span><span class="n">labels</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">incl</span><span class="p">,</span><span class="n">labels</span><span class="p">,</span><span class="n">bEquations</span><span class="p">,</span><span class="n">substitute</span><span class="o">=</span><span class="n">substVars</span><span class="p">,</span><span class="n">conditions</span><span class="o">=</span><span class="n">conditions</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">bVariables</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">incl</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;var,&quot;</span><span class="p">):</span>
+                                    <span class="n">incl</span> <span class="o">=</span> <span class="n">incl</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span>
+                                <span class="n">incl</span><span class="p">,</span><span class="n">substVars</span> <span class="o">=</span> <span class="n">substitute</span><span class="p">(</span><span class="n">incl</span><span class="p">,</span><span class="n">keyWords</span><span class="p">,</span><span class="n">substVars</span><span class="p">)</span>
+                                <span class="n">incl</span> <span class="o">=</span> <span class="n">drop_parenthesis</span><span class="p">(</span><span class="n">incl</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">bParameters</span><span class="p">:</span>
+                                <span class="n">incl</span><span class="p">,</span><span class="n">substVars</span> <span class="o">=</span> <span class="n">substitute</span><span class="p">(</span><span class="n">incl</span><span class="p">,</span><span class="n">keyWords</span><span class="p">,</span><span class="n">substVars</span><span class="p">)</span>
+
+                        <span class="n">ind</span>  <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;@include&quot;</span><span class="p">)</span>
+                        <span class="n">beg</span>  <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">bEquations</span> <span class="k">else</span> <span class="n">line</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+                        <span class="n">ind</span>  <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">fl</span><span class="p">)</span>
+                        <span class="n">end</span>  <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">fl</span><span class="p">):]</span>
+                        <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">beg</span> <span class="o">+</span> <span class="n">incl</span> <span class="o">+</span> <span class="n">end</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                        
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">lst</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">txt</span><span class="p">,</span><span class="n">labels</span></div>
+
+
+
+<div class="viewcode-block" id="drop_parenthesis">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.drop_parenthesis">[docs]</a>
+<span class="k">def</span> <span class="nf">drop_parenthesis</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">re</span>
+    <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">s</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+        <span class="n">ind1</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\(&#39;</span><span class="p">,</span><span class="n">s</span><span class="p">)]</span>
+        <span class="n">ind2</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\)&#39;</span><span class="p">,</span><span class="n">s</span><span class="p">)]</span>
+        <span class="n">j1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind1</span><span class="p">)):</span>
+            <span class="n">j2</span> <span class="o">=</span> <span class="n">ind1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">x</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">j1</span><span class="p">:</span><span class="n">j2</span><span class="p">]</span>
+            <span class="n">j1</span> <span class="o">=</span> <span class="mi">1</span><span class="o">+</span><span class="n">ind2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">s</span>
+    
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,,&quot;</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">x</span></div>
+
+        
+    
+<div class="viewcode-block" id="substitute">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.substitute">[docs]</a>
+<span class="k">def</span> <span class="nf">substitute</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span><span class="n">keyWords</span><span class="p">,</span><span class="n">subst</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Replaces variables names that belong to the key words in Python.</span>
+<span class="sd">    </span>
+<span class="sd">        :param variables: Path to file or URL address.</span>
+<span class="sd">        :type variables: str.</span>
+<span class="sd">        :param keyWords: Path to file or URL address.</span>
+<span class="sd">        :type keyWords: str.</span>
+<span class="sd">        :returns: variable name appended with underscore.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">keyWords</span><span class="p">:</span>
+            <span class="n">subst</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">+</span><span class="s2">&quot;_&quot;</span>
+            <span class="n">var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="n">var</span><span class="p">,</span><span class="n">subst</span></div>
+
+    
+
+<div class="viewcode-block" id="convert">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.convert">[docs]</a>
+<span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span><span class="n">labels</span><span class="p">,</span><span class="n">bEquations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">substitute</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">conditions</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert Dynare/Iris model files to yaml format.</span>
+<span class="sd">    </span>
+<span class="sd">        :param txt: Path to model file</span>
+<span class="sd">        :type txt: str.</span>
+<span class="sd">        :param labels: Labels</span>
+<span class="sd">        :type labels: dict.</span>
+<span class="sd">        :returns:  Converted text</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">start1</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span> <span class="n">start2</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span> <span class="n">b</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span> <span class="n">bModel</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">lst</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">eqs_labels</span><span class="o">=</span> <span class="p">[];</span> <span class="n">lbls</span><span class="o">=</span><span class="p">{};</span> <span class="n">label</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">&quot;model&quot;</span> <span class="ow">in</span> <span class="n">txt</span> <span class="ow">or</span> <span class="s2">&quot;varexo&quot;</span> <span class="ow">in</span> <span class="n">txt</span> <span class="ow">or</span> <span class="s2">&quot;parameters&quot;</span> <span class="ow">in</span> <span class="n">txt</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+            <span class="n">ln</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">ln</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;^&quot;</span><span class="p">,</span><span class="s2">&quot;**&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ln</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ln</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;//&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">ln</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">ln</span> <span class="o">==</span> <span class="s2">&quot;model;&quot;</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">bModel</span> <span class="o">=</span> <span class="n">start1</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">ln</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;var&quot;</span><span class="p">,</span><span class="s2">&quot;varexo&quot;</span><span class="p">,</span><span class="s2">&quot;parameters&quot;</span><span class="p">]:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">start2</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ln</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;;&quot;</span><span class="p">,</span><span class="s2">&quot;end;&quot;</span><span class="p">]:</span>
+                    <span class="n">start1</span> <span class="o">=</span> <span class="n">start2</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">break</span>
+                    
+            <span class="n">ln</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">start1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ln</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ln</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ln</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/*&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ln</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;*/&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">ln</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">):</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="s2">&quot;=&quot;</span> <span class="ow">in</span> <span class="n">ln</span><span class="p">:</span>
+                        <span class="n">ind1</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">ind1</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="s2">&quot;]&quot;</span> <span class="ow">in</span> <span class="n">ln</span><span class="p">:</span>
+                        <span class="n">ind2</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;]&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">ind2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ln</span><span class="p">)</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="n">ln</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind1</span><span class="p">:</span><span class="n">ind2</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;   - &quot;</span> <span class="o">+</span> <span class="n">ln</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">eqs_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+                    
+            <span class="k">elif</span> <span class="n">start2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">ln</span><span class="p">:</span>
+                    <span class="n">ind1</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                    <span class="n">ln1</span> <span class="o">=</span> <span class="n">ln</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span>
+                    <span class="n">ln2</span> <span class="o">=</span> <span class="n">ln</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind1</span><span class="p">:]</span>
+                    <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ln1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="s2">&quot;=&quot;</span> <span class="ow">in</span> <span class="n">ln2</span><span class="p">:</span>
+                        <span class="n">ind2</span> <span class="o">=</span> <span class="n">ln2</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+                        <span class="n">label</span> <span class="o">=</span> <span class="n">ln2</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind2</span><span class="p">:]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">label</span> <span class="o">=</span> <span class="n">ln2</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;]&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="n">lbls</span><span class="p">[</span><span class="n">ln1</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ln</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">bEquations</span><span class="p">:</span>
+            <span class="n">delimiters</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;^&quot;</span><span class="p">,</span> <span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;}&quot;</span><span class="p">,</span> <span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span>
+            <span class="n">regexPattern</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">,</span> <span class="n">delimiters</span><span class="p">))</span>
+            <span class="n">lstEqs</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">definitions</span> <span class="o">=</span> <span class="p">{};</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">txt</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;//&quot;</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="s2">&quot;[&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                    <span class="n">ind1</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+                    <span class="n">ind2</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;]&quot;</span><span class="p">)</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind1</span><span class="p">:</span><span class="n">ind2</span><span class="p">]</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">eq</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">regexPattern</span><span class="p">,</span><span class="n">eq</span><span class="p">)</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">arr</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="s2">&quot;%&quot;</span> <span class="ow">in</span> <span class="n">eq</span><span class="p">:</span>
+                        <span class="n">ind</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;%&quot;</span><span class="p">)</span>
+                        <span class="n">eq</span> <span class="o">=</span> <span class="n">eq</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+                        <span class="n">ind</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+                        <span class="n">key</span> <span class="o">=</span> <span class="n">eq</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                        <span class="n">rhs</span> <span class="o">=</span> <span class="n">eq</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                        <span class="n">rhs</span> <span class="o">=</span> <span class="n">modifyEquation</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span><span class="n">substitute</span><span class="p">,</span><span class="n">arr</span><span class="p">)</span>
+                        <span class="n">rhs</span> <span class="o">=</span> <span class="n">modifyEquation</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span><span class="n">definitions</span><span class="p">,</span><span class="n">arr</span><span class="p">)</span>
+                        <span class="n">definitions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;(&quot;</span> <span class="o">+</span> <span class="n">rhs</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+                        <span class="k">continue</span>
+                    <span class="n">eq</span> <span class="o">=</span> <span class="n">modifyEquation</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span><span class="n">definitions</span><span class="p">,</span><span class="n">arr</span><span class="p">)</span>
+                    <span class="n">eq</span> <span class="o">=</span> <span class="n">modifyEquation</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span><span class="n">substitute</span><span class="p">,</span><span class="n">arr</span><span class="p">)</span>
+                    <span class="n">lstEqs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">lbls</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">lbls</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">lstEqs</span> <span class="o">=</span> <span class="n">parseIfStatements</span><span class="p">(</span><span class="n">lstEqs</span><span class="p">,</span><span class="n">conditions</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lstEqs</span><span class="p">):</span>
+                <span class="n">lstEqs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;   - &quot;</span> <span class="o">+</span> <span class="n">eq</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lstEqs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">==</span><span class="s2">&quot;var&quot;</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[:</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp</span> <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">):]</span> <span class="k">if</span> <span class="s2">&quot;=&quot;</span> <span class="ow">in</span> <span class="n">x</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp</span> <span class="p">]</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">):]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp</span> <span class="k">if</span> <span class="s2">&quot;&#39;&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[:</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp</span> <span class="k">if</span> <span class="s2">&quot;&#39;&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span><span class="s2">&quot;, &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">,</span><span class="s2">&quot;; &quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">]</span>
+            <span class="n">lbls</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">var</span><span class="p">,</span><span class="n">tmp</span><span class="p">))</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">txt</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)))</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span> <span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;%&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">lst</span><span class="p">))</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,,&quot;</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span> <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span> <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">labels</span><span class="p">,</span><span class="o">**</span><span class="n">lbls</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">text</span><span class="p">,</span><span class="n">labels</span></div>
+
+              
+            
+<div class="viewcode-block" id="modifyEquation">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.modifyEquation">[docs]</a>
+<span class="k">def</span> <span class="nf">modifyEquation</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">arr</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Replace variables in equations.</span>
+<span class="sd">    </span>
+<span class="sd">        :param eq: Equation</span>
+<span class="sd">        :type eq: str</span>
+<span class="sd">        :param m: Dictionary of original and modified variables</span>
+<span class="sd">        :type m: dict</span>
+<span class="sd">        :param arr: Variables</span>
+<span class="sd">        :type arr: list</span>
+<span class="sd">        :returns:  Modified equation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ind1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">new_eq</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">m</span><span class="p">:</span>
+            <span class="n">ind2</span>  <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span> 
+            <span class="n">new_eq</span> <span class="o">+=</span> <span class="n">eq</span><span class="p">[</span><span class="n">ind1</span><span class="p">:</span><span class="n">ind2</span><span class="p">]</span> <span class="o">+</span> <span class="n">m</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+            <span class="n">ind1</span> <span class="o">=</span> <span class="n">ind2</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">ind1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">new_eq</span> <span class="o">=</span> <span class="n">eq</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">new_eq</span> <span class="o">+=</span> <span class="n">eq</span><span class="p">[</span><span class="n">ind1</span><span class="p">:]</span>
+            
+    <span class="k">return</span> <span class="n">new_eq</span></div>
+
+    
+
+<div class="viewcode-block" id="parseIfStatements">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.parseIfStatements">[docs]</a>
+<span class="k">def</span> <span class="nf">parseIfStatements</span><span class="p">(</span><span class="n">eqs</span><span class="p">,</span><span class="n">conditions</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Preparse @#if, @#else, @#endif directives</span>
+<span class="sd">    </span>
+<span class="sd">        :param eqs: Equations</span>
+<span class="sd">        :type eqs: list.</span>
+<span class="sd">        :param conditions: Directives</span>
+<span class="sd">        :type conditions: dict.</span>
+<span class="sd">        :returns:  Preparsed list of equations</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">start</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">eqtn</span> <span class="ow">in</span> <span class="n">eqs</span><span class="p">:</span>
+        <span class="n">eq</span> <span class="o">=</span> <span class="n">eqtn</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">eq</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;@#if&quot;</span><span class="p">):</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">eq</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;||&quot;</span><span class="p">,</span><span class="s2">&quot;or&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&amp;&amp;&quot;</span><span class="p">,</span><span class="s2">&quot;&amp;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">,</span><span class="s2">&quot;and&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">include</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span><span class="nb">globals</span><span class="p">(),</span><span class="n">conditions</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">include</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="n">start</span> <span class="ow">and</span> <span class="n">eq</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;@#else&quot;</span><span class="p">):</span>
+            <span class="n">include</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">include</span>
+        <span class="k">elif</span> <span class="n">start</span> <span class="ow">and</span> <span class="n">eq</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;@#endif&quot;</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">include</span><span class="p">:</span>
+                <span class="n">content</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">start</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">include</span><span class="p">:</span>
+                    <span class="n">block</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqtn</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">content</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqtn</span><span class="p">)</span>
+                
+    <span class="k">return</span> <span class="n">content</span>   </div>
+
+            
+                    
+<div class="viewcode-block" id="build">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.build">[docs]</a>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span><span class="n">categories</span><span class="p">,</span><span class="n">txt</span><span class="p">,</span><span class="n">out</span><span class="o">=</span><span class="p">[],</span><span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recursively iterates thru a list of indices and categories, </span>
+<span class="sd">    substitutes an index in a variable name with a corresponding category, </span>
+<span class="sd">    and builds a list of new variables.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param indices: List of indeces.</span>
+<span class="sd">        :type indices: list.</span>
+<span class="sd">        :param categories: List of categories.</span>
+<span class="sd">        :type categories: list.</span>
+<span class="sd">        :param txt: Text.</span>
+<span class="sd">        :type txt: string.</span>
+<span class="sd">        :param n: Number of calls.</span>
+<span class="sd">        :type n: int.</span>
+<span class="sd">        :returns: list object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">n</span><span class="p">,</span><span class="n">out</span>
+    
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    <span class="n">cat</span> <span class="o">=</span> <span class="n">categories</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    
+    <span class="c1"># Loop over categories</span>
+    <span class="n">sub</span> <span class="o">=</span> <span class="s2">&quot;{&quot;</span><span class="o">+</span><span class="n">ind</span><span class="o">+</span><span class="s2">&quot;}&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">txt</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cat</span><span class="p">:</span>
+                <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">txt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span><span class="n">c</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">t</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cat</span><span class="p">:</span>
+                    <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span><span class="n">c</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                
+    <span class="n">i</span><span class="p">,</span><span class="n">out</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span><span class="n">categories</span><span class="p">,</span><span class="n">txt</span><span class="p">,</span><span class="n">lst</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">i</span><span class="p">,</span><span class="n">out</span></div>
+
+            
+                
+<div class="viewcode-block" id="buildEquations">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.buildEquations">[docs]</a>
+<span class="k">def</span> <span class="nf">buildEquations</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">equations</span><span class="p">,</span><span class="n">variables</span><span class="o">=</span><span class="p">[],</span><span class="n">comments</span><span class="o">=</span><span class="p">[]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse sets and equations and build a list of equations and variables.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param sets: List of categories.</span>
+<span class="sd">        :type sets: list.</span>
+<span class="sd">        :param equations: List of equations.</span>
+<span class="sd">        :type equations: list.</span>
+<span class="sd">        :param variables: New variables.</span>
+<span class="sd">        :type variables: list.</span>
+<span class="sd">        :returns: list object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eqs</span><span class="o">=</span><span class="p">[];</span> <span class="n">eqs_ss</span><span class="o">=</span><span class="p">[];</span> <span class="n">eqs_files</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1">### Canonical form of yaml file format with sets definition suggested by Benjamin</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;file&#39;</span><span class="p">:</span>
+                    <span class="n">eqs_files</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="k">continue</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">st</span>  <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;set&#39;</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">st</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+                        <span class="n">st</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span><span class="p">]</span>
+                    <span class="n">indices</span>  <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+                        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Length of indeces </span><span class="si">{}</span><span class="s2"> and sets </span><span class="si">{}</span><span class="s2"> is different&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)))</span>                 
+                    <span class="n">categories</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">st</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sets</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                            <span class="c1"># Get list of categories for given set</span>
+                            <span class="n">cat</span> <span class="o">=</span> <span class="n">sets</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+                                <span class="n">cat</span> <span class="o">=</span> <span class="p">[</span><span class="n">cat</span><span class="p">]</span>
+                            <span class="n">categories</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+                    <span class="c1"># Loop over current set</span>
+                    <span class="n">eq</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;eq&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="n">n_eqs</span><span class="p">,</span><span class="n">eqs</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">categories</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">eq</span><span class="p">,</span><span class="n">eqs</span><span class="p">)</span>
+                    <span class="n">eq_ss</span>  <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;eq_ss&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="n">n_eqs_ss</span><span class="p">,</span><span class="n">eqs_ss</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">categories</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">eq_ss</span><span class="p">,</span><span class="n">eqs_ss</span><span class="p">)</span>
+                    <span class="n">endo</span>  <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;endo&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="n">n_variables</span><span class="p">,</span><span class="n">variables</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">categories</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">endo</span><span class="p">,</span><span class="n">variables</span><span class="p">)</span> 
+       
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eqs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">eqs</span><span class="p">,</span><span class="n">eqs_ss</span><span class="p">,</span><span class="n">variables</span><span class="p">,[],</span><span class="n">eqs_files</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">True</span>
+        
+    <span class="c1">### Simplified form of yaml file with sets definition</span>
+    <span class="kn">import</span> <span class="nn">re</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.model.util</span> <span class="kn">import</span> <span class="n">expand</span>
+    
+    <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sets</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+    
+    <span class="n">new_sets</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)))</span>
+        <span class="n">k1</span> <span class="o">=</span> <span class="n">k</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">indx</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;(&quot;</span> <span class="ow">in</span> <span class="n">indx</span> <span class="ow">and</span> <span class="s2">&quot;)&quot;</span> <span class="ow">in</span> <span class="n">indx</span><span class="p">:</span>
+            <span class="n">ind1</span> <span class="o">=</span> <span class="n">indx</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">)</span>
+            <span class="n">ind2</span> <span class="o">=</span> <span class="n">indx</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)</span>
+            <span class="n">k2</span> <span class="o">=</span> <span class="n">indx</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind1</span><span class="p">:</span><span class="n">ind2</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">k3</span> <span class="o">=</span> <span class="n">indx</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">k3</span> <span class="o">=</span> <span class="n">indx</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sets</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">sets</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">in</span> <span class="n">new_sets</span><span class="p">:</span>
+            <span class="n">new_sets</span><span class="p">[</span><span class="n">k3</span><span class="p">]</span> <span class="o">=</span> <span class="n">sets</span><span class="p">[</span><span class="n">sets</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_sets</span><span class="p">[</span><span class="n">k3</span><span class="p">]</span> <span class="o">=</span> <span class="n">sets</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="c1"># Check that all elements of map for key=k3 are subset of elements of this map for key=k2</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">k2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">new_sets</span><span class="p">[</span><span class="n">k3</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">new_sets</span><span class="p">[</span><span class="n">k2</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">diff</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+                <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Misspecified elements of set &#39;</span><span class="si">{</span><span class="n">k1</span><span class="si">}</span><span class="s2">&#39;: extra elements - </span><span class="si">{</span><span class="n">diff</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+                
+    <span class="n">delimiters</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;^&quot;</span><span class="p">,</span> <span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;}&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span>
+    <span class="n">regexPattern</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">,</span> <span class="n">delimiters</span><span class="p">))</span>
+    
+    <span class="c1"># Get list of new variables</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">equations</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">exclude</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">equations</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">eq</span><span class="p">:</span>
+                <span class="n">eqtn</span> <span class="o">=</span> <span class="n">eq</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">eq</span> <span class="o">=</span> <span class="n">eqtn</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">regexPattern</span><span class="p">,</span><span class="n">eq</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">arr</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;)(&quot;</span><span class="p">,</span><span class="s2">&quot;)&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                <span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_sets</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">k</span><span class="o">+</span><span class="s2">&quot;)&quot;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                        <span class="n">ind</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">k</span><span class="o">+</span><span class="s2">&quot;)&quot;</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">new_sets</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+                            <span class="n">var</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">x</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                                <span class="n">variables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
+                            <span class="n">exclude</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                            
+    <span class="c1"># Expand ariables</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">]</span>
+    
+    <span class="c1"># Expand equtions</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="p">[</span><span class="n">eq</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span> <span class="k">if</span> <span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">]</span>
+    <span class="n">eqs</span>     <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">new_sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">equations</span><span class="p">,</span><span class="n">loop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
+    
+    <span class="c1"># Expand comments</span>
+    <span class="n">cmnts</span>   <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="p">,)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">comments</span><span class="p">]</span>
+    <span class="n">cmnts</span>   <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">new_sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">cmnts</span><span class="p">,</span><span class="n">loop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  
+    <span class="n">cmnts</span>   <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span><span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span><span class="s2">&quot;:    &quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cmnts</span><span class="p">]</span>
+            
+    <span class="k">return</span> <span class="n">eqs</span><span class="p">,</span><span class="n">eqs_ss</span><span class="p">,</span><span class="n">variables</span><span class="p">,</span><span class="n">cmnts</span><span class="p">,</span><span class="n">eqs_files</span><span class="p">,</span><span class="n">index</span><span class="p">,</span><span class="kc">False</span></div>
+
+   
+    
+<div class="viewcode-block" id="sortIndex">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.sortIndex">[docs]</a>
+<span class="k">def</span> <span class="nf">sortIndex</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">variables</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sorts variables by category.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param sets: List of categories.</span>
+<span class="sd">        :type sets: list.</span>
+<span class="sd">        :param variables: New variables.</span>
+<span class="sd">        :type variables: list.</span>
+<span class="sd">        :returns: sorted list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+    
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">sets</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">cat</span> <span class="o">=</span> <span class="n">sets</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+        
+    <span class="n">nv</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">nv</span>
+    <span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>     
+    <span class="n">m</span> <span class="o">=</span> <span class="n">n</span><span class="o">**</span><span class="n">nv</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">sets</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="c1"># Get list of categories for a given set</span>
+        <span class="n">cat</span> <span class="o">=</span> <span class="n">sets</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">cat</span> <span class="o">=</span> <span class="p">[</span><span class="n">cat</span><span class="p">]</span>  
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cat</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">variables</span><span class="p">):</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">c</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span> <span class="c1"># and not v in lst:</span>
+                    <span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="n">m</span> <span class="o">+</span> <span class="n">i</span>
+                    <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="c1">#print(v,c,m,i,indices[i])</span>
+            <span class="n">m</span> <span class="o">/=</span> <span class="n">nv</span>
+                
+    <span class="n">sort_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> 
+    <span class="c1">#print(variables)</span>
+    <span class="c1">#print(indices)            </span>
+            
+    <span class="k">return</span> <span class="n">sort_index</span></div>
+
+ 
+                           
+<div class="viewcode-block" id="loadYaml">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.loadYaml">[docs]</a>
+<span class="k">def</span> <span class="nf">loadYaml</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">txt</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses a model file, resolves reference to files and parses these files, and builds a model dictionary object.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param path: Path to model files.</span>
+<span class="sd">        :type path: str.</span>
+<span class="sd">        :param txt: Text of model file.</span>
+<span class="sd">        :type txt: str.</span>
+<span class="sd">        :returns: dict object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.language</span> <span class="kn">import</span> <span class="n">minilang</span>
+ 
+    <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">minilang</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;!</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">constructor</span><span class="p">)</span>
+ 
+    <span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="s1">&#39;**&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Load equations comments</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="s1">&#39;0.18&#39;</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAML</span><span class="p">(</span><span class="n">typ</span><span class="o">=</span><span class="s1">&#39;rt&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">RoundTripLoader</span><span class="p">)</span>
+    <span class="n">eqs</span>  <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span>
+    <span class="n">comments</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">eqs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">eqs</span><span class="p">):</span>
+            <span class="n">comment_token</span> <span class="o">=</span> <span class="n">eqs</span><span class="o">.</span><span class="n">ca</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">comment_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">comment</span> <span class="o">=</span> <span class="n">comment_token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">n&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">comment</span><span class="o">.</span><span class="n">strip</span><span class="p">()):</span>
+                    <span class="n">comments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comment</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">comments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="s1">&#39;0.18&#39;</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">snowdrop.src.preprocessor.language</span> <span class="k">as</span> <span class="nn">module</span>
+        <span class="k">def</span> <span class="nf">my_constructor</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span><span class="n">node</span><span class="p">):</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">tag</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;!&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">class_</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">class_</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAML</span><span class="p">(</span><span class="n">typ</span><span class="o">=</span><span class="s1">&#39;safe&#39;</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;!Normal&#39;</span><span class="p">,</span><span class="n">constructor</span><span class="o">=</span><span class="n">my_constructor</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;!MvNormal&#39;</span><span class="p">,</span><span class="n">constructor</span><span class="o">=</span><span class="n">my_constructor</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;!LogNormal&#39;</span><span class="p">,</span><span class="n">constructor</span><span class="o">=</span><span class="n">my_constructor</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;!Beta&#39;</span><span class="p">,</span><span class="n">constructor</span><span class="o">=</span><span class="n">my_constructor</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;!Binomial&#39;</span><span class="p">,</span><span class="n">constructor</span><span class="o">=</span><span class="n">my_constructor</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;!Gamma&#39;</span><span class="p">,</span><span class="n">constructor</span><span class="o">=</span><span class="n">my_constructor</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;!Logistic&#39;</span><span class="p">,</span><span class="n">constructor</span><span class="o">=</span><span class="n">my_constructor</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;!Uniform&#39;</span><span class="p">,</span><span class="n">constructor</span><span class="o">=</span><span class="n">my_constructor</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;!Cartesian&#39;</span><span class="p">,</span><span class="n">constructor</span><span class="o">=</span><span class="n">my_constructor</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">Loader</span><span class="p">)</span>
+    
+    <span class="c1"># Symbols section</span>
+    <span class="n">symbols</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span>
+    <span class="n">sets</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sets&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;variables&#39;</span><span class="p">,[])</span>
+    <span class="n">endo1</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">variables</span> <span class="k">if</span> <span class="s2">&quot;(&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+    <span class="n">endo2</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">variables</span> <span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;(&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+    
+    <span class="c1"># Equations section</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span>
+    
+    <span class="n">new_eqs</span><span class="p">,</span><span class="n">new_eqs_ss</span><span class="p">,</span><span class="n">new_variables</span><span class="p">,</span><span class="n">new_comments</span><span class="p">,</span><span class="n">eqs_files</span><span class="p">,</span><span class="n">ind</span><span class="p">,</span><span class="n">bFormat</span> <span class="o">=</span> <span class="n">buildEquations</span><span class="p">(</span><span class="n">sets</span><span class="o">=</span><span class="n">sets</span><span class="p">,</span><span class="n">equations</span><span class="o">=</span><span class="n">equations</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">variables</span><span class="o">=</span><span class="n">endo1</span><span class="p">,</span><span class="n">comments</span><span class="o">=</span><span class="n">comments</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eqs_files</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">eqs_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">eqs_files</span><span class="p">]</span>
+               
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">eqs_files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">file</span><span class="p">):</span>
+            <span class="n">t</span><span class="p">,</span><span class="n">labels</span> <span class="o">=</span> <span class="n">read_file_or_url</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">file</span><span class="p">)</span> 
+            <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="s1">&#39;**&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="s1">&#39;0.18&#39;</span><span class="p">:</span>
+                <span class="n">sect</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAML</span><span class="p">(</span><span class="n">typ</span><span class="o">=</span><span class="s1">&#39;safe&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sect</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">Loader</span><span class="p">)</span>
+            <span class="n">equations</span> <span class="o">=</span> <span class="n">sect</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span>
+            <span class="n">new_f_eqs</span><span class="p">,</span><span class="n">new_f_eqs_ss</span><span class="p">,</span><span class="n">new_f_variables</span><span class="p">,</span><span class="n">new_comments</span><span class="p">,</span><span class="n">new_eqs_files</span><span class="p">,</span><span class="n">ind</span><span class="p">,</span><span class="n">bFormat</span>  <span class="o">=</span> <span class="n">buildEquations</span><span class="p">(</span><span class="n">sets</span><span class="o">=</span><span class="n">sets</span><span class="p">,</span><span class="n">equations</span><span class="o">=</span><span class="n">equations</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">variables</span><span class="o">=</span><span class="n">endo1</span><span class="p">,</span><span class="n">comments</span><span class="o">=</span><span class="n">comments</span><span class="p">)</span>
+            <span class="n">new_eqs</span> <span class="o">+=</span> <span class="n">new_f_eqs</span>
+            <span class="n">new_eqs_ss</span> <span class="o">+=</span> <span class="n">new_f_eqs_ss</span>
+            <span class="n">new_variables</span> <span class="o">+=</span> <span class="n">new_f_variables</span>
+    
+
+    <span class="k">if</span> <span class="n">bFormat</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">new_variables</span><span class="p">):</span>
+            <span class="c1"># Sort variables and equations by country</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">sortIndex</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">new_variables</span><span class="p">)</span>
+            <span class="n">new_variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_variables</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span><span class="p">]</span> 
+            <span class="n">new_eqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_eqs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span><span class="p">]</span> 
+            <span class="n">new_eqs_ss</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_eqs_ss</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span><span class="p">]</span> 
+            <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">new_variables</span>
+            <span class="c1">#print(new_variables)</span>
+            
+            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">new_eqs</span><span class="p">):</span>
+                <span class="n">equations</span> <span class="o">+=</span> <span class="n">new_eqs</span>
+                <span class="n">equations</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">equations</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="nb">str</span><span class="p">)]</span>  
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">equations</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Sort variables and equations by country</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">sortIndex</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">new_variables</span><span class="p">)</span>
+        <span class="n">new_variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_variables</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span><span class="p">]</span>  
+        <span class="n">new_eqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_eqs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span><span class="p">]</span> 
+        <span class="n">new_comments</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_comments</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span><span class="p">]</span> 
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">endo2</span> <span class="o">+</span> <span class="n">new_variables</span>
+        <span class="n">eqtns</span> <span class="o">=</span> <span class="p">[</span><span class="n">eq</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ind</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eqtns</span> <span class="o">+</span> <span class="n">new_eqs</span>
+        
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">new_eqs_ss</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations_ss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_eqs_ss</span> 
+        
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_comments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_comments</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]):</span>
+            <span class="n">comments</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">])</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">new_comments</span><span class="p">))</span> <span class="o">+</span> <span class="n">new_comments</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;eqComments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">comments</span>
+        
+    <span class="c1"># Shocks section</span>
+    <span class="n">shocks</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;shocks&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">shocks_files</span> <span class="o">=</span> <span class="n">shocks</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shocks_files</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+        <span class="n">shocks_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">shocks_files</span><span class="p">]</span>
+                 
+    <span class="c1"># Parameters section</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;parameters&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">params_files</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params_files</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">params_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">params_files</span><span class="p">]</span>
+    <span class="n">new_params</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">params_files</span><span class="p">:</span>
+        <span class="n">new_params</span> <span class="o">=</span> <span class="n">loadFile</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">file</span><span class="p">)</span> 
+            
+    <span class="k">if</span> <span class="s1">&#39;parameters&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>          
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">new_params</span><span class="p">):</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">new_params</span>
+    
+    <span class="c1"># Calibration section</span>
+    <span class="n">cal</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;calibration&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">cal_files</span> <span class="o">=</span> <span class="n">cal</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cal_files</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">cal_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">cal_files</span><span class="p">]</span>
+    <span class="n">cal_files</span> <span class="o">+=</span> <span class="n">shocks_files</span>
+    <span class="n">new_cal</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">cal_files</span><span class="p">:</span>
+        <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">file</span><span class="p">))</span>
+        <span class="n">new_cal</span> <span class="o">=</span> <span class="n">loadFile</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span><span class="n">new_cal</span><span class="p">)</span>
+          
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">new_cal</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;calibration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">cal</span><span class="p">,</span> <span class="o">**</span><span class="n">new_cal</span><span class="p">}</span>
+        
+    <span class="k">return</span> <span class="n">data</span></div>
+
+                      
+
+<div class="viewcode-block" id="loadFile">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.loadFile">[docs]</a>
+<span class="k">def</span> <span class="nf">loadFile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">calibration</span><span class="o">=</span><span class="p">{},</span><span class="n">names</span><span class="o">=</span><span class="p">[],</span><span class="n">bShocks</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse a file and populate model&#39;s calibration dictionary.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param path: Path to file.</span>
+<span class="sd">        :type path: str.</span>
+<span class="sd">        :param calibration: Map of variables names and values.</span>
+<span class="sd">        :type calibration: dict.</span>
+<span class="sd">        :param names: Names of variables.</span>
+<span class="sd">        :type names: list.</span>
+<span class="sd">        :param bShocks: True if loading shocks values file and False otherwise.</span>
+<span class="sd">        :type bShocks: bool.</span>
+<span class="sd">        :returns: dictionary object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">tan</span><span class="p">,</span> <span class="n">sqrt</span>
+    
+    <span class="n">m</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;log&#39;</span><span class="p">:</span><span class="n">log</span><span class="p">,</span> <span class="s1">&#39;exp&#39;</span><span class="p">:</span><span class="n">exp</span><span class="p">,</span> <span class="s1">&#39;sin&#39;</span><span class="p">:</span><span class="n">sin</span><span class="p">,</span> <span class="s1">&#39;cos&#39;</span><span class="p">:</span><span class="n">cos</span><span class="p">,</span> <span class="s1">&#39;tan&#39;</span><span class="p">:</span><span class="n">tan</span><span class="p">,</span> <span class="s1">&#39;sqrt&#39;</span><span class="p">:</span><span class="n">sqrt</span><span class="p">}</span>
+ 
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">File: &quot;</span> <span class="o">+</span> <span class="n">path</span> <span class="o">+</span> <span class="s2">&quot; does not exist!</span><span class="se">\n</span><span class="s2">Exitting...&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+    
+    <span class="n">new_cal</span> <span class="o">=</span> <span class="p">{};</span> <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">name</span><span class="p">,</span><span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">:</span>
+        <span class="n">txt</span><span class="p">,</span><span class="n">labels</span> <span class="o">=</span> <span class="n">read_file_or_url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="s1">&#39;0.18&#39;</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAML</span><span class="p">(</span><span class="n">typ</span><span class="o">=</span><span class="s1">&#39;safe&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">Loader</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_cal</span><span class="p">:</span>
+                        <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_cal</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_cal</span><span class="p">:</span>
+                            <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_cal</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="k">else</span><span class="p">:</span>                    
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_cal</span><span class="p">:</span>
+                            <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_cal</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                    
+                                
+    <span class="k">elif</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span> <span class="ow">or</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.xlsx&quot;</span> <span class="ow">or</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.xls&quot;</span><span class="p">:</span>
+        <span class="n">new_cal</span> <span class="o">=</span> <span class="n">loadTimeSeries</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        
+    <span class="k">elif</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.txt&quot;</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">ln</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ln</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">ln</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">ln</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">,</span><span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s2">&quot;#&quot;</span> <span class="ow">in</span> <span class="n">ln</span><span class="p">:</span>
+                    <span class="n">ind</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">)</span>
+                    <span class="n">ln</span> <span class="o">=</span> <span class="n">ln</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+                <span class="n">txt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ln</span><span class="p">)</span>
+                
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">txt</span><span class="p">):</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">arr</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">arr</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_cal</span><span class="p">:</span>
+                            <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_cal</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">arr</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span>
+                        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_cal</span><span class="p">:</span>
+                                <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_cal</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                                <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                    <span class="k">else</span><span class="p">:</span>     
+                        <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+       
+    <span class="k">elif</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.sqlite&quot;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.utils.db</span> <span class="kn">import</span> <span class="n">get_data</span>
+        <span class="n">rows</span><span class="p">,</span><span class="n">columns</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="ow">or</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to retrieve data from database, </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>    
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
+            <span class="n">new_cal</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span>
+        
+    <span class="n">newCal</span> <span class="o">=</span>  <span class="n">new_cal</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">newCal</span><span class="p">,</span><span class="n">m</span><span class="p">)</span> 
+        <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>            
+     
+    <span class="k">if</span> <span class="n">bShocks</span><span class="p">:</span>
+        <span class="c1"># Get max length</span>
+        <span class="n">Nt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_cal</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">Nt</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">Nt</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="n">periods</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">Nt</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nt</span><span class="p">):</span> 
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_cal</span><span class="p">:</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># cprint(f&quot;Shock name {k} is not defined&quot;,&quot;red&quot;)</span>
+                    <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">arr</span><span class="p">,</span><span class="n">periods</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_cal</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+                <span class="n">calibration</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">calibration</span><span class="p">,</span> <span class="o">**</span><span class="n">new_cal</span><span class="p">[</span><span class="n">k</span><span class="p">]}</span>
+        <span class="n">calibration</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">calibration</span><span class="p">,</span> <span class="o">**</span><span class="n">new_cal</span><span class="p">}</span>
+        
+        <span class="k">return</span> <span class="n">calibration</span></div>
+
+    
+                      
+<div class="viewcode-block" id="loadTimeSeries">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.loadTimeSeries">[docs]</a>
+<span class="k">def</span> <span class="nf">loadTimeSeries</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">dates</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse a file and create a time series object.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param path: Path to file.</span>
+<span class="sd">        :type path: str.</span>
+<span class="sd">        :param dates: Dates.</span>
+<span class="sd">        :type dates: date.</span>
+<span class="sd">        :returns: Time series object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">,</span><span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.xlsx&quot;</span> <span class="ow">or</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.xls&quot;</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.txt&quot;</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">m</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+            <span class="n">m</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># For more than one row treat data as time series</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+            <span class="n">dts</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dts</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">):</span>
+                    <span class="n">values</span> <span class="o">=</span> <span class="n">vals</span>
+                <span class="k">else</span><span class="p">:</span>    
+                    <span class="n">size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dts</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+                        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">dt</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dts</span><span class="p">,</span><span class="n">vals</span><span class="p">):</span>
+                            <span class="n">values</span><span class="p">[</span><span class="n">dt</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">series</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">dates</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dts</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">d1</span> <span class="o">=</span> <span class="n">dts</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                    <span class="n">d2</span> <span class="o">=</span> <span class="n">dts</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">]</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dates</span><span class="p">:</span>  
+                        <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;=</span> <span class="n">d1</span> <span class="ow">and</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">d2</span><span class="p">:</span>
+                            <span class="n">series</span><span class="p">[</span><span class="n">d</span><span class="p">:]</span> <span class="o">=</span> <span class="n">v</span>
+                            <span class="k">break</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">values</span>
+            
+            <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+                    
+            <span class="n">m</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span>
+            
+    <span class="k">return</span> <span class="n">m</span></div>
+
+
+
+<div class="viewcode-block" id="getCalibration">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.utils.html#snowdrop.src.utils.load.getCalibration">[docs]</a>
+<span class="k">def</span> <span class="nf">getCalibration</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses a model file, and builds a model calibration dictionary object.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param fpath: Path to model files.</span>
+<span class="sd">        :type fpath: str.</span>
+<span class="sd">        :param names: Endogenous variables names.</span>
+<span class="sd">        :type names: str.</span>
+<span class="sd">        :returns: dict object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">tan</span><span class="p">,</span> <span class="n">sqrt</span>
+    
+    <span class="n">m</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;log&#39;</span><span class="p">:</span><span class="n">log</span><span class="p">,</span> <span class="s1">&#39;exp&#39;</span><span class="p">:</span><span class="n">exp</span><span class="p">,</span> <span class="s1">&#39;sin&#39;</span><span class="p">:</span><span class="n">sin</span><span class="p">,</span> <span class="s1">&#39;cos&#39;</span><span class="p">:</span><span class="n">cos</span><span class="p">,</span> <span class="s1">&#39;tan&#39;</span><span class="p">:</span><span class="n">tan</span><span class="p">,</span> <span class="s1">&#39;sqrt&#39;</span><span class="p">:</span><span class="n">sqrt</span><span class="p">}</span>
+    
+    <span class="n">txt</span><span class="p">,</span><span class="n">labels</span> <span class="o">=</span> <span class="n">read_file_or_url</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="s1">&#39;0.18&#39;</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAML</span><span class="p">(</span><span class="n">typ</span><span class="o">=</span><span class="s1">&#39;safe&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">Loader</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;calibration&quot;</span><span class="p">]</span>
+    
+    <span class="n">cal</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">();</span> <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="n">cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                    <span class="n">cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>                    
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+      
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">cal</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">m</span><span class="p">)</span> 
+        <span class="n">cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>  
+        
+    <span class="k">return</span> <span class="n">cal</span></div>
+
+
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main program.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    <span class="n">working_dir</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">..&quot;</span>
+    
+    <span class="c1"># fname = &#39;Test.yaml&#39;</span>
+    <span class="c1"># file_path = os.path.abspath(os.path.join(working_dir,&#39;../templates/&#39;+fname))</span>
+    
+    <span class="c1"># with open(file_path, &#39;r&#39;) as fin:</span>
+    <span class="c1">#     txt = fin.read()</span>
+    <span class="c1">#     loadYaml(txt)</span>
+      
+        
+    <span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;sol.sqlite&#39;</span>
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s1">&#39;../data/db/&#39;</span><span class="o">+</span><span class="n">fname</span><span class="p">))</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">loadFile</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

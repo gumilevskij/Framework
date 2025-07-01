@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.solver.AIM.makeF &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.solver.AIM.makeF</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This function calculates the F matrix used in the AMA algorithm.&quot;&quot;&quot;</span>
+
+<span class="c1"># Import the numpy package</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="makeF">
+<a class="viewcode-back" href="../../../../../../source/snowdrop.src.numeric.solver.AIM.html#snowdrop.src.numeric.solver.AIM.makeF.makeF">[docs]</a>
+<span class="k">def</span> <span class="nf">makeF</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span><span class="n">cof</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">nlag</span><span class="p">,</span><span class="n">nlead</span><span class="p">,</span><span class="n">neq</span><span class="p">):</span>
+
+    <span class="c1"># Fix the size of the F Matrix, which is nlead*neq x nlead*neq</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">((</span><span class="n">nlead</span><span class="o">*</span><span class="n">neq</span><span class="p">,</span><span class="n">nlead</span><span class="o">*</span><span class="n">neq</span><span class="p">))))</span>
+
+    <span class="c1"># Calculate the H_+ Matrix, which is nlead*neq x neq</span>
+    <span class="n">H_plus</span> <span class="o">=</span> <span class="n">cof</span><span class="p">[:,</span><span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">nlag</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">nlag</span><span class="o">+</span><span class="n">nlead</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+
+    <span class="c1"># Calculate the Q_L Matrix, which is neq*nlead x neq*nlag</span>
+    <span class="n">Q_L</span> <span class="o">=</span> <span class="n">q</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="n">neq</span><span class="o">*</span><span class="n">nlag</span><span class="p">]</span>
+
+    <span class="c1"># Calculate the Q_R Matrix, which is neq*nlead x neq*nlead</span>
+    <span class="n">Q_R</span> <span class="o">=</span> <span class="n">q</span><span class="p">[:,</span><span class="n">neq</span><span class="o">*</span><span class="n">nlag</span><span class="p">:</span><span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">nlag</span><span class="o">+</span><span class="n">nlead</span><span class="p">)]</span>
+
+    <span class="c1"># Calculate the B Matrix, B = Q_R^-1 * Q_L, which is neq*nlead x neq*nlag</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="o">-</span><span class="n">Q_R</span><span class="o">.</span><span class="n">I</span> <span class="o">*</span> <span class="n">Q_L</span>
+
+    <span class="c1"># Calculate the B_R Matrix, which is neq*nlead x neq</span>
+    <span class="n">B_R</span> <span class="o">=</span> <span class="n">B</span><span class="p">[:,</span><span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">nlag</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">neq</span><span class="o">*</span><span class="n">nlag</span><span class="p">]</span>
+
+    <span class="c1"># Fill in the identity matrices in F </span>
+    <span class="c1"># Establish the veritcal index for inserting 1s into F</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">nlead</span><span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
+        <span class="c1"># Establish the horizontal index for inserting 1s into F</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="n">neq</span>
+        <span class="c1"># Insert Identity values into F</span>
+        <span class="n">F</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        
+    <span class="c1"># Construct the B_R Matrix used in the last column of F </span>
+    <span class="n">newB_R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">((</span><span class="n">neq</span><span class="o">*</span><span class="n">nlead</span><span class="p">,</span><span class="n">neq</span><span class="p">))))</span>
+
+    <span class="c1"># Insert Identity matrix into first element of newB_R</span>
+    <span class="n">newB_R</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">neq</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">neq</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">neq</span><span class="p">)</span>
+
+    <span class="c1"># Insert B_R^theta into newB_R for theta from 1 to theta_1</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nlead</span><span class="p">):</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">B_R</span><span class="p">[</span><span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">neq</span><span class="o">*</span><span class="n">a</span><span class="p">,:]</span>
+        <span class="n">newB_R</span><span class="p">[</span><span class="n">neq</span><span class="o">*</span><span class="n">a</span><span class="p">:</span><span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">),:]</span> <span class="o">=</span> <span class="n">temp</span>
+        
+    <span class="c1"># Now, newB_R should be fully constructed</span>
+        
+    <span class="c1"># Calculate the final row of matrices in F by looping over the values</span>
+    <span class="c1"># from 1 to nlead.</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nlead</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Calculate the matrix to be entered into F and enter it</span>
+        <span class="n">newEntry</span> <span class="o">=</span> <span class="o">-</span><span class="n">phi</span> <span class="o">*</span> <span class="n">H_plus</span> <span class="o">*</span> <span class="n">newB_R</span>
+        <span class="n">F</span><span class="p">[</span><span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">nlead</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">neq</span><span class="o">*</span><span class="n">nlead</span><span class="p">,</span><span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">neq</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">newEntry</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Update newB_R for the next matrix to be inserted by shifting down </span>
+            <span class="c1"># each element L rows</span>
+            <span class="k">for</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">nlead</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">beta</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">neq</span><span class="p">):</span>
+                    <span class="n">newB_R</span><span class="p">[</span><span class="n">alpha</span><span class="o">+</span><span class="n">neq</span><span class="p">,</span><span class="n">beta</span><span class="p">]</span> <span class="o">=</span> <span class="n">newB_R</span><span class="p">[</span><span class="n">alpha</span><span class="p">,</span><span class="n">beta</span><span class="p">]</span>
+                
+            <span class="c1"># Then, insert 0&#39;s into the newly emptied cells.</span>
+            <span class="n">newB_R</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">neq</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">neq</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">((</span><span class="n">neq</span><span class="p">,</span><span class="n">neq</span><span class="p">))))</span>
+                
+    <span class="k">return</span> <span class="n">F</span></div>
+
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

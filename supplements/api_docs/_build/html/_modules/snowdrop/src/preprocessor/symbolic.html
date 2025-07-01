@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.preprocessor.symbolic &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.preprocessor.symbolic</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd"> All symbolic functions take ast expression trees (not expressions) as input.</span>
+<span class="sd"> This one can be constructed as : ast.parse(s).body[0].value</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">from</span> <span class="nn">yaml</span> <span class="kn">import</span> <span class="n">ScalarNode</span>
+
+<span class="n">known_functions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;log&#39;</span><span class="p">,</span><span class="s1">&#39;exp&#39;</span><span class="p">,</span><span class="s1">&#39;sin&#39;</span><span class="p">,</span><span class="s1">&#39;cos&#39;</span><span class="p">,</span><span class="s1">&#39;tan&#39;</span><span class="p">,</span><span class="s1">&#39;max&#39;</span><span class="p">,</span><span class="s1">&#39;min&#39;</span><span class="p">,</span><span class="s1">&#39;Max&#39;</span><span class="p">,</span><span class="s1">&#39;Min&#39;</span><span class="p">,</span><span class="s1">&#39;Heaviside&#39;</span><span class="p">,</span><span class="s1">&#39;abs&#39;</span><span class="p">,</span><span class="s1">&#39;sign&#39;</span><span class="p">,</span><span class="s1">&#39;IfThenElse&#39;</span><span class="p">,</span><span class="s1">&#39;IfThen&#39;</span><span class="p">,</span><span class="s1">&#39;Positive&#39;</span><span class="p">,</span><span class="s1">&#39;Negative&#39;</span><span class="p">,</span><span class="s1">&#39;LambertW&#39;</span><span class="p">,</span><span class="s1">&#39;myzif&#39;</span><span class="p">]</span>
+<span class="n">Expression</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Expr</span>
+
+<span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">UnaryOp</span><span class="p">,</span> <span class="n">UAdd</span><span class="p">,</span> <span class="n">USub</span><span class="p">,</span> <span class="n">Name</span><span class="p">,</span> <span class="n">Load</span><span class="p">,</span> <span class="n">Call</span>
+<span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">NodeTransformer</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.language</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">functions_dict</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.codegen</span> <span class="kn">import</span> <span class="n">to_source</span>
+
+<span class="n">functions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">functions_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="list_variables">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.list_variables">[docs]</a>
+<span class="k">def</span> <span class="nf">list_variables</span><span class="p">(</span><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">funs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span><span class="nb">int</span><span class="p">]]:</span>
+
+    <span class="k">if</span> <span class="n">funs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> 
+        <span class="n">funs</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> 
+        <span class="nb">vars</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">ListSymbols</span><span class="p">(</span><span class="n">known_functions</span><span class="o">=</span><span class="n">functions</span><span class="o">+</span><span class="n">funs</span><span class="p">,</span> <span class="n">known_variables</span><span class="o">=</span><span class="nb">vars</span><span class="p">)</span>
+    <span class="n">l</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">problems</span><span class="p">:</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Symbolic error.&#39;</span><span class="p">)</span>
+        <span class="n">e</span><span class="o">.</span><span class="n">problems</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">problems</span>
+        <span class="k">raise</span> <span class="n">e</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">l</span><span class="o">.</span><span class="n">variables</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="time_shift">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.time_shift">[docs]</a>
+<span class="k">def</span> <span class="nf">time_shift</span><span class="p">(</span><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Shifts timing in equations variables.</span>
+<span class="sd">    </span>
+<span class="sd">        Example:</span>
+<span class="sd">        time_shift(:(a+b(1)+c),1,[:b,:c]) == :(a+b(2)+c(1))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eexpr</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">TimeShiftTransformer</span><span class="p">(</span><span class="n">shift</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="nb">vars</span><span class="p">)</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">eexpr</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="stringify_variable">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.stringify_variable">[docs]</a>
+<span class="k">def</span> <span class="nf">stringify_variable</span><span class="p">(</span><span class="n">arg</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stringify a variable.</span>
+<span class="sd">    </span>
+<span class="sd">    This method encodes varaible name with its lead or lag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">date</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1">#return &#39;{}__&#39;.format(s)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">+</span><span class="s1">&#39;__&#39;</span>
+        <span class="c1">#return f&#39;{s}__&#39;</span>
+    <span class="k">elif</span> <span class="n">date</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1">#return &#39;{}__m{}_&#39;.format(s,-date)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">+</span><span class="s1">&#39;__m&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="o">-</span><span class="n">date</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_&#39;</span>
+        <span class="c1">#return f&#39;{s}__m{-date}_&#39;</span>
+    <span class="k">elif</span> <span class="n">date</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1">#return &#39;{}__{}_&#39;.format(s,date)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">+</span><span class="s1">&#39;__p&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_&#39;</span></div>
+
+        <span class="c1">#return f&#39;{s}__{date}_&#39;</span>
+
+
+<div class="viewcode-block" id="log_stringify_variable">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.log_stringify_variable">[docs]</a>
+<span class="k">def</span> <span class="nf">log_stringify_variable</span><span class="p">(</span><span class="n">arg</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return variable  with a log function of time shifted variable.</span>
+<span class="sd">    </span>
+<span class="sd">    This method encodes varaible name with its lead or lag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">date</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1">#return &#39;{}__&#39;.format(s)</span>
+        <span class="k">return</span> <span class="s1">&#39;log(&#39;</span><span class="o">+</span><span class="n">s</span><span class="o">+</span><span class="s1">&#39;__)&#39;</span>
+        <span class="c1">#return f&#39;{s}__&#39;</span>
+    <span class="k">elif</span> <span class="n">date</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1">#return &#39;{}__m{}_&#39;.format(s,-date)</span>
+        <span class="k">return</span> <span class="s1">&#39;log(&#39;</span><span class="o">+</span><span class="n">s</span><span class="o">+</span><span class="s1">&#39;__m&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="o">-</span><span class="n">date</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_)&#39;</span>
+        <span class="c1">#return f&#39;{s}__m{-date}_&#39;</span>
+    <span class="k">elif</span> <span class="n">date</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1">#return &#39;{}__{}_&#39;.format(s,date)</span>
+        <span class="k">return</span> <span class="s1">&#39;log(&#39;</span><span class="o">+</span><span class="n">s</span><span class="o">+</span><span class="s1">&#39;__p&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_)&#39;</span></div>
+
+        <span class="c1">#return f&#39;{s}__{date}_&#39;</span>
+        
+
+<div class="viewcode-block" id="stringify_parameter">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.stringify_parameter">[docs]</a>
+<span class="k">def</span> <span class="nf">stringify_parameter</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stringify a parameter.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="stringify">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.stringify">[docs]</a>
+<span class="k">def</span> <span class="nf">stringify</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stingify a variable or a parameter.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">stringify_parameter</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">stringify_variable</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unknown canonical form: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="stringify_symbol">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.stringify_symbol">[docs]</a>
+<span class="k">def</span> <span class="nf">stringify_symbol</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stingify symbol.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">stringify_parameter</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">stringify_variable</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unknown canonical form: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="destringify">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.destringify">[docs]</a>
+<span class="k">def</span> <span class="nf">destringify</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find leads and lags of a variable from its name.&quot;&quot;&quot;</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">if</span> <span class="s2">&quot;__&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">rindex</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">):</span>
+            <span class="n">lead_lag</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">ind</span><span class="p">:]</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">s</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+            <span class="n">lead_lag</span> <span class="o">=</span> <span class="n">lead_lag</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;m&quot;</span> <span class="ow">in</span> <span class="n">lead_lag</span><span class="p">:</span>
+                <span class="n">lead_lag</span> <span class="o">=</span> <span class="n">lead_lag</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="k">if</span> <span class="n">lead_lag</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">lead_lag</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;p&quot;</span> <span class="ow">in</span> <span class="n">lead_lag</span><span class="p">:</span>
+                <span class="n">lead_lag</span> <span class="o">=</span> <span class="n">lead_lag</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="k">if</span> <span class="n">lead_lag</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lead_lag</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">lead_lag</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lead_lag</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;_plus_&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">rindex</span><span class="p">(</span><span class="s2">&quot;_plus_&quot;</span><span class="p">)</span>
+            <span class="n">lead_lag</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">6</span><span class="p">:]</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">s</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">lead_lag</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lead_lag</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s2">&quot;_minus_&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">rindex</span><span class="p">(</span><span class="s2">&quot;_minus_&quot;</span><span class="p">)</span>
+            <span class="n">lead_lag</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">7</span><span class="p">:]</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">s</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">lead_lag</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+                <span class="n">i</span> <span class="o">-=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lead_lag</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+       <span class="n">v</span> <span class="o">=</span> <span class="n">s</span>
+            
+    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parse_string">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.parse_string">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_string</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="kn">from</span> <span class="nn">lark.lark</span> <span class="kn">import</span> <span class="n">Lark</span>
+    <span class="kn">from</span> <span class="nn">lark.exceptions</span> <span class="kn">import</span> <span class="n">UnexpectedInput</span><span class="p">,</span> <span class="n">UnexpectedCharacters</span>
+    
+    <span class="n">DIR_PATH</span><span class="p">,</span> <span class="n">this_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+    <span class="n">DATA_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DIR_PATH</span><span class="p">,</span> <span class="s2">&quot;grammar.lark&quot;</span><span class="p">)</span>
+    
+    <span class="n">grammar</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">DATA_PATH</span><span class="p">,</span> <span class="s2">&quot;rt&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">Lark</span><span class="p">(</span>
+        <span class="n">grammar</span><span class="p">,</span>
+        <span class="n">start</span><span class="o">=</span><span class="p">[</span>
+            <span class="s2">&quot;start&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;variable&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;equation_block&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;assignment_block&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;complementarity_block&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="s2">&quot;start&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">ScalarNode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">tag</span> <span class="o">!=</span> <span class="s2">&quot;tag:yaml.org,2002:str&quot;</span><span class="p">:</span>
+            <span class="c1">#     raise Exception(f&quot;Don&#39;t know how to parse node {text}&quot;)</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">start_mark</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">buffer</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">end_mark</span><span class="o">.</span><span class="n">buffer</span>
+                <span class="n">i1</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">start_mark</span><span class="o">.</span><span class="n">pointer</span>
+                <span class="n">i2</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">end_mark</span><span class="o">.</span><span class="n">pointer</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="n">buffer</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">style</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;|&quot;</span><span class="p">):</span>
+                    <span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">text</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="n">UnexpectedInput</span><span class="p">,</span> <span class="n">UnexpectedCharacters</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">ScalarNode</span><span class="p">):</span>
+            <span class="n">sm</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">start_mark</span>
+            <span class="c1"># em = text.end_mark</span>
+            <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">style</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;|&quot;</span><span class="p">):</span>
+                <span class="n">new_column</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">column</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">column</span>
+                <span class="n">new_line</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">line</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">line</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_line</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">line</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">line</span>
+                <span class="n">new_column</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">column</span>
+            <span class="n">newargs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">newargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;line </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;line </span><span class="si">{</span><span class="n">new_line</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">newargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">newargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;col </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">column</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;col </span><span class="si">{</span><span class="n">new_column</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">newargs</span><span class="p">)</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">line</span> <span class="o">=</span> <span class="n">new_line</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">column</span> <span class="o">=</span> <span class="n">new_column</span>
+
+        <span class="k">raise</span> <span class="n">e</span></div>
+
+    
+        
+<div class="viewcode-block" id="normalize">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.normalize">[docs]</a>
+<span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span><span class="o">-&gt;</span><span class="n">Expression</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Replace calls to variables by their time subscripts.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">en</span> <span class="o">=</span> <span class="n">ExpressionNormalizer</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">)</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: &quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">to_source</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">e</span></div>
+
+
+    
+<div class="viewcode-block" id="log_normalize">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.log_normalize">[docs]</a>
+<span class="k">def</span> <span class="nf">log_normalize</span><span class="p">(</span><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">log_variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span><span class="o">-&gt;</span><span class="n">Expression</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Replace calls to variables by their time subscripts.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">en</span> <span class="o">=</span> <span class="n">ExpressionLogNormalizer</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span><span class="n">log_variables</span><span class="o">=</span><span class="n">log_variables</span><span class="p">)</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: &quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">to_source</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">e</span></div>
+
+
+
+<div class="viewcode-block" id="std_tsymbol">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.std_tsymbol">[docs]</a>
+<span class="k">def</span> <span class="nf">std_tsymbol</span><span class="p">(</span><span class="n">tsymbol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return string encoded with leads/lags.&quot;&quot;&quot;</span>
+    <span class="n">s</span><span class="p">,</span> <span class="n">date</span> <span class="o">=</span> <span class="n">tsymbol</span>
+    <span class="k">if</span> <span class="n">date</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;_</span><span class="si">{}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">date</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;_</span><span class="si">{}</span><span class="s1">_m</span><span class="si">{}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="o">-</span><span class="n">date</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">date</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;_</span><span class="si">{}</span><span class="s1">__</span><span class="si">{}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">date</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="StandardizeDatesSimple">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.StandardizeDatesSimple">[docs]</a>
+<span class="k">class</span> <span class="nc">StandardizeDatesSimple</span><span class="p">(</span><span class="n">NodeTransformer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Replaces calls to variables by time subscripts.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">variables</span>
+        <span class="c1"># self.variables = tvariables # ???</span>
+
+<div class="viewcode-block" id="StandardizeDatesSimple.visit_Name">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.StandardizeDatesSimple.visit_Name">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Visitor for Name node.&quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">std_tsymbol</span><span class="p">((</span><span class="n">name</span><span class="p">,</span><span class="mi">0</span><span class="p">)),</span><span class="n">ctx</span><span class="o">=</span><span class="n">Load</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">node</span></div>
+
+
+<div class="viewcode-block" id="StandardizeDatesSimple.visit_Call">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.StandardizeDatesSimple.visit_Call">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Visitor for Call node.&quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">UnaryOp</span><span class="p">):</span>
+                <span class="c1"># we have s(+1)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">UAdd</span><span class="p">)):</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">operand</span>
+                    <span class="n">date</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">n</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">USub</span><span class="p">)):</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">operand</span>
+                    <span class="n">date</span> <span class="o">=</span> <span class="o">-</span><span class="n">args</span><span class="o">.</span><span class="n">n</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unrecognized subscript.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">date</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">n</span>
+            <span class="n">newname</span> <span class="o">=</span> <span class="n">std_tsymbol</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">date</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">newname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Name</span><span class="p">(</span><span class="n">newname</span><span class="p">,</span> <span class="n">Load</span><span class="p">())</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="c1"># , keywords=node.keywords, starargs=node.starargs, kwargs=node.kwargs)</span>
+            <span class="k">return</span> <span class="n">Call</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">],</span> <span class="n">keywords</span><span class="o">=</span><span class="p">[])</span></div>
+</div>
+
+
+
+
+<div class="viewcode-block" id="TimeShiftTransformer">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.TimeShiftTransformer">[docs]</a>
+<span class="k">class</span> <span class="nc">TimeShiftTransformer</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeTransformer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">shift</span>
+
+<div class="viewcode-block" id="TimeShiftTransformer.visit_Name">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.TimeShiftTransformer.visit_Name">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Visitor for Name node.&quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="o">==</span><span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="o">==</span><span class="s1">&#39;S&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">))</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+             <span class="k">return</span> <span class="n">node</span></div>
+
+
+<div class="viewcode-block" id="TimeShiftTransformer.visit_Call">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.TimeShiftTransformer.visit_Call">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Visitor for Call node.&quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">UnaryOp</span><span class="p">):</span>
+                <span class="c1"># we have s(+1)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">UAdd</span><span class="p">)):</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">operand</span>
+                    <span class="n">date</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">n</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">USub</span><span class="p">)):</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">operand</span>
+                    <span class="n">date</span> <span class="o">=</span> <span class="o">-</span><span class="n">args</span><span class="o">.</span><span class="n">n</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unrecognized subscript.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">date</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">n</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">==</span><span class="s1">&#39;S&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">shift</span>
+                <span class="k">if</span> <span class="n">new_date</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">new_date</span><span class="p">))</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="c1"># , keywords=node.keywords,  kwargs=node.kwargs)</span>
+            <span class="k">return</span> <span class="n">Call</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">],</span> <span class="n">keywords</span><span class="o">=</span><span class="p">[])</span></div>
+</div>
+
+
+
+
+
+<div class="viewcode-block" id="timeshift">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.timeshift">[docs]</a>
+<span class="k">def</span> <span class="nf">timeshift</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span> <span class="n">shift</span><span class="p">):</span>
+
+    <span class="n">eexpr</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">TimeShiftTransformer</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">shift</span><span class="p">)</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">eexpr</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Compare">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.Compare">[docs]</a>
+<span class="k">class</span> <span class="nc">Compare</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compares two ast tree instances.</span>
+<span class="sd">    </span>
+<span class="sd">    .. currentmodule: preprocessor</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="Compare.compare">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.Compare.compare">[docs]</a>
+    <span class="k">def</span> <span class="nf">compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compare two nodes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">B</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">id</span><span class="p">],</span> <span class="n">B</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">B</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">B</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Call</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">func</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">args</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">args</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">B</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Num</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="n">B</span><span class="o">.</span><span class="n">n</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">body</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">body</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">body</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">B</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinOp</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">left</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">right</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">UnaryOp</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">operand</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">operand</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Subscript</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">value</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">slice</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">slice</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Index</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Compare</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">left</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">ops</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">ops</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">B</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">comparators</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">comparators</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">comparators</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">comparators</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">B</span><span class="o">.</span><span class="n">comparators</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">In</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">Eq</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">LtE</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Not implemented&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="compare">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.compare">[docs]</a>
+<span class="k">def</span> <span class="nf">compare</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare two nodes.&quot;&quot;&quot;</span>
+    <span class="n">comp</span> <span class="o">=</span> <span class="n">Compare</span><span class="p">()</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">val</span></div>
+
+
+<div class="viewcode-block" id="match">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.match">[docs]</a>
+<span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">comp</span> <span class="o">=</span> <span class="n">Compare</span><span class="p">()</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">d</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">val</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+
+
+<div class="viewcode-block" id="ListNames">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ListNames">[docs]</a>
+<span class="k">class</span> <span class="nc">ListNames</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+<div class="viewcode-block" id="ListNames.visit_Name">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ListNames.visit_Name">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="get_names">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.get_names">[docs]</a>
+<span class="k">def</span> <span class="nf">get_names</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="n">ln</span> <span class="o">=</span> <span class="n">ListNames</span><span class="p">()</span>
+    <span class="n">ln</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ln</span><span class="o">.</span><span class="n">found</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="eval_scalar">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.eval_scalar">[docs]</a>
+<span class="k">def</span> <span class="nf">eval_scalar</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Num</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">tree</span><span class="o">.</span><span class="n">n</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">UnaryOp</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">USub</span><span class="p">):</span>
+                <span class="k">return</span> <span class="o">-</span><span class="n">tree</span><span class="o">.</span><span class="n">operand</span><span class="o">.</span><span class="n">n</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">UAdd</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">tree</span><span class="o">.</span><span class="n">operand</span><span class="o">.</span><span class="n">n</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Don&#39;t know how to do that.&quot;</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Don&#39;t know how to do that.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ExpressionChecker">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ExpressionChecker">[docs]</a>
+<span class="k">class</span> <span class="nc">ExpressionChecker</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeVisitor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks AST expressions.</span>
+<span class="sd">    </span>
+<span class="sd">    .. currentmodule: preprocessor</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec_variables</span><span class="p">,</span> <span class="n">known_functions</span><span class="p">,</span> <span class="n">known_constants</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_variables</span> <span class="o">=</span> <span class="n">spec_variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">known_functions</span> <span class="o">=</span> <span class="n">known_functions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">known_constants</span> <span class="o">=</span> <span class="n">known_constants</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">functions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problems</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="ExpressionChecker.visit_Call">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ExpressionChecker.visit_Call">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">call</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">call</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">colno</span> <span class="o">=</span> <span class="n">call</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">col_offset</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_variables</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">eval_scalar</span><span class="p">(</span><span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">allowed_timing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">allowed_timing</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">allowed_timing</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">call</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">col_offset</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">colno</span><span class="p">,</span><span class="s1">&#39;incorrect_timing&#39;</span><span class="p">,</span><span class="n">allowed_timing</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="n">colno</span><span class="p">,</span><span class="s1">&#39;timing_error&#39;</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">known_functions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">colno</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">colno</span><span class="p">,</span><span class="s1">&#39;unknown_function&#39;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="ExpressionChecker.visit_Name">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ExpressionChecker.visit_Name">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="c1"># colno = name.colno</span>
+        <span class="n">colno</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">col_offset</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_variables</span><span class="p">:</span>
+            <span class="n">allowed_timing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">allowed_timing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">allowed_timing</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">colno</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">colno</span><span class="p">,</span><span class="s1">&#39;incorrect_timing&#39;</span><span class="p">,</span><span class="n">allowed_timing</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">known_constants</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">colno</span><span class="p">,</span><span class="s1">&#39;unknown_variable&#39;</span><span class="p">])</span></div>
+</div>
+
+
+<div class="viewcode-block" id="check_expression">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.check_expression">[docs]</a>
+<span class="k">def</span> <span class="nf">check_expression</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">spec_variables</span><span class="p">,</span> <span class="n">known_functions</span><span class="o">=</span><span class="p">[]):</span>
+
+    <span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.language</span> <span class="kn">import</span> <span class="n">functions</span><span class="p">,</span> <span class="n">constants</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">functions</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="n">known_functions</span>
+
+    <span class="n">ch</span> <span class="o">=</span> <span class="n">ExpressionChecker</span><span class="p">(</span><span class="n">spec_variables</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">constants</span><span class="p">)</span>
+    <span class="n">ch</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">functions</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">functions</span><span class="p">,</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">variables</span><span class="p">,</span>
+        <span class="n">problems</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">problems</span>
+    <span class="p">)</span></div>
+
+    
+
+<div class="viewcode-block" id="ExpressionNormalizer">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ExpressionNormalizer">[docs]</a>
+<span class="k">class</span> <span class="nc">ExpressionNormalizer</span><span class="p">(</span><span class="n">NodeTransformer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Replaces calls to variables by time subscripts.</span>
+<span class="sd">    </span>
+<span class="sd">    .. currentmodule: preprocessor.symbolic</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">functions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">variables</span> <span class="k">if</span> <span class="n">variables</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">functions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">functions</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">functions_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">functions</span> <span class="o">=</span> <span class="n">functions</span>
+
+<div class="viewcode-block" id="ExpressionNormalizer.visit_Name">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ExpressionNormalizer.visit_Name">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span>
+        <span class="c1"># if name self.functions:</span>
+        <span class="c1">#     return node</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">stringify_variable</span><span class="p">((</span><span class="n">name</span><span class="p">,</span><span class="mi">0</span><span class="p">)),</span> <span class="n">ctx</span><span class="o">=</span><span class="n">Load</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">stringify_parameter</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">ctx</span><span class="o">=</span><span class="n">Load</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="ExpressionNormalizer.visit_Call">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ExpressionNormalizer.visit_Call">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">date</span> <span class="o">=</span> <span class="n">eval_scalar</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unrecognized subscript: name =</span><span class="si">{}</span><span class="s2"> args=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">args</span><span class="p">))</span>
+            <span class="n">newname</span> <span class="o">=</span> <span class="n">stringify_variable</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">date</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">newname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Name</span><span class="p">(</span><span class="n">newname</span><span class="p">,</span> <span class="n">Load</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Call</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">],</span> <span class="n">keywords</span><span class="o">=</span><span class="p">[])</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ExpressionLogNormalizer">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ExpressionLogNormalizer">[docs]</a>
+<span class="k">class</span> <span class="nc">ExpressionLogNormalizer</span><span class="p">(</span><span class="n">NodeTransformer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Replaces calls to variables by log function of their time subscripts.</span>
+<span class="sd">    </span>
+<span class="sd">    .. currentmodule: preprocessor.symbolic</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">[],</span> <span class="n">log_variables</span><span class="o">=</span><span class="p">[],</span> <span class="n">functions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_variables</span> <span class="o">=</span> <span class="n">log_variables</span>
+        <span class="k">if</span> <span class="n">functions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">functions</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">functions_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">functions</span> <span class="o">=</span> <span class="n">functions</span>
+
+<div class="viewcode-block" id="ExpressionLogNormalizer.visit_Name">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ExpressionLogNormalizer.visit_Name">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span>
+        <span class="c1"># if name self.functions:</span>
+        <span class="c1">#     return node</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">log_stringify_variable</span><span class="p">((</span><span class="n">name</span><span class="p">,</span><span class="mi">0</span><span class="p">)),</span> <span class="n">ctx</span><span class="o">=</span><span class="n">Load</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">stringify_variable</span><span class="p">((</span><span class="n">name</span><span class="p">,</span><span class="mi">0</span><span class="p">)),</span> <span class="n">ctx</span><span class="o">=</span><span class="n">Load</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">stringify_parameter</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">ctx</span><span class="o">=</span><span class="n">Load</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="ExpressionLogNormalizer.visit_Call">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ExpressionLogNormalizer.visit_Call">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">date</span> <span class="o">=</span> <span class="n">eval_scalar</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unrecognized subscript: name =</span><span class="si">{}</span><span class="s2"> args=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">args</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_variables</span><span class="p">:</span>
+                <span class="n">newname</span> <span class="o">=</span> <span class="n">log_stringify_variable</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">date</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">newname</span> <span class="o">=</span> <span class="n">stringify_variable</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">date</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">newname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Name</span><span class="p">(</span><span class="n">newname</span><span class="p">,</span> <span class="n">Load</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Call</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">],</span> <span class="n">keywords</span><span class="o">=</span><span class="p">[])</span></div>
+</div>
+
+        
+        
+<div class="viewcode-block" id="ListSymbols">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ListSymbols">[docs]</a>
+<span class="k">class</span> <span class="nc">ListSymbols</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeVisitor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a lists of symbols by visiting each Call object in ast expression tree.</span>
+<span class="sd">    </span>
+<span class="sd">    .. currentmodule: preprocessor.symbolic</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">known_functions</span><span class="o">=</span><span class="p">[],</span> <span class="n">known_variables</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">known_functions</span> <span class="o">=</span> <span class="n">known_functions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">known_variables</span> <span class="o">=</span> <span class="n">known_variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">functions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constants</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problems</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="ListSymbols.visit_Call">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ListSymbols.visit_Call">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">call</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">call</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">colno</span> <span class="o">=</span> <span class="n">call</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">col_offset</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">known_functions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">colno</span><span class="p">))</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">eval_scalar</span><span class="p">(</span><span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">append</span><span class="p">(((</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">colno</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">known_variables</span> <span class="o">+</span> <span class="p">[</span><span class="n">vv</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">colno</span><span class="p">,</span> <span class="s1">&#39;incorrect subscript&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">colno</span><span class="p">,</span> <span class="s1">&#39;unknown_function&#39;</span><span class="p">])</span></div>
+
+                <span class="c1"># [self.visit(e) for e in call.args]</span>
+
+<div class="viewcode-block" id="ListSymbols.visit_Name">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.symbolic.ListSymbols.visit_Name">[docs]</a>
+    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="c1"># colno = name.colno</span>
+        <span class="n">colno</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">col_offset</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">known_variables</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">append</span><span class="p">(((</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">colno</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">known_functions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span> <span class="n">colno</span><span class="p">,</span> <span class="s1">&#39;function_not_called&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">colno</span><span class="p">))</span></div>
+</div>
+
+            
+<span class="c1"># def get_variables(variables, expr):</span>
+<span class="c1">#     ln = ListVariables(variables)</span>
+<span class="c1">#     ln.visit(expr)</span>
+<span class="c1">#     return ln.found</span>
+
+<span class="c1"># def get_functions(variables, expr):</span>
+<span class="c1">#     ln = ListVariables(variables)</span>
+<span class="c1">#     ln.visit(expr)</span>
+<span class="c1">#     return ln.functions</span>
+
+
+<span class="c1"># class ExpressionChecker(ast.NodeVisitor):</span>
+<span class="c1">#</span>
+<span class="c1">#     def __init__(self, variables, functions):</span>
+<span class="c1">#</span>
+<span class="c1">#         self.allowed_variables = variables</span>
+<span class="c1">#         self.functions = functions</span>
+<span class="c1">#         self.found = []</span>
+<span class="c1">#         self.problems = []</span>
+<span class="c1">#</span>
+<span class="c1">#     def visit_Call(self, call):</span>
+<span class="c1">#         name = call.func.id</span>
+<span class="c1">#         if name in self.variables:</span>
+<span class="c1">#             assert(len(call.args)==1)</span>
+<span class="c1">#             print(call.args[0])</span>
+<span class="c1">#             n = eval_scalar(call.args[0])</span>
+<span class="c1">#             self.found.append((name, n))</span>
+<span class="c1">#         elif name in self.functions:</span>
+<span class="c1">#             self.functions.append(name)</span>
+<span class="c1">#             for e in call.args:</span>
+<span class="c1">#                 self.visit(e)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             for e in call.args:</span>
+<span class="c1">#                 self.visit(e)</span>
+<span class="c1">#</span>
+<span class="c1">#     def visit_Name(self, name):</span>
+<span class="c1">#         name = name.id</span>
+<span class="c1">#         if name in self.variables:</span>
+<span class="c1">#             self.found.append((name,0))</span>
+<span class="c1">#</span>
+<span class="c1"># def check_expression(expr, variables, functions):</span>
+<span class="c1">#     ec = ExpressionChecker(variables, functions)</span>
+<span class="c1">#     pbs = ec.visit(ec)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main program</span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="n">var</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;p_pdot1&#39;</span><span class="p">,</span> <span class="s1">&#39;p_pdot2&#39;</span><span class="p">,</span> <span class="s1">&#39;p_pdot3&#39;</span><span class="p">,</span> <span class="s1">&#39;p_rs1&#39;</span><span class="p">,</span> <span class="s1">&#39;p_y1&#39;</span><span class="p">,</span> <span class="s1">&#39;p_y2&#39;</span><span class="p">,</span> <span class="s1">&#39;p_y3&#39;</span><span class="p">,</span> <span class="s1">&#39;p_pdot1__m1_&#39;</span><span class="p">]</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">var</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">stringify</span><span class="p">((</span><span class="n">s</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">var</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">sd</span> <span class="o">=</span> <span class="n">destringify</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">var</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">sd</span><span class="p">)</span>
+    
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

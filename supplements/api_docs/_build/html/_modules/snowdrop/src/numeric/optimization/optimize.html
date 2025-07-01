@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.optimization.optimize &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.optimization.optimize</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generic optimization module.</span>
+
+<span class="sd">@author: A.Goumilevski</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">filterwarnings</span>
+<span class="c1">#from numba import njit</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">Bounds</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">LinearConstraint</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">NonlinearConstraint</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.model.util</span> <span class="kn">import</span> <span class="n">importModel</span>
+<span class="c1">#from snowdrop.src.model.util import loadLibrary</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.model.util</span> <span class="kn">import</span> <span class="n">getLimits</span><span class="p">,</span> <span class="n">getConstraints</span>
+<span class="c1">#from snowdrop.src.model.util import print_path_solution_status</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.graphs.util</span> <span class="kn">import</span> <span class="n">bar_plot</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.function</span> <span class="kn">import</span> <span class="n">get_function_and_jacobian</span> <span class="k">as</span> <span class="n">fun</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.utils.prettyTable</span> <span class="kn">import</span> <span class="n">PrettyTable</span>
+
+<span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">it</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="Data">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.Data">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Data</span><span class="p">:</span>
+    <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span><span class="p">;</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">;</span> <span class="n">fun</span><span class="p">:</span> <span class="nb">float</span><span class="p">;</span> <span class="n">nfev</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
+
+
+<span class="c1">#@njit</span>
+<div class="viewcode-block" id="solver">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.solver">[docs]</a>
+<span class="k">def</span> <span class="nf">solver</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find solution of linear constraint optimization problem.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">            :param model: Model object.</span>
+<span class="sd">            :type model: Model.</span>
+<span class="sd">            :returns: solution of optimization problem.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+    <span class="n">MAXITER</span> <span class="o">=</span> <span class="mi">1000</span>
+    
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbolic</span><span class="o">.</span><span class="n">SOLVER</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbolic</span><span class="o">.</span><span class="n">METHOD</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;minimize&quot;</span><span class="p">:</span>
+            <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span> 
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;maximize&quot;</span><span class="p">:</span>
+            <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Please choose either Maximize or Minimize method.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> is not implemented.&quot;</span><span class="p">)</span>
+
+    <span class="n">constraints</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbolic</span><span class="o">.</span><span class="n">constraints</span>
+    <span class="n">obj_func</span>    <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbolic</span><span class="o">.</span><span class="n">objective_function</span>
+    <span class="n">var_names</span>   <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="n">var_values</span>  <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="c1">#var        = dict(zip(var_names,var_values))</span>
+    <span class="n">par_names</span>   <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+    <span class="n">par_values</span>  <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+    <span class="n">cal</span>         <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">par_names</span><span class="p">,</span><span class="n">par_values</span><span class="p">))</span>
+    <span class="n">n</span>           <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">var_names</span><span class="p">)</span>
+    <span class="c1">#n_par      = len(par_names)</span>
+    <span class="n">eqs_labels</span>  <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">eqLabels</span>
+    
+    <span class="c1"># Assign missing parameters to zero.</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">cal</span><span class="p">:</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="n">cal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+  
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">var_values</span><span class="p">)</span>
+
+    <span class="c1">### Objective function</span>
+    <span class="k">def</span> <span class="nf">mcp_fobj</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">it</span>
+        <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sign</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">f</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="c1">### Objective function</span>
+    <span class="k">def</span> <span class="nf">fobj</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">it</span>
+        <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="n">cal</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">var_names</span><span class="p">):</span>
+            <span class="n">loc</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">sign</span><span class="o">*</span><span class="nb">eval</span><span class="p">(</span><span class="n">obj_func</span><span class="p">,{},</span><span class="n">loc</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">f</span>
+    
+    <span class="c1"># Function and Jacobian</span>
+    <span class="k">def</span> <span class="nf">func_jac</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">it</span>
+        <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">f</span> <span class="p">,</span><span class="n">jacob</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">)),</span><span class="n">params</span><span class="o">=</span><span class="n">par_values</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="n">jacob</span><span class="p">[:,</span><span class="n">n</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">Il</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">Iu</span><span class="p">):</span>
+            <span class="n">a1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">else</span> <span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+            <span class="n">b1</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">map_func</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span><span class="n">b1</span><span class="p">)</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">else</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">map_func_der</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span><span class="n">b1</span><span class="p">)</span><span class="o">*</span><span class="n">I</span> <span class="o">+</span> <span class="n">map_func_der</span><span class="p">(</span><span class="n">b1</span><span class="p">,</span><span class="n">a1</span><span class="p">)</span><span class="o">*</span><span class="n">jac</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">map_func_der</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">I</span> <span class="o">-</span> <span class="n">map_func_der</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">z</span>
+        <span class="k">elif</span> <span class="nb">bool</span><span class="p">(</span><span class="n">Il</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">else</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">f</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">map_func_der</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">I</span> <span class="o">+</span> <span class="n">map_func_der</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">jac</span>
+        <span class="k">elif</span> <span class="nb">bool</span><span class="p">(</span><span class="n">Iu</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">else</span> <span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">map_func_der</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">I</span> <span class="o">+</span> <span class="n">map_func_der</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">jac</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="o">-</span><span class="n">jac</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">,</span><span class="n">y</span>
+    
+    <span class="c1"># Function</span>
+    <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">)),</span><span class="n">params</span><span class="o">=</span><span class="n">par_values</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">f</span>
+    
+    <span class="c1"># Mapping function</span>
+    <span class="k">def</span> <span class="nf">map_func</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="p">)</span><span class="o">-</span><span class="n">a</span><span class="o">-</span><span class="n">b</span>
+     
+    <span class="c1"># Mapping function derivatives</span>
+    <span class="k">def</span> <span class="nf">map_func_der</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+         
+    <span class="c1"># MCP Squared Function</span>
+    <span class="k">def</span> <span class="nf">path_scalar_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">path_func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">f2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">f2</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mf">1.e10</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f2</span>
+        
+    <span class="c1"># MCP Function</span>
+    <span class="k">def</span> <span class="nf">path_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">Il</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">Iu</span><span class="p">):</span>
+            <span class="n">a1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">else</span> <span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+            <span class="n">b1</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">map_func</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span><span class="n">b1</span><span class="p">)</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">else</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">map_func</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">bool</span><span class="p">(</span><span class="n">Il</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">else</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">f</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">map_func</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">bool</span><span class="p">(</span><span class="n">Iu</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">else</span> <span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="o">-</span><span class="n">map_func</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
+        <span class="k">return</span> <span class="n">y</span>
+        
+    <span class="c1"># MCP Jacobian</span>
+    <span class="k">def</span> <span class="nf">path_jacob</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">f</span><span class="p">,</span><span class="n">jac</span> <span class="o">=</span> <span class="n">func_jac</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">jac</span>
+    
+    <span class="c1"># Jacobian matrix</span>
+    <span class="k">def</span> <span class="nf">jacob</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">f</span><span class="p">,</span><span class="n">jac</span> <span class="o">=</span> <span class="n">FuncJacob</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">jac</span>
+            
+    <span class="c1"># Jacobian matrix</span>
+    <span class="k">def</span> <span class="nf">FuncJacob</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">f</span><span class="p">,</span><span class="n">jac</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">)),</span><span class="n">params</span><span class="o">=</span><span class="n">par_values</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">,</span><span class="n">jac</span><span class="p">[:,</span><span class="n">n</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">]</span>
+    
+    <span class="c1"># Hessian matrix</span>
+    <span class="k">def</span> <span class="nf">hess</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">hessian</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">)),</span><span class="n">params</span><span class="o">=</span><span class="n">par_values</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1">#print(hessian)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)):</span>
+            <span class="n">y</span> <span class="o">+=</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">hessian</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">n</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">y</span>
+    
+
+    <span class="c1"># Get variables constraints</span>
+    <span class="n">Il</span><span class="p">,</span><span class="n">Iu</span><span class="p">,</span><span class="n">lower</span><span class="p">,</span><span class="n">upper</span> <span class="o">=</span> <span class="n">getLimits</span><span class="p">(</span><span class="n">var_names</span><span class="p">,</span><span class="n">constraints</span><span class="p">,</span><span class="n">cal</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="nb">max</span><span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">x0</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        
+    <span class="c1"># Get bounds</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">Bounds</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span><span class="n">upper</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;minimize&quot;</span> <span class="ow">or</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;maximize&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">isLinear</span><span class="p">:</span>
+            <span class="c1">#Get jacobian.  It is constant for linear problems.</span>
+            <span class="n">jacobian</span> <span class="o">=</span> <span class="n">jacob</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
+            <span class="c1"># Build linear constraints matrix</span>
+            <span class="n">A</span><span class="p">,</span><span class="n">lb</span><span class="p">,</span><span class="n">ub</span> <span class="o">=</span> <span class="n">getConstraints</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">constraints</span><span class="p">,</span><span class="n">cal</span><span class="p">,</span><span class="n">eqs_labels</span><span class="p">,</span><span class="n">jacobian</span><span class="p">)</span>
+            <span class="n">constraint</span> <span class="o">=</span> <span class="n">LinearConstraint</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">lb</span><span class="p">,</span><span class="n">ub</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">]</span><span class="o">*</span><span class="n">n</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+                    <span class="n">ind</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">Lower</span> <span class="o">=</span> <span class="n">lower</span><span class="p">[</span><span class="n">ind</span><span class="p">];</span> <span class="n">Upper</span> <span class="o">=</span> <span class="n">upper</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">constraint</span> <span class="o">=</span> <span class="n">NonlinearConstraint</span><span class="p">(</span><span class="n">func</span><span class="p">,</span><span class="n">Lower</span><span class="p">,</span><span class="n">Upper</span><span class="p">,</span><span class="n">jac</span><span class="o">=</span><span class="n">jacob</span><span class="p">,</span><span class="n">hess</span><span class="o">=</span><span class="n">hess</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">constraint</span> <span class="o">=</span> <span class="n">NonlinearConstraint</span><span class="p">(</span><span class="n">func</span><span class="p">,</span><span class="n">Lower</span><span class="p">,</span><span class="n">Upper</span><span class="p">,</span><span class="n">jac</span><span class="o">=</span><span class="n">jacob</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">constraint</span> <span class="o">=</span> <span class="n">NonlinearConstraint</span><span class="p">(</span><span class="n">func</span><span class="p">,</span><span class="n">Lower</span><span class="p">,</span><span class="n">Upper</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">solver</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;trust-constr&#39;</span><span class="p">,</span><span class="s1">&#39;SLSQP&#39;</span><span class="p">]:</span>            
+            <span class="n">results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">fobj</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span><span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span><span class="n">constraints</span><span class="o">=</span><span class="n">constraint</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1.e-10</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="n">MAXITER</span><span class="p">})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Only &#39;trust-constr&#39; and &#39;SLSQP&#39; methods are implemented...&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;&#39;trust-constr&#39; method.&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">fobj</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;trust-constr&quot;</span><span class="p">,</span><span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span><span class="n">constraints</span><span class="o">=</span><span class="n">constraint</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1.e-10</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="n">MAXITER</span><span class="p">})</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Constrained minimization failed.&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;Running un-constrained minimization...&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">fobj</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;Powell&#39;</span><span class="p">,</span><span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="mi">1000</span><span class="p">})</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">solver</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;trust-constr&#39;</span><span class="p">,</span><span class="s1">&#39;SLSQP&#39;</span><span class="p">]:</span>            
+            <span class="n">results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">fobj</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span><span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span><span class="n">constraints</span><span class="o">=</span><span class="n">constraint</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1.e-10</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="n">MAXITER</span><span class="p">})</span>
+            
+        <span class="k">elif</span> <span class="n">solver</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;MCP&#39;</span><span class="p">,</span><span class="s1">&#39;CONSTRAINED_OPTIMIZATION&#39;</span><span class="p">,</span><span class="s1">&#39;PATH&#39;</span><span class="p">,</span><span class="s1">&#39;ROOT&#39;</span><span class="p">]:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">solver</span><span class="si">}</span><span class="s2"> solver&quot;</span><span class="p">,</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+            <span class="c1"># if solver == &#39;PATH&#39;:</span>
+            <span class="c1">#     x = x0</span>
+            <span class="c1">#     f = np.zeros(n) </span>
+            <span class="c1">#     os.environ[&#39;PATH_LICENSE_STRING&#39;] = &#39;2830898829&amp;Courtesy&amp;&amp;&amp;USR&amp;45321&amp;5_1_2021&amp;1000&amp;PATH&amp;GEN&amp;31_12_2025&amp;0_0_0&amp;6000&amp;0_0&#39;</span>
+            <span class="c1">#     # Load path library</span>
+            <span class="c1">#     libc = loadLibrary()</span>
+            <span class="c1">#     # Call path solver C++ function</span>
+            <span class="c1">#     status = libc.path_solver(n,n_par,x,par_values,f,lower,upper)</span>
+            <span class="c1">#     print_path_solution_status(status)</span>
+            <span class="c1">#     results = Data(status,x,np.sqrt(np.sum(f*f)),&quot;Success&quot;)</span>
+                
+            <span class="k">if</span> <span class="n">solver</span> <span class="o">==</span> <span class="s1">&#39;CONSTRAINED_OPTIMIZATION&#39;</span><span class="p">:</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">path_scalar_func</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;trust-constr&quot;</span><span class="p">,</span><span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="n">MAXITER</span><span class="p">})</span>
+            
+            <span class="k">elif</span> <span class="n">solver</span> <span class="o">==</span> <span class="s1">&#39;MCP&#39;</span><span class="p">:</span> 
+                <span class="kn">from</span> <span class="nn">compecon</span> <span class="kn">import</span> <span class="n">MCP</span> 
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">F</span> <span class="o">=</span> <span class="n">MCP</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">func_jac</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="n">lower</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">upper</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span><span class="n">maxit</span><span class="o">=</span><span class="mi">1500</span><span class="p">)</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">zero</span><span class="p">(</span><span class="n">transform</span><span class="o">=</span><span class="s1">&#39;minmax&#39;</span><span class="p">)</span>
+                    <span class="n">f</span> <span class="o">=</span> <span class="n">func_jac</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">results</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span><span class="n">fun</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="n">f</span><span class="p">)),</span><span class="n">nfev</span><span class="o">=</span><span class="n">it</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+                    <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Compecon MCP solver failed.&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+                    <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;Running constrained minimization solver...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+                    <span class="n">results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">path_scalar_func</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;trust-constr&quot;</span><span class="p">,</span><span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="n">MAXITER</span><span class="p">})</span>
+
+            <span class="k">elif</span> <span class="n">solver</span> <span class="o">==</span> <span class="s1">&#39;ROOT&#39;</span><span class="p">:</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="n">root</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">path_func</span><span class="p">,</span><span class="n">jac</span><span class="o">=</span><span class="n">path_jacob</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;lm&quot;</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="n">MAXITER</span><span class="p">})</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">sys</span>
+                <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">solver</span><span class="si">}</span><span class="s2"> is not implemented. Exitting...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+                
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Only &#39;MCP&#39;, &#39;CONSTRAINED_OPTIMIZATION&#39;, &#39;ROOT&#39; and &#39;PATH&#39; solvers are implemented...&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;&#39;CONSTRAINED_OPTIMIZATION&#39; solver.&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">path_scalar_func</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;trust-constr&quot;</span><span class="p">,</span><span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="n">MAXITER</span><span class="p">})</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Constrained solver failed.&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;Running un-constrained solver...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">path_scalar_func</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;trust-constr&quot;</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1.e-10</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="n">MAXITER</span><span class="p">})</span>
+         
+    <span class="k">return</span> <span class="n">results</span></div>
+
+            
+
+<div class="viewcode-block" id="run">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.optimization.html#snowdrop.src.numeric.optimization.optimize.run">[docs]</a>
+<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">Output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">plot_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">model_info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Call main driver program.</span>
+<span class="sd">    </span>
+<span class="sd">    Runs model simulations.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param fpath: Path to model file.</span>
+<span class="sd">        :type fpath: str.      </span>
+<span class="sd">        :param fout: Path to output excel file.</span>
+<span class="sd">        :type fout: str.</span>
+<span class="sd">        :param Output: If True save results in excel file.</span>
+<span class="sd">        :type Output: bool.</span>
+<span class="sd">        :param plot_variables: Plot variables.</span>
+<span class="sd">        :type plot_variables: list.</span>
+<span class="sd">        :param model_info: If True creates a pdf/latex model file.</span>
+<span class="sd">        :type model_info: bool.</span>
+<span class="sd">        :returns: Optimization results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">it</span>
+   
+    <span class="n">model</span> <span class="o">=</span> <span class="n">importModel</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">Output</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    
+    <span class="n">var_names</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="n">var_values</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="n">par_names</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+    <span class="n">par_values</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+    <span class="c1"># par = dict(zip(par_names,par_values))</span>
+    <span class="c1"># co2_parameters = [x for x in par_names if x.startswith(&quot;PCARB&quot;)]</span>
+    <span class="n">shock_names</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">shock_values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">1</span>
+    
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">symbolic</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">==</span> <span class="s2">&quot;PATH&quot;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.utils.util</span> <span class="kn">import</span> <span class="n">create_config_file</span>
+        <span class="n">create_config_file</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">var_names</span><span class="p">,</span><span class="n">var_values</span><span class="p">,</span><span class="n">shock_names</span><span class="p">,</span><span class="n">shock_values</span><span class="p">,</span><span class="n">par_names</span><span class="p">,</span><span class="n">par_values</span><span class="p">,</span><span class="n">model</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
+    
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+    
+    <span class="c1"># Run baseline scenario</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">y</span>       <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">x</span>
+    <span class="n">n</span>       <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">var</span>     <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">var_names</span><span class="p">,</span><span class="n">y</span><span class="p">))</span>
+    <span class="n">func</span>    <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">fun</span>
+    <span class="n">nfev</span>    <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">nfev</span>
+    <span class="n">status</span>  <span class="o">=</span> <span class="s2">&quot;success&quot;</span> <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">success</span> <span class="k">else</span> <span class="s2">&quot;failure&quot;</span>
+    
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span>
+    
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">symbolic</span><span class="o">.</span><span class="n">objective_function</span><span class="p">):</span>
+        <span class="c1">#cprint(f&quot;\nObjective function:\n {model.symbolic.objective_function}&quot;,&quot;blue&quot;)</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Objective function value: </span><span class="si">{:.2e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="p">),</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+    
+    <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solution status: </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+    <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of function calls: </span><span class="si">{</span><span class="n">nfev</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+    <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;Elapsed time: </span><span class="si">{:.2f}</span><span class="s2"> (seconds) </span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed</span><span class="p">),</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Plot bar graphs</span>
+    <span class="c1"># if bool(co2_parameters):</span>
+        <span class="c1"># # Set CO2 price to zero</span>
+        <span class="c1"># cal = model.calibration</span>
+        <span class="c1"># for p in co2_parameters:</span>
+        <span class="c1">#     cal[p] = 0</span>
+         
+        <span class="c1"># model.calibration = cal   </span>
+        <span class="c1"># # Run scenrio </span>
+        <span class="c1"># results = solver(model=model)</span>
+        <span class="c1"># var2 = dict(zip(var_names,model.calibration[&#39;parameters&#39;]))</span>
+        <span class="c1"># arr  = [np.array([var[x],var2[x]]) for x in var_names]</span>
+        <span class="c1"># var2 = dict(zip(var_names,arr))plot(var=var,var_names=var_names,par=par,par_names=par_names,fig_sizes=(8,6),title=&quot;Equivalent Variation&quot;)</span>
+        <span class="c1"># plotBar(var=var2,var_names=var_names,par=par,par_names=par_names,yLabel=&quot;percent&quot;,fig_sizes=(8,6),title=&quot;Relative Impact on Welfare&quot;,relative=True)</span>
+        <span class="c1"># plot(var=var,var_names=var_names,par=par,par_names=par_names,fig_sizes=(8,6),title=&quot;Equivalent Variation&quot;)</span>
+
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">plot_variables</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bar_plot</span><span class="p">(</span><span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span><span class="n">var_names</span><span class="o">=</span><span class="n">plot_variables</span><span class="p">,</span><span class="n">plot_variables</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">symbols</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;variables_labels&quot;</span><span class="p">],</span><span class="n">sizes</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span><span class="n">fig_sizes</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Variables&quot;</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">model_info</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.misc.text2latex</span> <span class="kn">import</span> <span class="n">saveDocument</span>
+        <span class="n">saveDocument</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">Output</span><span class="p">:</span>
+        <span class="c1"># Save results in excel file</span>
+        <span class="n">fdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fdir</span><span class="p">,</span><span class="s1">&#39;../../../supplements/data/OPT/&#39;</span><span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">var_names</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y</span><span class="p">)</span>  <span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            
+        <span class="n">pTable</span> <span class="o">=</span> <span class="n">PrettyTable</span><span class="p">([</span><span class="s1">&#39;Var Name&#39;</span><span class="p">,</span><span class="s1">&#39;Var Value&#39;</span><span class="p">,</span><span class="s1">&#39;Var Name &#39;</span><span class="p">,</span><span class="s1">&#39;Var Value &#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">var_names</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">]]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="n">var_names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>
+            <span class="n">pTable</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="n">pTable</span><span class="o">.</span><span class="n">float_format</span> <span class="o">=</span> <span class="s2">&quot;4.1&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">pTable</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Constrained solver failed: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+              
+    <span class="k">return</span></div>
+
+ 
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
