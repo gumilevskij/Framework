@@ -1,0 +1,127 @@
+   #<---- Country specific
+   calfa  :   0.17 
+   csadjcost  :   3.96   #  6.0144 
+   chabb  :   0.75   #  0.6361    
+   cprobw  :   0.55   #  0.8087 
+   csigl :   4.35   #  1.9423 
+   ceta :     5 
+   cprobp :   0.62   #  0.6 
+   cindw :   0.18   #  0.3243 
+   cindp :   0.49   #  0.47 
+   czcap :   0.56   #  0.2696 
+   crpi :   1.89   #  1.488 
+   crr :   0.86   #  0.8762 
+   cry :   0.16   #  0.0593 
+   crdy :   0.25   #  0.2347 
+   crhoa :   0.98   #  0.999 
+   crhob :   0.42   #  0.5799 
+   crhog :   0.97   #  0.9957 
+   crhoqs :   0.75   #  0.7165 
+   # Country specific ---->
+   # fixed parameters
+   ctou :  0.025 
+   clandaw :  1.5 
+   cg :  0.18 
+   curvp :  10 
+   curvw :  10 
+   # estimated parameters initialisation
+   cgamma_init :  1.004 
+   cgamma :  cgamma_init  
+   cbeta :  0.9995 
+   csigma :  1.0 
+   cpie_init :  1.005 
+   cfc :  1.5 
+   cgy :  0.51 
+   crhoas :  1  
+   crhoms :  0 
+   crhopinf :  0 
+   crhow :  0 
+   cmap  :   0 
+   cmaw   :   0 
+   crhols :    0.0 
+   crhotheta  :   0.999 
+   # derived from steady state
+   clandap :  cfc 
+   cbetabar :  cbeta*cgamma_init** (-csigma) 
+   cr_init :  cpie_init/(cbeta*cgamma_init** (-csigma)) 
+   crk :  (cbeta** (-1))*(cgamma_init** csigma) - (1-ctou) 
+   cw  :   (calfa** calfa*(1-calfa)** (1-calfa)/(clandap*crk** calfa))** (1/(1-calfa)) 
+   cikbar :  (1-(1-ctou)/cgamma_init) 
+   cik :  (1-(1-ctou)/cgamma_init)*cgamma_init 
+   clk :  ((1-calfa)/calfa)*(crk/cw) 
+   cky :  cfc*(clk)** (calfa-1) 
+   ciy :  cik*cky 
+   ccy :  1-cg-cik*cky 
+   crkky :  crk*cky 
+   cwhlc :  (1/clandaw)*(1-calfa)/calfa*crk*cky/ccy 
+   cwly :  1-crk*cky 
+   cB :  1/((1-chabb/cgamma_init)*(1-cwhlc/(1+csigl))) 
+   BIGphi  :   (clandaw*(1+ceta)-1)/(clandaw*(1+ceta)) 
+   ctrend :  (cgamma_init-1)*100 
+   conster :  (cr_init-1)*100 
+   constepinf :  (cpie_init-1)*100 
+   constelab :  0 
+   cchi  :   0.1 
+   #consteu : (1-(1/clandaw)** (1/csigl))*100 
+   consteu  :   (((1+ceta)*clandaw-1)/ceta)** (1/csigl)-1   
+   chntheta  :   1 
+   cltheta  :   0 
+   cla  :   0 
+   # Acopied from the estimation block, now needed here
+   constebeta  :   0.13 
+   
+   # # Shocks initial values
+   # ea  :  0   #  0.42 estimated mean in GSW Table 1
+   # eb  :  0   #  1.60
+   # eg  :  0   #  0.48
+   # eqs  :  0   #  0.42
+   # em  :  0   #  0.22
+   # epinf  :  0 #  0.11
+   # ew  :  0   #  0.06
+   # els  :  0   #  1.17
+   
+   # Initial values
+   x  :  0
+   xf  :  0
+   u  :  0
+   labstar  :  0
+   ls  :  0
+   z  :  0
+   zf  :  0
+   lam  :  0
+   lamf  :  0
+   ewma  :  0
+   epinfma  :  0
+   zcapf  :  0
+   rkf  :  0
+   kf  :  0
+   pkf  :  0
+   cf  :  0
+   invef  :  0
+   yf  :  0
+   labf  :  0
+   wf  :  0
+   rrf  :  0
+   mc  :  0
+   zcap  :  0
+   rk  :  0
+   k  :  0
+   pk  :  0
+   c  :  0
+   inve  :  0
+   y  :  0
+   lab  :  0
+   pinf  :  0
+   w  :  0
+   r  :  0
+   a  :  0
+   b  :  0
+   g  :  0
+   qs  :  0
+   ms  :  0
+   spinf  :  0
+   sw  :  0
+   kpf  :  0
+   kp  :  0
+   winf  :  0
+   ygap  :  0

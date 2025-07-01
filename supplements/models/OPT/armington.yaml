@@ -1,0 +1,87 @@
+name: Armington Trade Equilibrium with Iceberg Costs
+
+sets:
+   regions r:   [R1, R2, R3]
+   goods j:     [G1]
+   regions alias s: r
+   
+symbols:
+   variables:  [Q(j)(r),P(j)(r),c(j)(r),Y(j)(r)]
+   parameters: [sig,eta,mu,Q0(j)(r),P0(j)(r),Y0(j)(r),c0(j)(r),tau(j)(r)(s),vx0(j)(r)(s),zeta(j)(r)(s)]
+
+equations:
+# Eq.1 Aggregate demand
+ - DEM(j)(r):     Q(j)(r) - Q0(j)(r) * (P0(j)(r) / P(j)(r))**eta
+# Eq.2 Armington unit cost function
+ - ARM(j)(s):     sum(r, zeta(j)(r)(s)**sig*tau(j)(r)(s)*c(j)(r))**(1/(1-sig)) - P(j)(s)
+# Eq.3 Market clearance    
+ - MKT(j)(r):     Y(j)(r) = sum(s, tau(j)(r)(s)*Q(j)(s)*zeta(j)(r)(s)*P(j)(s)/(tau(j)(r)(s)*c(j)(r)))**sig
+# Eq.4 Input supply (output)
+ - SUP(j)(r):     Y0(j)(r) * (c(j)(r)/c0(j)(r)) ** mu - Y(j)(r)
+
+
+calibration:
+    # Parameters
+    sig           : 3
+    eta           : 1.5
+    mu            : 0.5
+    P0(j)(r)      : 1
+    c0(j)(r)      : 1
+    vx0(j)(r)(s)  : 1
+    vx0(j)(r)(r)  : 3
+    Q0(j)(r)      : sum(s, vx0(j)(s)(r)) / P0(j)(r)
+    Y0(j)(r)      : sum(s, vx0(j)(s)(r)) / c0(j)(r)
+    # Variables
+    Q(j)(r)       : Q0(j)(r)
+    Q(G1)(R1)     : 4.0
+    Q(G1)(R3)     : 7.0
+    P(j)(r)       : P0(j)(r)
+    P(G1)(R2)     : 1.2
+    P(G1)(R3)     : 0.5
+    c(j)(r)       : c0(j)(r)
+    c(G1)(R2)     : 0.5
+    c(G1)(R3)     : 0.7
+    Y(j)(r)       : Y0(j)(r)
+    Y(G1)(R1)     : 3.5
+    Y(G1)(R2)     : 3.0
+    tau(j)(r)(s)  : 1.5
+      
+constraints:
+   # Positive Variables
+   - Q(j)(r) .ge. 5.1
+   - P(j)(r) .ge. 0
+   - c(j)(r) .ge. 0
+   - Y(j)(r) .ge. 0
+   # Positive LHS of equations    
+   - DEM(j)(r) .ge. 0
+   - ARM(j)(s) .ge. 0
+   - MKT(j)(r) .ge. 0
+   - SUP(j)(r) .ge. 0
+
+labels:
+    # Variables
+    Q:    Composite Quantity
+    P:    Composite Price Index
+    c:    Composite input price (marginal cost)
+    Y:    Composite input supply (output)
+    # Parameters
+    sig:  Elasticity of substitution
+    eta:  Demand elasticity
+    mu:   Supply elasticity
+    Q0:   Benchmark aggregate quantity
+    P0:   Benchmark price index
+    c0:   Benchmark input cost
+    Y0:   Benchmark input supply
+    tau:  Iceberg transport cost factor
+    vx0:  Arbitrary benchmark export values
+    zeta: Bilateral preference weights
+    # Equations
+    DEM:  Aggregate demand
+    ARM:  Armington unit cost function
+    MKT:  Input market clearance
+    SUP:  Input supply (output)
+    
+Model: [DEM.Q,ARM.P,MKT.c,SUP.Y]
+Solver: 'CONSTRAINED_OPTIMIZATION'   # 'MCP','PATH', 'CONSTRAINED_OPTIMIZATION', 'ROOT'
+
+    

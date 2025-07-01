@@ -1,0 +1,517 @@
+name: Eichenbaum, Rebelo and Trabandt Model with Resistant Virus Strain.  
+
+# This file solves and simulates the model developed by 
+# Eichenbaum M.S., Rebelo S., Trabandt M. (2020) “Epidemics in the Neoclassical and New Keynesian Models”.
+# NBER Working Paper 27430, http://www.nber.org/papers/w27430
+
+# Multi-strain coinfection model is borrowed from paper of 
+# S.Y. Tchoumi, H. Rwezaura, J.M. Tchuenche
+# Dynamic of a two-strain COVID-19 model with vaccination
+# https://assets.researchsquare.com/files/rs-553546/v1_covered.pdf?c=1631869530
+
+# Based on parameters, the code below nests the models with 
+# perfect competition (gam -> 1, xi = 0), imperfect competition with 
+# flexible prices (gam = 1.35, xi = 0) and imperfect competition with 
+# sticky prices (gam = 1.35, xi = 0.98 (weekly calibration)).
+# gam and xi are set in lines 56 and 60.
+
+# We solve the fully nonlinear model. Given the strong nonlinearities of the 
+# model due to the epidemic dynamics we use homotopy for a number of 
+# parameters, i.e. we increase parameter values stepwise until we impose
+# their final desired value. Homotopy calculations can take a while. 
+
+
+symbols:
+
+  variables: [
+    # Endogenous variables of the actual (sticky price) economy
+    y,k,n,w,rk,x,c,s,s1,s2,i,i1,i2,r,r1,r2,v,ns,ni,nr,cs,ci,cr,tau,tau1,tau2,
+    lambtilde,lamtau,lami,lams,lamr,dd,pop,Rb,pie,mc,F,Kf,rr,pbreve,
+    # Endogenous variables of the flexible price economy
+    yF,kF,nF,wF,rkF,xF,cF,sF,sF1,sF2,iF,iF1,iF2,rF,rF1,rF2,vF,nsF,niF,nrF,csF,ciF,crF,
+    tauF,tauF1,tauF2,lambtildeF,lamtauF,lamiF,lamsF,lamrF,ddF,popF,RbF,pieF,
+    mcF,FF,KfF,rrF,pbreveF]  
+  
+  shocks: [ei1,ei2,ed]
+     
+  parameters:  [xi,rpi,rx,gam,pi1,pi2,pi3,mult,mult2,pir,pid,betta,i_ini,d_ini,A,theta,alfa,
+                inc_target,n_target,delta,g_ss,eta,xi_flex,pie_ss,rr_ss,Rb_ss,lockdown_policy,
+                sigma,theta_lockdown,vaccination_policy,vaccination_rate,
+                virus_resistant_strain,virus_variant_start,ex]
+
+calibration:
+   i_ini: 1.e-4          # Initial seed of infection
+   d_ini: 1.e-4          # Initial number of deaths
+   
+   betta: 0.98**(1./52)   # Weekly household discount factor
+   pid: 2.8e-3 #7*0.002/14 # Weekly probability of dying
+   pir: 7*1./14-pid #0.16 # Weekly probability of recovering
+   delta: 0.06/52        # Capital depreciation rate (weekly)
+   alfa: 2./3            # Labor share
+
+   # final numbers for pi1,pi2,pi3 and xi will be imposed below using homotopy
+   pi1: 2.e-7
+   pi2: 2.e-4
+   pi3: 0.5
+   pi1_final: pi1 
+   pi2_final: pi2 
+   pi3_final: pi3 
+   xi_final: xi 
+   
+   # Calibation targets for shares of pi-terms in T-function in SIR model
+   pi3_shr_target: 2/3 #ag 2/3   # share at T=0 of jump due general infections
+   RplusD_target: 0.4 #0.04 #ag 0.60   # total share of people infected and then either recovered or dead after epidemic
+  
+   share: 0.5            # 0.5 - supply and demand, 0 - supply only, 1 - demand only
+   ### Neo-classical Economy
+   gam: 1.35             #1.00001   # Steady state gross price markup   Keep in mind that
+                         # gam must be larger than unity. So, for the competitive 
+                         # economy, set gam arbitrarily close to unity, i.e. gam=1.00001.
+   xi: 0.98              # Calvo price stickiness in actual economy (weekly)
+   xi_flex: 0            # Calvo price stickiness in flexible price economy (weekly)
+   pi1_shr_target: (1-pi3_shr_target)*share     # share at T=0 of jump due to consumption-based infections
+   pi2_shr_target: (1-pi3_shr_target)*(1-share) # share at T=0 of jump due to work-based infections
+   
+   # Lockdown
+   lockdown_policy: 0
+   theta_lockdown: 0
+   # Vaccination
+   vaccination_policy: 0
+   vaccination_rate: 0.0014/7 # Vaccination rate
+   # Strain #1 vaccine efficacy
+   sigma: 0.9
+
+   # Virus variant parameters
+   virus_variant_start: 62 # start time of virus resistant strain
+   virus_resistant_strain: 0
+   mult: 1.25 # strain #2 is more contagious than strain #1
+   mult2: 4  # strain #2 is less deadly than strain #1
+   ex: 0.05
+   
+   # ### Neo-classical Economy
+   # gam: 1.35
+   # xi: 0.98
+   # pi1_shr_target: (1-pi3_shr_target)/2
+   # pi2_shr_target: (1-pi3_shr_target)/2
+   
+   # ### Competetive economy
+   # gam: 1.0
+   # xi: 0.98
+   # pi1_shr_target: (1-pi3_shr_target)/2
+   # pi2_shr_target: (1-pi3_shr_target)/2
+   
+   # ### Markup Supply Only
+   # gam: 1.35
+   # xi: 0
+   # pi1_shr_target: 0
+   # pi2_shr_target: 1-pi3_shr_target
+    
+   # ### Markup Demand Only
+   # gam: 1.35
+   # xi: 0
+   # pi2_shr_target: 0
+   # pi1_shr_target: 1-pi3_shr_target  
+   
+   # ### Markup Economy
+   # gam: 1.35
+   # xi: 0
+   # pi1_shr_target: (1-pi3_shr_target)/2
+   # pi2_shr_target: (1-pi3_shr_target)/2
+   
+   # ### Competetive Supply Only
+   # gam: 1.00001
+   # xi: 0
+   # pi1_shr_target: 0
+   # pi2_shr_target: 1-pi3_shr_target
+   
+   # ### Competetive Demand Only
+   # gam: 1.00001
+   # xi: 0
+   # pi2_shr_target: 0
+   # pi1_shr_target: 1-pi3_shr_target
+   
+   # ### Competetive Economy
+   # gam: 1.00001
+   # xi: 0
+   # pi1_shr_target: (1-pi3_shr_target)/2
+   # pi2_shr_target: (1-pi3_shr_target)/2
+   
+   rpi: 1.5              # Taylor rule coefficient inflation
+   rx: 0.5/52            # Taylor rule coefficient output gap    
+   n_target: 28          # Calibration target for weekly hours
+   inc_target: 58000/52  # Calibration target for weekly income
+   eta: 0.19             # Calibration target for government consumption to GDP ratio 
+   # pre-infection steady states
+   y_ss: inc_target 
+   n_ss: n_target 
+   mc_ss: 1/gam 
+   w_ss: mc_ss*alfa*y_ss/n_ss 
+   rk_ss: 1/betta-1+delta 
+   kn_ss: (1-alfa)*w_ss/alfa/rk_ss 
+   yk_ss: (y_ss/n_ss)/kn_ss 
+   A: (y_ss/n_ss)**alfa*yk_ss**(1-alfa) 
+   k_ss: (y_ss/A/n_ss**alfa)**(1/(1-alfa)) 
+   x_ss: delta*k_ss 
+   g_ss: eta*y_ss 
+   c_ss: (1-eta)*y_ss-x_ss
+   #ag g_ss: y_ss-c_ss-x_ss 
+   ns_ss: n_ss 
+   cs_ss: c_ss 
+   tau_ss: 0
+   s_ss: 1 
+   i_ss: 0 
+   r_ss: 0 
+   lambtilde_ss: 1/cs_ss 
+   ci_ss: cs_ss 
+   cr_ss: cs_ss 
+   theta: lambtilde_ss*w_ss/ns_ss 
+   ni_ss: lambtilde_ss*w_ss/theta 
+   nr_ss: ns_ss 
+   lams_ss: (log(cs_ss)-theta/2*ns_ss**2 + lambtilde_ss*(w_ss*ns_ss-cs_ss) ) / ( 1/betta-1 ) 
+   lamr_ss: (log(cr_ss)-theta/2*nr_ss**2 + lambtilde_ss*(w_ss*nr_ss-cr_ss) ) / ( 1/betta-1 ) 
+   lami_ss: (log(ci_ss)-theta/2*ni_ss**2 + lambtilde_ss*(w_ss*ni_ss-ci_ss) + pir*lamr_ss) / ( 1/betta-1+pir+pid ) 
+   lamtau_ss: lami_ss-lams_ss 
+   rr_ss: 1/betta 
+   Kf_ss: 1/(1-betta*xi)*gam*mc_ss*lambtilde_ss*y_ss 
+   F_ss: 1/(1-betta*xi)*lambtilde_ss*y_ss 
+   pie_ss: 1 
+   Rb_ss: rr_ss 
+   KfF_ss: 1/(1-betta*xi_flex)*gam*mc_ss*lambtilde_ss*y_ss 
+   FF_ss: 1/(1-betta*xi_flex)*lambtilde_ss*y_ss 
+   # Some useful command window output
+   cons_share: c_ss/y_ss
+   inv_share: x_ss/y_ss
+   gov_share: g_ss/y_ss
+   value_of_life: 1/(1-betta)*(log(c_ss)-theta/2*n_ss**2)*c_ss
+   ann_capoutputratio: k_ss/(52*y_ss)
+   thetaval: theta
+   Aval: A
+   # initial (pre-infection) steady state used in simulations 
+   y: y_ss   
+   k: k_ss 
+   n: n_ss 
+   w: w_ss 
+   rk: rk_ss 
+   x: x_ss 
+   c: c_ss 
+   s: 1 
+   s1: 1 
+   s2: 1 
+   i: 0  
+   i1: 0
+   i2: 0   
+   r: 0  
+   r1: 0  
+   r2: 0  
+   v: 0 
+   ns : ns_ss 
+   ni: ni_ss   
+   nr: nr_ss   
+   cs: cs_ss 
+   ci: ci_ss 
+   cr: cr_ss 
+   tau: tau_ss 
+   tau1: 0
+   tau2: 0
+   lambtilde: lambtilde_ss 
+   lamtau: lamtau_ss 
+   lami: lami_ss 
+   lams: lams_ss 
+   lamr: lamr_ss 
+   dd: 0 
+   pop: 1 
+   rr: rr_ss 
+   Rb: Rb_ss   
+   pie: pie_ss   
+   mc: mc_ss   
+   F: F_ss   
+   Kf: Kf_ss  
+   pbreve: 1  
+   yF: y_ss   
+   kF: k_ss 
+   nF: n_ss 
+   wF: w_ss 
+   rkF: rk_ss 
+   xF: x_ss 
+   cF: c_ss 
+   sF: 1
+   sF1: 1
+   sF2: 1
+   iF: 0
+   iF1: 0 
+   iF2: 0  
+   rF: 0   
+   rF1: 0   
+   rF2: 0   
+   vF: 0
+   nsF: ns_ss 
+   niF: ni_ss   
+   nrF: nr_ss   
+   csF: cs_ss 
+   ciF: ci_ss 
+   crF: cr_ss 
+   tauF: tau_ss 
+   tauF1: 0
+   tauF2: 0
+   lambtildeF: lambtilde_ss 
+   lamtauF: lamtau_ss 
+   lamiF: lami_ss 
+   lamsF: lams_ss 
+   lamrF: lamr_ss 
+   ddF: 0 
+   popF: 1 
+   rrF: rr_ss 
+   RbF: Rb_ss   
+   pieF: pie_ss   
+   mcF: mc_ss 
+   FF: FF_ss   
+   KfF: KfF_ss   
+   pbreveF: 1  
+   
+
+equations:
+  # We use a non-reflecting boundry condition since the terminal steady state depends on 
+  # epidemic dynamics and policies and we dont know the terminal value of the new steady state.
+  # In other words, the terminal steady state is an endogenous function of the transition 
+  # dynamics. 
+  #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # / 
+  # equilibrium equations: actual (sticky price) economy  
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+  # Eq.1. Production 
+  - y: y=pbreve*A*k(-1)**(1-alfa)*n**alfa
+  
+  # Eq.2. Marginal cost
+  - mc: mc=1/(A*alfa**alfa*(1-alfa)**(1-alfa))*w**alfa*rk**(1-alfa) 
+  
+  # Eq.3. Cost mininizing inputs
+  - w: w=mc*alfa*A*n**(alfa-1)*k(-1)**(1-alfa) 
+  
+  # Eq.4. Law of motion capital
+  - k: k=x+(1-delta)*k(-1) 
+  
+  # Eq.5. Aggregate resources
+  - x: y=c+x+g_ss 
+  
+  # Eq.6. Aggregate hours
+  - n: n = s1(-1)*ns+i1(-1)*ni+r1(-1)*nr
+  
+  # Eq.7. Aggregate consumption
+  - c: c = s1(-1)*cs+i1(-1)*ci+r1(-1)*cr
+
+  ### Two-strain SIR model with vaccination
+  # Eq.8. New infections
+  # Strain #1
+  - tau1: tau1 = (pi1*s1(-1)*cs*i1(-1)*ci + pi2*s1(-1)*ns*i1(-1)*ni + pi3*s1(-1)*i1(-1))*(1-theta_lockdown*lockdown_policy)**2
+  # Strain #2
+  - tau2: tau2 = (pi1*s2(-1)*cs*i2(-1)*ci + pi2*s2(-1)*ns*i2(-1)*ni + mult*pi3*s2(-1)*i2(-1))*virus_resistant_strain*(1-theta_lockdown*lockdown_policy)**2
+  # Total new infection
+  - tau: tau = tau1 + tau2
+  
+  # Eq.9. Total susceptibles
+  - s1: s1 = s1(-1) - tau1 - v
+  - s2: s2 = s2(-1) - tau2
+  - s: s  = IfThenElse(s(-1)-tau-v,s(-1)-tau-v,0)
+
+  # Eq.10. Total infected
+  # Strain #1
+  - i1: i1 = i1(-1) + tau1 - (pir+pid)*i1(-1) + ei1
+  # Strain #2
+  - i2: i2 = i2(-1) + (tau2 - (pir+pid/mult2)*i2(-1))*virus_resistant_strain + ei2
+  # Total infected
+  - i: i = i1 + ex*i2
+        
+  # Eq.11. Total recovered
+  - r1: r1 = r1(-1) + pir*i1(-1) + v
+  - r2: r2 = r2(-1) + pir*i2(-1)
+  - r: r  = r1 + r2
+  
+  # Eq.12. Newly vaccinated
+  - v: v = vaccination_rate*s1(-1)
+
+  # Eq.13. Total deaths 
+  - dd: dd = dd(-1) + pid*i1(-1) + pid/mult2*i2(-1) + ed
+  
+  # Eq.14. Total population
+  - pop: pop = pop(-1) - pid*i1(-1) - pid/mult2*i2(-1) 
+  
+  # Eq.15. First order condition, consumption susceptibles
+  - cs: 1/cs=lambtilde-lamtau*pi1*i(-1)*ci
+  
+  # Eq.16. First order condition, consumption infected
+  - ci: 1/ci=lambtilde
+  
+  # Eq.17. First order condition, consumption recovered
+  - cr: 1/cr=lambtilde
+  
+  # Eq.18. First order condition, hours susceptibles
+  - ns: theta*ns=(lambtilde*w+lamtau*pi2*i(-1)*ni) *(1-theta_lockdown*lockdown_policy)
+  
+  # Eq.19. First order condition, hours infected
+  - ni: theta*ni=lambtilde*w *(1-theta_lockdown*lockdown_policy)
+  
+  # Eq.20. First order condition, hours recovered
+  - nr: theta*nr=lambtilde*w
+  
+  # Eq.21. First order condition, capital
+  - rk: lambtilde=betta*(rk(+1)+(1-delta))*lambtilde(+1) 
+  
+  # Eq.22. First order condition, new infected
+  - lami: lami=lamtau+lams 
+  
+  # Eq.23. First order condition, susceptibles
+  - lamtau: log(cs(+1)) - theta/2*(ns(+1))**2 + lamtau(+1)*(pi1*cs(+1)*i*ci(+1)+pi2*ns(+1)*i*ni(+1)+pi3*i) + lambtilde(+1)*( w(+1)*ns(+1)-cs(+1) ) - lams/betta+lams(+1) 
+  
+  # Eq.24. First order condition, infected
+  - ci: log(ci(+1)) - theta/2*(ni(+1))**2 + lambtilde(+1)*( w(+1)*ni(+1)-ci(+1) ) - lami/betta+lami(+1)*(1-pir-pid)+lamr(+1)*pir 
+  
+  # Eq.25. First order condition, recovered
+  - cr: log(cr(+1))-theta/2*(nr(+1))**2 + lambtilde(+1)*( w(+1)*nr(+1)-cr(+1) ) - lamr/betta+lamr(+1) 
+  
+  # Eq.26. First order condition, bonds
+  - lambtilde: lambtilde=betta*Rb/(pie(+1))*lambtilde(+1) 
+  
+  # Eq.27. Real interest rate
+  - rr: rr=Rb/(pie(+1)) 
+  
+  # Eq.28. Nonlinear price setting 1
+  - pie: Kf=gam*mc*lambtilde*y+betta*xi*(pie(+1))**(gam/(gam-1))*Kf(+1) 
+  
+  # Eq.29. Nonlinear price setting 2
+  - F: F=lambtilde*y+betta*xi*(pie(+1))**(1/(gam-1))*F(+1) 
+  
+  # Eq.30. Nonlinear price setting 3
+  - Kf: Kf=F*( (1-xi*pie**(1/(gam-1)) ) / (1-xi) )**(-(gam-1)) 
+  
+  # Eq.31. Inverse price dispersion
+  - pbreve: 1/pbreve=(1-xi)*( (1-xi*pie**(1/(gam-1)))/(1-xi) )**gam + xi*pie**(gam/(gam-1))/pbreve(-1) 
+  
+  # Eq.32. Taylor rule
+  - Rb: Rb=rr_ss + rpi*log(pie/pie_ss) + rx*log(y/yF) 
+ 
+  
+  # # # # # # # # # # # # # # # # # # # # # # # #  
+  # equilibrium equations: flexible price economy
+  # # # # # # # # # # # # # # # # # # # # # # # #  
+  # Eq.1. Production
+  - yF: yF=pbreveF*A*kF(-1)**(1-alfa)*nF**alfa
+  
+  # Eq.2. Marginal cost
+  - mcF: mcF=1/(A*alfa**alfa*(1-alfa)**(1-alfa))*wF**alfa*rkF**(1-alfa) 
+  
+  # Eq.3. Cost minimizing inputs
+  - wF: wF=mcF*alfa*A*nF**(alfa-1)*kF(-1)**(1-alfa) 
+  
+  # Eq.4. Law of motion for capital
+  - kF: kF=xF+(1-delta)*kF(-1) 
+  
+  # Eq.5. Aggregate Resources
+  - yF: yF=cF+xF+g_ss 
+  
+  # Eq.6. Aggregate hours
+  - nF: nF=sF1(-1)*nsF+iF1(-1)*niF+rF1(-1)*nrF
+  
+  # Eq.7. Aggregate consumption
+  - cF: cF=sF1(-1)*csF+iF1(-1)*ciF+rF1(-1)*crF
+  
+  ### Two-strain SIR model with vaccination
+  # Eq.8. New infections
+  # Strain #1
+  - tauF1: tauF1 = (pi1*sF1(-1)*csF*iF1(-1)*ciF + pi2*sF1(-1)*nsF*iF1(-1)*niF + pi3*sF1(-1)*iF1(-1))*(1-theta_lockdown*lockdown_policy)**2
+  # Strain #2
+  - tauF2: tauF2 = (pi1*sF2(-1)*csF*iF2(-1)*ciF + pi2*sF2(-1)*nsF*iF2(-1)*niF + mult*pi3*sF2(-1)*iF2(-1))*virus_resistant_strain*(1-theta_lockdown*lockdown_policy)**2
+  # Total new infection(-1)
+  - tauF:  tauF = tauF1 + tauF2
+
+  # Eq.9. Total susceptibles
+  - sF1: sF1 = sF1(-1) - tauF1 - vF
+  - sF2 : sF2 = sF2(-1) - tauF2
+  - sF: sF  = IfThenElse(sF(-1)-tauF-vF,sF(-1)-tauF-vF,0)
+
+  # Eq.10. Total infected
+  # Strain #1
+  - iF1: iF1 = iF1(-1) + tauF1 - (pir+pid)*iF1(-1) + ei1
+  # Strain #2
+  - iF2: iF2 = iF2(-1) + (tauF2 - (pir+pid/mult2)*iF2(-1))*virus_resistant_strain + ei2
+  # Total infected
+  - iF: iF = iF1 + ex*iF2
+        
+  # Eq.11. Total recovered
+  - rF1: rF1 = rF1(-1) + pir*iF1(-1) + vF
+  - rF2: rF2 = rF2(-1) + pir*iF2(-1)
+  - rF: rF  = rF1 + rF2
+  
+  # Eq.12. Newly vaccinated
+  - vF: vF = vaccination_rate*sF1(-1)
+
+  # Eq.13. Total deaths 
+  - ddF: ddF = ddF(-1) + pid*iF1(-1) + pid/mult2*iF2(-1) + ed
+  
+  # Eq.14. Total population
+  - popF: popF = popF(-1) - pid*iF1(-1) - pid/mult2*iF2(-1) 
+  
+  # Eq.15. First order condition, consumption susceptibles
+  - csF: 1/csF=lambtildeF-lamtauF*pi1*iF(-1)*ciF
+  
+  # Eq.16. First order condition, consumption infected
+  - ciF: 1/ciF=lambtildeF
+  
+  # Eq.17. First order condition, consumption recovered
+  - crF: 1/crF=lambtildeF
+  
+  # Eq.18. First order condition, hours susceptibles
+  - nsF: theta*nsF=(lambtildeF*wF+lamtauF*pi2*iF(-1)*niF) *(1-theta_lockdown*lockdown_policy)
+  
+  # Eq.19. First order condition, hours infected
+  - niF: theta*niF=lambtildeF*wF *(1-theta_lockdown*lockdown_policy)
+  
+  # Eq.20. First order condition, hours recovered
+  - nrF: theta*nrF=lambtildeF*wF
+  
+  # Eq.21. First order condition, capital
+  - rkF: lambtildeF=betta*(rkF(+1)+(1-delta))*lambtildeF(+1) 
+  
+  # Eq.22. First order condition, new infected
+  - lamiF: lamiF=lamtauF+lamsF 
+  
+  # Eq.23. First order condition, susceptibles
+  - lamtauF: log(csF(+1)) - theta/2*(nsF(+1))**2 + lamtauF(+1)*(pi1*csF(+1)*iF*ciF(+1)+pi2*nsF(+1)*iF*niF(+1)+pi3*iF) + lambtildeF(+1)*( wF(+1)*nsF(+1)-csF(+1) ) - lamsF/betta+lamsF(+1) 
+  
+  # Eq.24. First order condition, infected
+  - ciF: log(ciF(+1)) - theta/2*(niF(+1))**2 + lambtildeF(+1)*( wF(+1)*niF(+1)-ciF(+1) ) - lamiF/betta + lamiF*(1-pir-pid) + lamrF(+1)*pir 
+  
+  # Eq.25. First order condition, recovered
+  - crF: log(crF(+1)) - theta/2*(nrF(+1))**2 + lambtildeF(+1)*( wF(+1)*nrF(+1)-crF(+1) ) - lamrF/betta + lamrF(+1) 
+  
+  # Eq.26. First order condition, bonds
+  - lambtildeF: lambtildeF=betta*RbF/(pieF(+1))*lambtildeF(+1) 
+  
+  # Eq.27. Real interest rate
+  - rrF: rrF=RbF/(pieF(+1)) 
+  
+  # Eq.28. Nonlinear price setting 1
+  - pieF: KfF=gam*mcF*lambtildeF*yF+betta*xi_flex*(pieF(+1))**(gam/(gam-1))*KfF(+1) 
+  
+  # Eq.29. Nonlinear price setting 2
+  - FF: FF=lambtildeF*yF+betta*xi_flex*(pieF(+1))**(1/(gam-1))*FF(+1) 
+  
+  # Eq.30. Nonlinear price setting 3
+  - KfF: KfF=FF*( (1-xi_flex*pieF**(1/(gam-1)) ) / (1-xi_flex) )**(-(gam-1)) 
+  
+  # Eq.31. Inverse price dispersion
+  - pbreveF: 1/pbreveF=(1-xi_flex)*( (1-xi_flex*pieF**(1/(gam-1)))/(1-xi_flex) )**gam + xi_flex*pieF**(gam/(gam-1))/pbreveF(-1) 
+  
+  # Eq.32. Taylor rule
+  - RbF: RbF=Rb_ss+rpi*log(pieF/pie_ss) #+rx*log(yF/yF)  
+    
+    
+options:
+    range: [[2019,8,1],[2023,1,1]]
+    frequency: 3 # Weekly
+    T : 500
+    periods: [2*14] # number of weeks = 2 quarters
+    shock_values: [[i_ini,0.1*i_ini,d_ini]]
+    
+
+    
+

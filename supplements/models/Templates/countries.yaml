@@ -1,0 +1,39 @@
+name: Five regions economy 
+
+symbols: 
+   sets: 
+    countries c: [US,EU,JP,EA,RC]    
+   variables: [Y_WORLD,PDOT(c),RR(c),RS(c),Y(c)]  
+   shocks: [e]
+   parameters: [g,p_pdot1,p_pdot2,p_pdot3,p_rs1,p_y1,p_y2,p_y3]
+
+equations:
+
+   # World output
+   - Y_WORLD = 0.18*Y_US+0.14*Y_EU+0.05*Y_JP+0.4*Y_EA+0.16*Y_RC 
+   # PDOT(c): Inflation
+   - PDOT(c) = p_pdot1*PDOT(c)(+1) + (1-p_pdot1)*PDOT(c)(-1) + p_pdot2*(g^2/(g-Y(c)) - g) + p_pdot3*(g^2/(g-Y(c)(-1)) - g)
+   # RR(c): Real Interest Rate
+   - RR(c) = RS(c) - p_pdot1*PDOT(c)(+1) - (1-p_pdot1)*PDOT(c)(-1)
+   # RS(c): Short Term Interest Rate
+   - RS(c) = p_rs1*PDOT(c) + Y(c)
+   # Y(c): Output Gap
+   - Y(c) = p_y1*Y(c)(-1) - p_y2*RR(c) - p_y3*RR(c)(-1) + e
+
+parameters:
+   parameters: [g,p_pdot1,p_pdot2,p_pdot3,p_rs1,p_y1,p_y2,p_y3]
+   #file: [params.yaml]
+
+calibration: 
+    # shocks
+    e: 0.0    
+    # parameters and initial values
+    file: [files/calib.yaml]
+
+options:
+    T : 14
+    periods: [2]
+    shock_values: [0.02]
+
+   
+   

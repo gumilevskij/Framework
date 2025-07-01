@@ -1,0 +1,45 @@
+% Very simple RBC model
+
+!variables
+    # Output 
+    Y
+    # Consumption 
+    C
+    # Capital 
+    K
+    # Real rate of interest 
+    r
+    # Productivity level 
+    A
+
+!shocks
+    # Productivity shock 
+    ea
+
+!parameters
+    # Discount factor
+    beta
+    #Depreciation rate
+    delta
+    #Share of capital in production
+    gamma
+    # Autoregression in productivity
+    rho
+    # Steady-state productivity level
+    a
+
+!equations
+    # Household intertemporal choice
+    1/C = 1/C{1} * beta * (1 + r);
+
+    # Resource constrain
+    Y = C + K - (1-delta)*K{-1};
+
+    # Production function
+    Y = K{-1}^gamma * A^(1-gamma);
+
+    # Demand for capital
+    gamma*Y{1}/K = r + delta;
+
+    # Productivity
+    log(A) = rho*log(A{-1}) + (1-rho)*log(a) + ea;

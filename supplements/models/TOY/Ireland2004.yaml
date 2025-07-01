@@ -1,0 +1,129 @@
+name: Technology Shocks in the New Keynesian Model
+# Peter Ireland, 2004, TECHNOLOGY SHOCKS IN THE NEW KEYNESIAN MODEL
+# http://ireland    com/pubs/tshocksnk.pdf
+
+symbols: 
+
+   variables : [y, x, r, g, pie, a, e]
+
+   measurement_variables : [obs_g, obs_pie, obs_r]
+
+   shocks : [epsa, epse, epsz, epsr]
+   
+   measurement_shocks : [res_obs_g, res_obs_pie, res_obs_r]
+   
+   parameters : [beta, psi, omega, alphax, alphapie,   
+                 rhopie, rhog, rhox, rhoa, rhoe]
+                 
+    # measurement_parameters : []
+                 
+equations: 
+      # Linear Model (equations 5,11,14,13,15,2,9)
+      - a = rhoa*a(-1) + epsa
+      - e = rhoe*e(-1) + epse
+      - x = alphax*x(-1) + (1-alphax)*x(+1) - (r-pie(+1)) + (1-omega)*(1-rhoa)*a
+      - pie = beta*(alphapie*pie(-1)+ (1-alphapie)*pie(+1)) + psi*x - e
+      - x = y - omega*a
+      - g = y - y(-1) + epsz
+      - r =  r(-1) + rhopie*pie + rhog*g + rhox*x + epsr
+      
+measurement_equations: 
+    - obs_g   = g   + res_obs_g
+    - obs_pie = pie + res_obs_pie
+    - obs_r   = r   + res_obs_r
+
+calibration:
+   # parameters:
+    beta :     0.99
+    psi :      0.1
+    omega :    0.0617
+    alphax :   0.0836
+    alphapie : 0.0001
+    rhopie :   0.3597
+    rhog :     0.2536
+    rhox :     0.0347
+    rhoa :     0.9470
+    rhoe :     0.9625
+
+    # starting values for endogenous variables:
+    y:   0.0 
+    pie: 0.0
+    r: 0.0
+    g: 0.0
+    x: 0.0
+    a: 0.0
+    e: 0.0
+    
+    #Standard deviation of shocks:
+    std_epsa: 0.0405
+    std_epse: 0.0012
+    std_epsz: 0.0109
+    std_epsr: 0.0031
+      
+    #Standard deviations of observation errors:
+    std_res_obs_g:   0
+    std_res_obs_pie: 0
+    std_res_obs_r:   0
+    
+
+estimated_parameters:
+    # Please choose one of the following distributions: 
+    # normal_pdf,lognormal_pdf,beta_pdf,gamma_pdf,t_pdf,weibull_pdf,inv_gamma_pdf,inv_weibull_pdf,wishart_pdf,inv_wishart_pdf    
+    # PARAM NAME, INITVAL, LB, UB, PRIOR_SHAPE, PRIOR_P1, PRIOR_P2, PRIOR_P3, PRIOR_P4, PRIOR_P5
+    # The first parameter is the parameter name, the second is the initial value, the third and 
+    # the fourth are the lower and the upper bounds,the fifth is the prior shape, 
+    # the sixth to tenth are prior parameters (mean, standard deviation, shape, etc.).
+    # Parameters
+    - omega,    0.2, 1.e-7, 1,  normal_pdf, 0.20, 0.02
+    - alphax,   0.08,  1.e-7, 1,  normal_pdf, 0.10, 0.05
+    - alphapie, 1.e-4, 1.e-7, 1,  normal_pdf, 5.e-6, 1.e-6
+    - rhoa,     0.9,  1.e-7, 1,  normal_pdf, 0.85, 0.10
+    - rhoe,     0.9,  1.e-7, 1,  normal_pdf, 0.85, 0.10
+    - rhopie,   0.3,  1.e-7, 1,  normal_pdf, 0.30, 0.1
+    - rhog,     0.2,  1.e-7, 1,  normal_pdf, 0.30, 0.1
+    - rhox,     0.03,  1.e-7, 1,  normal_pdf, 0.25, 0.0625
+    
+    # Endogenous variables shocks
+    # should we use inverse wishart distribution for sigma^-2: inverse wishart_pdf ?
+    - std_epsa, 0.0405, 1.e-7, 1,  normal_pdf, 0.03,      1.80
+    - std_epse, 0.0012, 1.e-7, 1,  normal_pdf, 0.0000727, 0.0000582
+    - std_epsz, 0.0109, 1.e-7, 1,  normal_pdf, 0.005,     0.275
+    - std_epsr, 0.0031, 1.e-7, 1,  normal_pdf, 0.005,     0.004417
+    
+    # # Measurement variables shocks
+    # - std_res_obs_g,   0.01,  0, 10, normal_pdf, 0.03, 2
+    # - std_res_obs_pie, 0.01,  0, 10, normal_pdf, 0.03, 2
+    # - std_res_obs_r,   0.01,  0, 10, normal_pdf, 0.03, 2
+
+labels:
+   y:       "Output"
+   y(-1):   "Lag of Output"
+   x:       "Output Gap"
+   x(-1):   "Lag of Output Gap"
+   x(+1):   "Lead of Output Gap"
+   r:       "Interest Rate"
+   r(-1):   "Lag of Interest Rate"
+   pie:     "Inflation"
+   g:       "Output Growth"
+   pie(+1): "Lead of Inflation"
+   pie(-1): "Lag of Inflation"
+   a:       "Total Factor Productivity"
+   a(-1):   "Lag of Total Factor Productivity"
+   e:       "Aggregate Technology AR(1) Process"
+   e(-1):   "Lag of Aggregate Technology AR(1) Process"
+   epsa:    "Preference Shock"
+   epse:    "Cost-Push Shock"
+   epsz:    "Shock to Output Gap"
+   epsr:    "Shock to Interest Rate"
+   
+   
+options:
+    range : ["1948,1,1","2002,12,31"]
+    filter_range : ["1948,4,1","2002,12,31"]
+   
+    frequency: 1 #quarterly
+    
+    # periods : [10]
+    # shock_values : [[0.1,0,0,0]]
+
+   
