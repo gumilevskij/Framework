@@ -233,12 +233,12 @@ def readDynareModelFile(file_path,conditions={},bFillValues=True):
         txtShocks = arr
                     
         if not "Date" in txtShocks:
-            txtShocks.insert(0,"Date : 01/01/2001\n") 
+            txtShocks.insert(0,"Date : 01/01/2026\n") 
             
         txtShocks = "\n".join(txtShocks)
             
         if not txtRange:
-            txtRange = "01/01/2000 - 01/01/2100"
+            txtRange = "01/01/2025 - 01/01/2125"
           
         return txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,txtDescription
     
@@ -347,6 +347,6 @@ def getDynareModel(fpath,calibration,options={},use_cache=False,debug=False):
     
 if __name__ == '__main__':
     """The main program."""
-    file_path = os.path.abspath(os.path.join(path,'../../models/ICD/MPAF/model.mod'))
+    file_path = os.path.abspath(os.path.join(path,'../../../supplements/models/MPAF/model.mod'))
     model = getDynareModel(fpath=file_path,calibration={},debug=True)
    

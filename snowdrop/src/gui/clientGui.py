@@ -8,7 +8,7 @@ Created on Fri Apr 20 13:49:49 2018
 import sys, os
 
 path = os.path.dirname(os.path.abspath(__file__))
-working_dir = os.path.abspath(os.path.join(path,".."))
+working_dir = os.path.abspath(os.path.join(path,"../../.."))
 if os.path.exists(working_dir):
     sys.path.append(working_dir)
 
@@ -40,7 +40,7 @@ strShocks = "Shocks:"
 strTimeRange = "Time Range:"
 strFreq = "Frequency:"
 strFreqList = ['Annually','Quarterly','Monthly','Weekly','Daily']
-strSteadyState = "Find Steady-State Solution for Parameters Range:"
+strSteadyStates = "Find Steady-State Solution for Parameters Range:"
 strSteadyStateSolution = "Steady-State Solution:"
 strSimulationResults = "Simulation Results:"
 
@@ -55,21 +55,23 @@ class Application(tk.Frame):
         if file_path is None:
             txtDescr="";txtEqs="";txtParams="";txtParamsRange="";txtEndogVars="";txtExogVars="";txtShocks="";txtRange="";txtFreq="";eqLabels=""
         else:
-            txtDescr,txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,eqLabels,comments = readFile(file_path)
+            txtDescr,txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,varLabels,txtRange,txtFreq,eqLabels,comments = readFile(file_path)
         self.description = txtDescr
         self.createWidgets(txtDescr,txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq)
         self.tabContainer = None
         self.tableContainer = None
         self.eqLabels = eqLabels
         self.input_file = None
+        self.temp_file = None
         self.history_file = None
         self.comments = None
+        self.labels = []
         self.pack()
 
     def OpenFile(self):
         """ Open file dialog."""
         #fdir = os.path.abspath(os.path.join(working_dir,"../models/Sirius"))
-        fdir = os.path.abspath(os.path.join(working_dir,"../models/Troll/FSGM3"))
+        fdir = os.path.abspath(os.path.join(working_dir,"../../supplements/models/TOY/RBC.yaml"))
         file_path = fd.askopenfilename(initialdir=fdir)
         self.input_file = os.path.abspath(file_path)
         
@@ -77,8 +79,9 @@ class Application(tk.Frame):
             tab= self.containers[key]
             tab.destroy()
             
-        txtDescr,txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,eqLabels,comments = readFile(file_path)
+        txtDescr,txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,varLabels,txtRange,txtFreq,eqLabels,comments = readFile(file_path)
         self.description = txtDescr
+        self.labels= varLabels
         self.createWidgets(txtDescr,txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq)
         self.comments = comments
         
@@ -103,10 +106,14 @@ class Application(tk.Frame):
                 obj.insert(tk.END,ln)
         
     def Save(self):
-        """Save GUI data into template.txt files and template.yaml files."""
+        """Save GUI data into temp.yaml file."""
         if checkNumberOfEquationsAndVariables(self):
             SaveYamlOutput(self)
-            #SaveTemplateOutput(self)
+            
+    def SaveTemplate(self):
+        """Save GUI data into template.yaml file."""
+        if checkNumberOfEquationsAndVariables(self):
+            SaveTemplateOutput(self)
         
     def SaveSession(self):
         """Save user input to a text file."""
@@ -128,24 +135,76 @@ class Application(tk.Frame):
 
         # Save GUI data to template file
         self.Save()
+        
+        figs = None
         # Run simulations
-        fdir = os.path.dirname(self.input_file)
-        name = os.path.basename(self.input_file)
-        fout,ext = os.path.splitext(name)
-        fname = os.path.abspath(os.path.join(fdir,fout+'.yaml'))
         # Create model
-        model = importModel(fname)
+        model = importModel(self.temp_file)
         # Get variables names
         variables = model.symbols['variables']
+        parameters = model.symbols['parameters']
         order = np.argsort(variables)
         
         param_range = getParamRange(self)
-        if param_range.strip():
-            findSteadyStateSolutions(model=model,Plot=False,Output=False)
+        par_range = {}; data = []
+        for p in param_range:
+            p = p.replace("="," : ")
+            if ':' in p:
+                left,right = p.split(':')
+                left = left.strip()
+                right = right.replace(' ','')
+                if left in parameters:
+                    if '-' in right:
+                        tmp = right.split('-')
+                        tmp = list(filter(None,tmp))
+                        if len(tmp) == 2:
+                            par_range[left] = [float(tmp[0]),float(tmp[1])]
+                
+        if len(par_range) > 0:
+            arr_ss,par_ss,par_names,mp = findSteadyStateSolutions(model=model,par_range=par_range,number_of_steps=10,Plot=False,Output=False)
+     
+            sort = False
+            for i,k in enumerate(mp):
+                arr = mp[k]
+                for x in arr:
+                    data.append(['',''])
+                    x0 = np.around(x[0], decimals=3)
+                    data.append([k,x0])
+                    z = np.around(x[1], decimals=3) 
+                    m = dict(zip(variables,z))
+                    for i in order:
+                        v = variables[i]
+                        if "_plus_" in v or "_minus_" in v:
+                            continue
+                        data.append([v,m[v]])
+            data = np.array(data)
+            
+            #import matplotlib
+            #matplotlib.use('TkAgg')
+            from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+            from snowdrop.src.graphs.util import plotSteadyState
+            
+            figures_dir = os.path.abspath(os.path.join(working_dir,'graphs'))
+            figs = plotSteadyState(path_to_dir=figures_dir,variables=variables,arr_ss=arr_ss,par_ss=par_ss,sizes=(3,2),save=False)
+            
+            # Remove figures tabs
+            self.removeFigures()
+                
+            # Place figures in new tabs
+            for i,fig in enumerate(figs):
+                tabControl = self.notebook
+                tab = ttk.Frame(tabControl)
+                tabName = 'Steady State Figure #' + str(1+i)
+                self.containers[tabName] = tab
+                tabControl.add(tab,text=tabName)
+                canvas = FigureCanvasTkAgg(fig, master=tab)
+                canvas.get_tk_widget().pack(padx=100,pady=100,side=tk.TOP,fill=tk.BOTH,expand=tk.TRUE)
+                canvas.draw()
+            
         else:
             data = findSteadyStateSolution(model=model,Output=False)    
             data = np.around(data, decimals=3)   
-            arr1 = []; arr2 = []
+            arr1 = []; arr2 = []; sort = True
             for i in order:
                 v = variables[i]
                 if "_plus_" in v or "_minus_" in v:
@@ -155,63 +214,61 @@ class Application(tk.Frame):
             
             data = np.column_stack((arr1,arr2))
             
-            tab = self.containers["tab3"]
-            if not self.tabContainer is None:
-                self.tabContainer.destroy()
+        tab = self.containers["tab4"]
+        if not self.tabContainer is None:
+            self.tabContainer.destroy()
+        
+        # Populate widgets of this tab  
+        container = tk.Frame(tab)
+        
+        self.cl = tk.Button(container, fg = "black", bg = "white")
+        self.cl["text"] = "CLOSE"
+        self.cl["command"] = self.Close
+        self.cl.pack(side=tk.RIGHT,padx=5,pady=5)
+        
+        self.cl = tk.Button(container, fg = "black", bg = "white")
+        self.cl["text"] = "CLEAN"
+        self.cl["command"] = self.CleanResults
+        self.cl.pack(side=tk.RIGHT,padx=5,pady=5)
+        
+        if not self.tableContainer is None:
+            self.tableContainer.destroy()
             
-            # Pupulate widgets of this tab  
-            container = tk.Frame(tab)
-            
-            self.cl = tk.Button(container, fg = "black", bg = "white")
-            self.cl["text"] = "CLOSE"
-            self.cl["command"] = self.Close
-            self.cl.pack(side=tk.RIGHT,padx=5,pady=5)
-            
-            self.cl = tk.Button(container, fg = "black", bg = "white")
-            self.cl["text"] = "CLEAN"
-            self.cl["command"] = self.CleanResults
-            self.cl.pack(side=tk.RIGHT,padx=5,pady=5)
-            
-            if not self.tableContainer is None:
-                self.tableContainer.destroy()
-                
-            self.tableContainer = createTableWidget(tab,container,strSteadyStateSolution,columns=['Name','Value'],values=data,minheight=40,width=200,minwidth=50,anchor="w",stretch=True,side=tk.TOP,adjust_heading_to_content=True)
-            container.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True) 
-            self.tabContainer = container
+        self.tableContainer = createTableWidget(tab,container,strSteadyStateSolution,columns=['Name','Value'],values=data,minheight=45,width=200,minwidth=50,anchor="w",stretch=True,side=tk.TOP,adjust_heading_to_content=True,sort=sort)
+        container.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True) 
+        self.tabContainer = container
 
-            self.notebook.select(tab)
+        self.notebook.select(tab)
                              
             
     def GetImpulseResponseFunctions(self):
         """Find and plot impulse response functions."""
-        from snowdrop.src.driver import plot,getImpulseResponseFunctions
+        from snowdrop.src.driver import getImpulseResponseFunctions
+        from snowdrop.src.graphs.util import plot
         
         # Save GUI data to template file
         self.Save()
         
         # Remove figure tabs
         self.removeFigures()
-        
-        fdir = os.path.dirname(self.input_file)
-        name = os.path.basename(self.input_file)
-        fout,ext = os.path.splitext(name)
-        fname = os.path.abspath(os.path.join(fdir,fout+'.yaml'))
-        
+ 
         path = os.path.dirname(os.path.abspath(__file__))
-        path_to_dir = os.path.abspath(os.path.join(path,'../../graphs'))
+        path_to_dir = os.path.abspath(os.path.join(path,'../../../graphs'))
+        fname = self.temp_file
         
         # Run simulations
-        time,data,columns,rng = getImpulseResponseFunctions(fname=fname,Plot=False,Output=False)
+        data,rng = getImpulseResponseFunctions(fname=fname,Plot=False,Output=False)
+        columns,_ = getVariableNamesAndInitialValues(self)
         
         # Get figures
-        figs = plot(path_to_dir=path_to_dir,data=data,variable_names=columns,sizes=(2,2),figsize=(6,4),rng=rng,show=False,save=False)
+        figs = plot(path_to_dir=path_to_dir,data=[data],variable_names=columns,var_labels=self.labels,sizes=(2,2),figsize=(12,8),rng=rng,show=False,save=False)
          
         # Output data 
-        data = np.around(data[0], decimals=3)
-        if len(time) > 0:
+        data = np.around(data, decimals=3)
+        if len(rng) > 0:
             columns = ['Date'] + columns
             dates = []
-            for d in time:
+            for d in rng:
                 dates.append(dt.datetime.strftime(d,'%m/%d/%Y'))
             n = min(len(dates),len(data))
             data = np.column_stack( (dates[:n],data[:n]) )
@@ -246,7 +303,7 @@ class Application(tk.Frame):
         if not self.tableContainer is None:
             self.tableContainer.destroy()
         
-        self.tableContainer = createTableWidget(tab,container,strSimulationResults,columns=columns,values=data,minheight=40,side=tk.TOP,adjust_heading_to_content=True)
+        self.tableContainer = createTableWidget(tab,container,strSimulationResults,columns=columns,values=data,minheight=45,width=200,minwidth=50,side=tk.TOP,adjust_heading_to_content=True)
         container.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True) 
         self.tabContainer = container
         
@@ -265,12 +322,116 @@ class Application(tk.Frame):
             self.containers[tabName] = tab
             tabControl.add(tab,text=tabName)
             canvas = FigureCanvasTkAgg(fig, master=tab)
-            canvas.get_tk_widget().pack(expand=tk.TRUE)
+            canvas.get_tk_widget().pack(padx=100,pady=100,side=tk.TOP,fill=tk.BOTH,expand=tk.TRUE)
             canvas.draw()
             
         tab = self.containers["tab2"]   
         self.notebook.select(tab)
            
+        
+    def Run(self):
+        """Run simulations."""
+        from snowdrop.src.driver import run,importModel
+        from snowdrop.src.graphs.util import plot,plotDecomposition
+        
+        # Save GUI data to template file
+        self.Save()
+        
+        # Remove figure tabs
+        self.removeFigures()
+        
+        path = os.path.dirname(os.path.abspath(__file__))
+        path_to_dir = os.path.abspath(os.path.join(path,'../../../graphs'))
+        fname = self.temp_file
+        
+        # Run simulations
+        model = importModel(fname=fname)
+        data, rng = run(model=model,Plot=False,Output=False)
+        columns = model.symbols["variables"]
+        
+        # Get periods
+        periods = []
+        shocks = getShocks(self)
+        for sh in shocks:
+            if 'Date' in sh:
+                d = sh.split("=")[1].strip()
+                date = dt.datetime.strptime(d,'%m/%d/%Y')
+                for i,d in enumerate(rng):
+                    if d == date:
+                        periods.append(i)
+          
+        figs1 = plot(path_to_dir=path_to_dir,data=[data],variable_names=columns,var_labels=self.labels,sizes=(2,2),figsize=(12,8),rng=rng,show=False,save=False)        
+        #decomp = ['dot4_cpi','dot4_cpi_x','dot4_gdp','lgdp_gap','lx_gdp_gap','mci','rmc','rr','rr_gap']
+        decomp = columns # All variables
+   
+        figs2 = plotDecomposition(path_to_dir=path_to_dir,model=model,y=data,variables_names=columns,decomp_variables=decomp,periods=periods,rng=rng,sizes=(2,2),figsize=(12,8),show=False,save=False)        
+        figs = figs1 + figs2   
+        
+        indices = sorted(range(len(columns)), key=lambda k: columns[k])
+        variable_names = [columns[i] for i in indices if not "_plus_" in columns[i] and not "_minus_" in columns[i]]
+        indices = [i for i,x in enumerate(columns) if x in variable_names]
+                         
+        # Output data
+        data = np.around(data, decimals=3)
+        data = data[:,indices]
+        if len(rng) > 0:
+            columns = ['Date'] + variable_names
+            dates = []
+            for d in rng:
+                dates.append(dt.datetime.strftime(d,'%m/%d/%Y'))
+            n = min(len(dates),len(data))
+            data = np.column_stack( (dates[:n],data[:n]) )
+            
+        arr1 = []; arr2 = []
+        for i,v in enumerate(columns):
+            if "_plus_" in v or "_minus_" in v:
+                continue
+            arr1.append(v)
+            arr2.append(data[:,i])
+                
+        columns = arr1                         
+        data = np.array(arr2).T
+        
+        tab = self.containers["tab3"]
+        if not self.tabContainer is None:
+            self.tabContainer.destroy()
+        
+        # Pupulate widgets of this tab  
+        container = tk.Frame(tab)
+        
+        self.cl = tk.Button(container, fg = "black", bg = "white")
+        self.cl["text"] = "CLOSE",
+        self.cl["command"] = self.Close
+        self.cl.pack(side=tk.RIGHT,padx=5,pady=5)
+        
+        self.cl = tk.Button(container, fg = "black", bg = "white")
+        self.cl["text"] = "CLEAN",
+        self.cl["command"] = self.CleanResults
+        self.cl.pack(side=tk.RIGHT,padx=5,pady=5)
+        
+        if not self.tableContainer is None:
+            self.tableContainer.destroy()
+        
+        self.tableContainer = createTableWidget(tab,container,strSimulationResults,columns=columns,values=data,minheight=45,width=200,minwidth=50,side=tk.TOP,adjust_heading_to_content=True)
+        container.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True) 
+        self.tabContainer = container
+        
+        container = tk.Frame(tab)
+        self.notebook.select(tab)
+        
+        # Place figures in new tabs
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        
+        for i,fig in enumerate(figs):
+            tabControl = self.notebook
+            tab = ttk.Frame(tabControl)
+            tabName = 'Figure #' + str(1+i)
+            self.containers[tabName] = tab
+            tabControl.add(tab,text=tabName)
+            canvas = FigureCanvasTkAgg(fig, master=tab)
+            canvas.get_tk_widget().pack(padx=100,pady=100,side=tk.TOP,fill=tk.BOTH,expand=tk.TRUE)
+            canvas.draw()
+
     def Clean(self):  
         """
         Cleans session and command text boxes
@@ -343,164 +504,7 @@ class Application(tk.Frame):
         obj.config(state=tk.NORMAL)
         obj.delete('1.0', tk.END)  
         obj.insert(tk.END,"\n".join(buf))
-        obj.config(state=tk.DISABLED)
-                       
-        
-    def Run(self):
-        """Run simulations."""
-        from snowdrop.src.driver import run,importModel
-        from snowdrop.src.graphs.util import plot,plotDecomposition
-        
-        # Save GUI data to template file
-        self.Save()
-        
-        # Remove figure tabs
-        self.removeFigures()
-        
-        fdir = os.path.dirname(self.input_file)
-        name = os.path.basename(self.input_file)
-        fout,ext = os.path.splitext(name)
-        fname = os.path.abspath(os.path.join(fdir,fout+'.yaml'))
-        
-        path = os.path.dirname(os.path.abspath(__file__))
-        path_to_dir = os.path.abspath(os.path.join(path,'../../graphs'))
-        
-        # Run simulations
-        model = importModel(fname=fname)
-        rng,data = run(model=model,Plot=False,Output=False)
-        columns = model.symbols["variables"]
-    
-        # Get figures
-        figs1 = plot(path_to_dir=path_to_dir,data=data,variable_names=columns,sizes=(2,2),figsize=(12,8),rng=rng,show=False,save=False)        
-        decomp = ['dot4_cpi','dot4_cpi_x','dot4_gdp','lgdp_gap','lx_gdp_gap','mci','rmc','rr','rr_gap']
-        #decomp = columns
-        figs2 = plotDecomposition(path_to_dir=path_to_dir,model=model,y=data[-1],s=columns,decomp_variables=decomp,periods=rng,rng=rng,sizes=(2,2),figsize=(12,8),show=False,save=False)        
-        figs = figs1 + figs2   
-        
-        indices = sorted(range(len(columns)), key=lambda k: columns[k])
-        variable_names = [columns[i] for i in indices if not "_plus_" in columns[i] and not "_minus_" in columns[i]]
-        indices = [i for i,x in enumerate(columns) if x in variable_names]
-                         
-        # Output data
-        data = np.around(data[-1], decimals=3)
-        data = data[:,indices]
-        if len(rng) > 0:
-            columns = ['Date'] + variable_names
-            dates = []
-            for d in rng:
-                dates.append(dt.datetime.strftime(d,'%m/%d/%Y'))
-            n = min(len(dates),len(data))
-            data = np.column_stack( (dates[:n],data[:n]) )
-            
-        arr1 = []; arr2 = []
-        for i,v in enumerate(columns):
-            if "_plus_" in v or "_minus_" in v:
-                continue
-            arr1.append(v)
-            arr2.append(data[:,i])
-                
-        columns = arr1                         
-        data = np.array(arr2).T
-        
-        tab = self.containers["tab3"]
-        if not self.tabContainer is None:
-            self.tabContainer.destroy()
-        
-        # Pupulate widgets of this tab  
-        container = tk.Frame(tab)
-        
-        self.cl = tk.Button(container, fg = "black", bg = "white")
-        self.cl["text"] = "CLOSE",
-        self.cl["command"] = self.Close
-        self.cl.pack(side=tk.RIGHT,padx=5,pady=5)
-        
-        self.cl = tk.Button(container, fg = "black", bg = "white")
-        self.cl["text"] = "CLEAN",
-        self.cl["command"] = self.CleanResults
-        self.cl.pack(side=tk.RIGHT,padx=5,pady=5)
-        
-        if not self.tableContainer is None:
-            self.tableContainer.destroy()
-        
-        self.tableContainer = createTableWidget(tab,container,strSimulationResults,columns=columns,values=data,minheight=40,side=tk.TOP,adjust_heading_to_content=True)
-        container.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True) 
-        self.tabContainer = container
-        
-        container = tk.Frame(tab)
-        self.notebook.select(tab)
-        
-        # Place figures in new tabs
-        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-        
-        for i,fig in enumerate(figs):
-            tabControl = self.notebook
-            tab = ttk.Frame(tabControl)
-            tabName = 'Figure #' + str(1+i)
-            self.containers[tabName] = tab
-            tabControl.add(tab,text=tabName)
-            canvas = FigureCanvasTkAgg(fig, master=tab)
-            canvas.get_tk_widget().pack(expand=tk.TRUE)
-            canvas.draw()
-
-    def Close(self):
-       """Close the GUI."""
-       global root
-       root.destroy()
-       root.quit()
-       root = None
-       
-       
-    def CloseFrame(self):
-       """Close the frame."""
-       self.root.destroy()
-       self.root = None
-      
-        
-    def Reset(self):
-       """Reset the GUI."""
-       self.destroy()
-       app = Application(root)
-       app.master.title("Equations Editor")
-       app.master.minsize(minWidth, minHeight)
-       app.master.maxsize(maxWidth, maxHeight)
-               
-       tab = self.containers["tab2"]   
-       self.notebook.select(tab)
-                  
-       
-    def getEquationLabels(self):
-        """Return equation labels and definition for Troll models."""
-        eqs = ""
-        if not self.eqLabels is None:
-            for lb, eq in self.eqLabels.iteritems():
-                eqs = eqs + lb + " : " + eq + "\n"
-            
-        return eqs
-    
-    def removeFigures(self):
-        """
-        Removes figures tab
-        """
-        keys = []
-        for key in self.containers.keys():
-            tab = self.containers[key]
-            if key.startswith("Figure"):
-                keys.append(key)
-                
-        for key in keys:
-            tab = self.containers[key]
-            tab.destroy()
-            self.containers.pop(key,None)
-               
-    def getEquation(self,label):
-        """
-        Returns equation definition by label for Troll models
-        """
-        eq = ""
-        if not self.eqLabels is None and label in self.eqLabels.keys():
-            eq = self.eqLabels[label]
-            
-        return eq           
+        obj.config(state=tk.DISABLED)       
      
     def createWidgets(self,txtDescr,txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq):
         """
@@ -520,6 +524,9 @@ class Application(tk.Frame):
         tab3 = ttk.Frame(tabControl)
         tabControl.add(tab3, text='Results')
         self.containers["tab3"] = tab3
+        tab4 = ttk.Frame(tabControl)
+        tabControl.add(tab4, text='Steady State')
+        self.containers["tab4"] = tab4
         tabControl.pack(expand=True, fill="both")
         
         if showSessionTab:
@@ -591,7 +598,7 @@ class Application(tk.Frame):
         #img = tk.PhotoImage(file=imgFilePath)
         self.sv = tk.Button(container, fg = "green", bg = "white")
         self.sv["text"] = "SAVE TEMPLATE"
-        self.sv["command"] = self.Save
+        self.sv["command"] = self.SaveTemplate
         self.sv.pack(side=tk.RIGHT,padx=5,pady=5)
         
         self.rs = tk.Button(container, fg = "green", bg = "white")
@@ -612,7 +619,7 @@ class Application(tk.Frame):
         container = tk.Frame(tab2)
         createTextBoxWidget(self,container,label=strTimeRange,text=txtRange,width=40,height=3,side=tk.RIGHT)
         createListBoxWidget(self,container,label=strFreq,items=strFreqList,selected_item=txtFreq,width=30,height=5,side=tk.RIGHT)
-        createTextBoxWidget(self,container,label=strSteadyState,text=txtParamsRange,width=40,height=3,side=tk.RIGHT)
+        createTextBoxWidget(self,container,label=strSteadyStates,text=txtParamsRange,width=40,height=3,side=tk.RIGHT)
         var = tk.IntVar()
         var.set(1)
         container.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True)
@@ -623,9 +630,67 @@ class Application(tk.Frame):
         createTextBoxWidget(self,container,label=strExogVariables,text=txtExogVars,width=40,height=10,scrollBar=True,side=tk.RIGHT) 
         createTextBoxWidget(self,container,label=strParams,text=txtParams,width=40,height=10,scrollBar=True,side=tk.BOTTOM)  
         container.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True) 
+         
+    def Close(self):
+       """Close the GUI."""
+       global root
+       root.destroy()
+       root.quit()
+       root = None
+       
+    def CloseFrame(self):
+       """Close the frame."""
+       self.root.destroy()
+       self.root = None
+      
+    def Reset(self):
+       """Reset the GUI."""
+       self.destroy()
+       app = Application(root)
+       app.master.title("Equations Editor")
+       app.master.minsize(minWidth, minHeight)
+       app.master.maxsize(maxWidth, maxHeight)
+               
+       tab = self.containers["tab2"]   
+       self.notebook.select(tab)
+                
+    def getEquationLabels(self):
+        """Return equation labels and definition for Troll models."""
+        eqs = ""
+        if not self.eqLabels is None:
+            for lb, eq in self.eqLabels.iteritems():
+                eqs = eqs + lb + " : " + eq + "\n"
+            
+        return eqs
+    
+    def removeFigures(self):
+        """
+        Removes figures tab
+        """
+        keys = []
+        for key in self.containers.keys():
+            tab = self.containers[key]
+            if "Figure" in key:
+                keys.append(key)
+                
+        for key in keys:
+            tab = self.containers[key]
+            tab.destroy()
+            self.containers.pop(key,None)
+               
+    def getEquation(self,label):
+        """
+        Returns equation definition by label for Troll models
+        """
+        eq = ""
+        if not self.eqLabels is None and label in self.eqLabels.keys():
+            eq = self.eqLabels[label]
+            
+        return eq    
+
 ### End of class
                         
-def createTableWidget(self,parent,label,columns,values,minheight,side=tk.BOTTOM,adjust_heading_to_content=False,width=None,minwidth=None,anchor=None,stretch=None):
+def createTableWidget(self,parent,label,columns,values,minheight,side=tk.BOTTOM,adjust_heading_to_content=True,width=None,minwidth=None,anchor=None,stretch=None,sort=True):
     """
     Creates table widget
     """
@@ -643,12 +708,15 @@ def createTableWidget(self,parent,label,columns,values,minheight,side=tk.BOTTOM,
     nrow = len(values)
     for i in range(nrow):
         table.insert_row(list(values[i,:]))
+    if sort:    
+        table.sort_by(col=0, descending=False)
+    
                  
     #table = Table(container,columns,minheight=minheight,height=500)
     #table.pack(expand=True,side=tk.TOP,padx=1,pady=1)
     #table.set_data(values)
     
-    container.pack(side=side,fill=tk.BOTH,expand=True) 
+    container.pack(side=side,fill=tk.BOTH,padx=10,pady=10,expand=True) 
     
     return container
     
@@ -707,7 +775,7 @@ def createListBoxWidget(self,parent,label,selected_item,items,width,height,scrol
     for i in items:
         container.lb.insert(tk.END, i)
     container.lb.pack(side=tk.TOP,padx=10,pady=10)
-    item = re.sub('\s+', '', selected_item)
+    item = re.sub(r'\s+', '', selected_item)
     if item in items:
         ind = items.index(item)
     else: 
@@ -761,7 +829,7 @@ def readFile(file_path):
     from snowdrop.src.utils.getXmlData import readXmlModelFile
     from snowdrop.src.utils.getYamlData import readYamlModelFile
     
-    eqLabels = None; comments = None
+    eqLabels = None; labels=None; comments = None
     fname, ext = os.path.splitext(file_path)
     name,_ = os.path.splitext(os.path.basename(file_path))
     if ext.lower() in [".inp",".src"]:
@@ -773,33 +841,34 @@ def readFile(file_path):
         if len(undefined_parameters):
             messagebox.showwarning("Warning",f"{len(undefined_parameters)} parameters were not defined and were set to one.")           
     elif ext.lower() == ".mod":
-        txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,modelName = readDynareModelFile(file_path)
-        if modelName:
-            txtDescr = modelName
+        txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,description = readDynareModelFile(file_path)
+        if description:
+            txtDescr = description
         else:
             txtDescr = 'Dynare Model ' + name
     elif ext.lower() == ".model":   
-        txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,modelName = readIrisModelFile(file_path)
-        if modelName:
-            txtDescr = modelName
+        txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,description  = readIrisModelFile(file_path)
+        if description:
+            txtDescr = description
         else:
             txtDescr = 'Iris Model ' + name
     elif ext.lower() == ".txt": 
-        txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,modelName = readTemplateFile(file_path)   
-        if modelName:
-            txtDescr = modelName
+        txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,description = readTemplateFile(file_path)   
+        if description:
+            txtDescr = description
         else:
             txtDescr = 'Text File ' + name
     elif ext.lower() == ".yaml": 
-        txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,modelName = readYamlModelFile(file_path)   
-        if modelName:
-            txtDescr = modelName
+        txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,varLabels,txtRange,txtFreq,description = readYamlModelFile(file_path)   
+        if description:
+            txtDescr = description
         else:
             txtDescr = 'YAML Model ' + name
+        labels = varLabels
     elif ext.lower() == ".xml": 
-        txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,modelName = readXmlModelFile(file_path)   
-        if modelName:
-            txtDescr = modelName
+        txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,description = readXmlModelFile(file_path)   
+        if description:
+            txtDescr = description
         else:
             txtDescr = 'XML Model ' + name
     else:
@@ -807,7 +876,17 @@ def readFile(file_path):
         txtDescr = 'UnknownL Model File Type'
         messagebox.showwarning("Unknown Model File Extension","Only the following file extensions are supported: inp/mod/model/yaml/txt!  You are trying to open file with extension: {}".format(ext))
         
-    return txtDescr,txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,eqLabels,comments 
+    lst = txtShocks.split('\n'); lst2 = []
+    for x in lst:
+        if  ':' in x or '=' in x:
+            lst2.append(x.replace('=','= ').replace(':','= '))
+        else:
+            tmp = x.split(',')
+            for i in range(len(tmp)):
+                lst2.append(f'{tmp[i]} = 0')
+    txtShocks = '\n'.join(lst2)
+    
+    return txtDescr,txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,labels,txtRange,txtFreq,eqLabels,comments 
 
 
 def checkNumberOfEquationsAndVariables(self):
@@ -818,14 +897,12 @@ def checkNumberOfEquationsAndVariables(self):
     input_file = self.input_file
     b = not input_file is None and input_file.endswith(".inp")
     var = getVariables(self)
-    var = var.split("\n")
     if b:
-        var = [x for x in var if x.strip() and not "_ss" in x]
+        var = [x.strip() for x in var if x.strip() and not "_ss" in x]
     n_var = len(var)
     eqs = getEquations(self)
-    eqs = eqs.split("\n")
     if b:
-        eqs = [x for x in eqs if x.strip() and not "_ss" in x]
+        eqs = [x.strip() for x in eqs if x.strip() and not "_ss" in x]
     n_eqs = len(eqs)
     if n_var < n_eqs:
         msg = "endogenous variables"
@@ -845,6 +922,8 @@ def getDescription(self):
 def getShocks(self):
     obj = self.containers[strShocks]
     shocks = obj.get("1.0",tk.END)
+    tmp = shocks.split("\n")
+    shocks = list(filter(None,tmp))
     return shocks
     
 def getShockNamesAndValues(self):
@@ -864,17 +943,23 @@ def getVariableNamesAndInitialValues(self):
 
 def getVariables(self): 
     obj = self.containers[strEndogVarInitValues]
-    init_values = obj.get("1.0",tk.END)
-    return init_values
+    var = obj.get("1.0",tk.END)
+    tmp = var.split("\n")
+    var = list(filter(None,tmp))
+    return var
 
 def getExogVariables(self):
     obj = self.containers[strExogVariables]
     exog_var = obj.get("1.0",tk.END)
+    tmp = exog_var.split("\n")
+    exog_var = list(filter(None,tmp))
     return exog_var
 
 def getParameters(self):
     obj = self.containers[strParams]
     params = obj.get("1.0",tk.END)
+    tmp = params.split("\n")
+    params = list(filter(None,tmp))
     return params
     
 def getParameterNamesAndValues(self): 
@@ -882,13 +967,18 @@ def getParameterNamesAndValues(self):
     return getNamesAndValues(params)
 
 def getParamRange(self):
-    obj = self.containers[strSteadyState]
+    obj = self.containers[strSteadyStates]
     param_range = obj.get("1.0",tk.END)
+    param_range = param_range.split('\n')
+    param_range = list(filter(None,param_range))
     return param_range
     
 def getEquations(self):
     obj = self.containers[strEqs]
     equations = obj.get("1.0",tk.END)
+    eqs = equations.split("\n")
+    eqs = [x for x in eqs if not x.strip().startswith("#")]
+    equations = list(filter(None,eqs))
     return equations
 
 def getTimeRange(self):
@@ -924,31 +1014,45 @@ def getFrequency(self):
     return str(ind)
 
 def getPeriods(self):
-    periods = ''
-    shocks = getShocks(self).split("\n")
+    import pandas as pd
+    
+    periods = []
+    shocks = getShocks(self)
+    rng = getTimeRange(self)
+    freq = getFrequency(self)
     ind = -1
     for shock in shocks:
         ind = shock.find('Date')
         if ind >= 0:
-            txt = shock[1+ind:]
-            ind2 = txt.find(":")
+            txt = shock[3+ind:]
+            ind2 = -1
+            if ":" in txt:
+                ind2 = txt.find(":")
+            if "=" in txt:
+                ind2 = txt.find("=")
             if ind2 >= 0:
                 txt = txt[1+ind2:].strip()
-                d = dt.datetime.strptime(txt,'%m/%d/%Y')
-                periods = periods + '[' + str(d.year) + ',' + str(d.month) + ',' + str(d.day) + '],'
-    periods = periods[:-1]
-    if ind >= 0:
-        periods = '[' + periods[0:len(periods)-1] + ']'
-    return '[' + periods + ']'
+                period = dt.datetime.strptime(txt,'%m/%d/%Y')
+
+    frequencies = {"0":"YS","1":"QS","2":"MS","3":"W","4":"D"}
+    tmp = rng.split('-')
+    if len(tmp) == 2:
+        time_range = pd.date_range(start=tmp[0].strip(),end=tmp[1].strip(),freq=frequencies[freq])
+        for i,d in enumerate(time_range):
+            if d == period:
+                periods.append(i)
+            
+    return periods
   
 def output(self,f,label,txt):
     #print(txt)
     f.write(label)
     f.write('\n')
-    f.writelines(txt + '\n')
+    txt = txt.split('\n')
+    for i in range(len(txt)):
+        f.writelines('   ' + txt[i] + '\n')
     f.write('\n')
     
-         
 def SaveYamlOutput(self):
     """
     Writes GUI data to YAML template text file
@@ -968,18 +1072,21 @@ def SaveYamlOutput(self):
     input_file = self.input_file
     bInp = not input_file is None and input_file.endswith(".inp")
     
-    SaveToYaml(file=self.input_file,description=description,shock_names=shock_names,shock_values=shock_values,
+    fdir,fname = os.path.split(self.input_file)
+    self.temp_file = os.path.abspath(os.path.join(fdir,'../temp.yaml'))
+    
+    SaveToYaml(file=self.temp_file,description=description,shock_names=shock_names,shock_values=shock_values,
              variables_names=variables_names,variables_init_values=variables_init_values,comments=self.comments,
              param_names=param_names,param_values=param_values,exog_var=exog_var,equations=equations,
-             time_range=time_range,freq=freq, periods=periods,param_range=param_range,bInp=bInp)
-            
+             varLabels=self.labels,time_range=time_range,freq=freq, periods=periods,
+             param_range=param_range,bInp=bInp)
             
 def SaveTemplateOutput(self):
     """
-    Wtites GUI data to template text file
+    Write GUI data to template yaml file.
     """
     path = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.abspath(os.path.join(path, '../../models/template.txt'))
+    file_path = os.path.abspath(os.path.join(path, '../../../supplements/models/template.yaml'))
     
     description = getDescription(self)
     eqs = getEquations(self)
@@ -989,22 +1096,29 @@ def SaveTemplateOutput(self):
     shocks = getShocks(self)
     timeRange = getTimeRange(self)
     freq = getFrequency(self)
+    
+    eqs = '\n'.join(eqs).replace(' ','').replace('=',' = ')
+    params = '\n'.join(params).replace(' ','').replace('=',': ')
+    initValues = '\n'.join(initValues).replace(' ','').replace('=',': ')
+    exogVariables ='\n'.join(exogVariables).replace(' ','').replace('=',': ') 
+    shocks = '\n'.join(shocks).replace(' ','').replace('=',': ')
+    timeRange = timeRange.replace(':',': ').replace('=',': ')
       
     with open(file_path, 'w') as f:
         output(self,f,strDescription,description) 
         output(self,f,strEqs,eqs) 
         output(self,f,strParams,params) 
-        output(self,f,strEndogVarInitValues,initValues)  
-        output(self,f,strExogVariables,exogVariables)  
-        output(self,f,strShocks,shocks) 
+        output(self,f,strEndogVarInitValues,initValues)
+        output(self,f,strExogVariables,exogVariables) 
+        output(self,f,strShocks,shocks)
         output(self,f,strTimeRange,timeRange)  
         output(self,f,strFreq,freq) 
 
 if __name__ == '__main__':
     path = os.path.dirname(os.path.abspath(__file__))
-    working_dir = os.path.abspath(os.path.join(path,"../"))
+    working_dir = os.path.abspath(os.path.join(path,"../../.."))
     sys.path.append(working_dir)
-    file_path = os.path.abspath(os.path.join(path,'../../models/PAMISV01.inp'))
+    file_path = os.path.abspath(os.path.join(working_dir,'supplements/models/TOY/JLMP98.yaml'))
     
     root = tk.Tk()
     app = Application(root)

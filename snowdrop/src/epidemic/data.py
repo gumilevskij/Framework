@@ -19,12 +19,12 @@ os.chdir(working_dir)
 
 def getData(start,end,country=None,save=True):
     """Read excel file."""
-    file_path  = os.path.abspath(os.path.join(working_dir,'snowdrop/data/COVID19/Countries.xlsx'))
+    file_path  = os.path.abspath(os.path.join(working_dir,'supplements/data/COVID19/Countries.xlsx'))
     xl = pd.ExcelFile(file_path)
     sheet_names = xl.sheet_names  # see all sheet names
     dbs = {}; index = None
     
-    fpath = os.path.abspath(os.path.join(working_dir,"snowdrop/data/COVID19/country_data.xlsx"))
+    fpath = os.path.abspath(os.path.join(working_dir,"supplements/data/COVID19/country_data.xlsx"))
     writer = pd.ExcelWriter(fpath, engine='xlsxwriter')
     
     for sht in sheet_names:
@@ -111,7 +111,7 @@ def getData(start,end,country=None,save=True):
 def getData2(start,end,sht,save=True):
     """Read excel file."""
     db = {}
-    file_path  = os.path.abspath(os.path.join(working_dir,'snowdrop/data/COVID19/Countries.xlsx'))
+    file_path  = os.path.abspath(os.path.join(working_dir,'supplements/data/COVID19/Countries.xlsx'))
     df = pd.read_excel(file_path,sht,parse_dates=True)
     dt = df["Date"][6:]
     dt = pd.to_datetime(dt)
@@ -195,7 +195,7 @@ def plot_data(db,labels,save=True,size=[3,3],show=True):
         make_space_above(fig)
         
         if save:
-            path_to_dir = os.path.join(working_dir,"snowdrop/graphs")
+            path_to_dir = os.path.join(working_dir,"graphs")
             plt.savefig(os.path.join(path_to_dir,k+'_'+str(numb)+'.png'))
         if show: 
             plt.show(block=False)

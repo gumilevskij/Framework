@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import root
 from scipy.optimize import minimize,Bounds
 
-working_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+working_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),"../../.."))
 os.chdir(working_dir)
 
 from snowdrop.src.misc.termcolor import cprint
@@ -220,7 +220,7 @@ def getData(start,end,country=None,save=True):
     pop={"Germany":83.8*10**6,"US":331*10**6,"France":67*10**6,"Italy":60.5*10**6, "Spain":46.8}
     population = pop[country]
 
-    file_path  = os.path.abspath(os.path.join(working_dir,'data/COVID19/US_data.xlsx'))
+    file_path  = os.path.abspath(os.path.join(working_dir,'supplements/data/COVID19/US_data.xlsx'))
     df = pandas.read_excel(file_path,index_col=0,parse_dates=True)
     index = pandas.to_datetime(df.columns)
     data = df.iloc[1].values.astype('float64') / population
@@ -325,7 +325,7 @@ def getData(start,end,country=None,save=True):
     df = pandas.DataFrame(m)
     # Convert daily frequency to weekly 
     df = df.resample("W").mean()
-    df.to_csv(os.path.join(working_dir,"data/COVID19/epidemic.csv"))
+    df.to_csv(os.path.join(working_dir,"supplements/data/COVID19/epidemic.csv"))
     #print(df)
     
     return db

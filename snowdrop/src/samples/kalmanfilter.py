@@ -29,8 +29,8 @@ from snowdrop.src.utils.util import saveTimeSeries as dbsave
 def kalmanfilter(Plot=False,save=True):
     """Run Kalman filter and smoother."""
     path_to_dir = os.path.join(working_dir,'graphs')
-    meas = os.path.abspath(os.path.join(working_dir,'snowdrop/data/MPAF/history.csv'))
-    fout = os.path.abspath(os.path.join(working_dir,'data/MPAF/results.csv'))     # Results are saved in this file
+    meas = os.path.abspath(os.path.join(working_dir,'supplements/data/MPAF/history_new.csv'))
+    fout = os.path.abspath(os.path.join(working_dir,'supplements/data/MPAF/results.csv'))     # Results are saved in this file
     
     # Read historic data
     #df = pd.read_excel(io=meas,header=0,index_col=0,parse_dates=True,infer_datetime_format=True)
@@ -44,7 +44,7 @@ def kalmanfilter(Plot=False,save=True):
     
     # Instantiate model  
     fname = 'model.yaml'
-    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/MPAF',fname))
+    file_path = os.path.abspath(os.path.join(working_dir,'supplements/models/MPAF',fname))
     # Create model object
     model = importModel(fname=file_path, Solver="Klein", Filter="Durbin_Koopman",
                         Smoother="Durbin_Koopman", Prior="Equilibrium", measurement_file_path=meas, use_cache=False)
@@ -131,69 +131,7 @@ def kalmanfilter(Plot=False,save=True):
     file_path = os.path.abspath(os.path.join(working_dir,'data/MPAF/kalm_his_new.csv'))
     dbsave(fname=file_path,data=d)
     
-           
-    if False:
-        # Read IRIS results
-        if model.SMOOTHER is None:
-            file_path = os.path.abspath(os.path.join(working_dir,'data/MPAF/kalm_his_f.csv'))
-        else:
-            file_path = os.path.abspath(os.path.join(working_dir,'data/MPAF/kalm_his_s.csv'))
-        df_iris = pd.read_csv(file_path,header=0,index_col=0,parse_dates=True)
-        df_iris = df_iris.iloc[6:].astype(float)
-        df_iris.index = pd.to_datetime(df_iris.index)
-        # Read DYNARE results
-        file_path = os.path.abspath(os.path.join(working_dir,'data/MPAF/kalm_his_dynare_mpaf.csv'))
-        df_dynare = pd.read_csv(file_path,header=0,index_col=0,parse_dates=True)
-        df_dynare = df_dynare.iloc[4:].astype(float)
-        df_dynare.index = pd.to_datetime(df_dynare.index)
-    
-        # Compare with IRIS results
-        var = list();lst=list(); k=0
-        all_vars = sorted(var_names + 0*shocks)
-        for i in range(len(all_vars)):
-            n = all_vars[i]
-            if n in df_iris.columns and isinstance(d[n],pd.Series):
-                k += 1
-                lst.append(n)
-                if k%6 == 0:
-                    var.append(lst)
-                    lst = list()
-        if k%6 > 0:
-            var.append(lst)
-                      
-        files = []
-        for k,lst in enumerate(var):
-            plt.figure(figsize=(16,16))
-            for i,n in enumerate(lst):
-                ax = plt.subplot(3,2,1+i)
-                #ax.plot(df_dynare[n][start:end],label="Dynare")
-                ax.plot(df_iris[n][start:end],label="Iris")
-                ax.plot(d[n][start:end],label="Python")
-                plt.title(n,fontsize = 'x-large')
-                plt.xlabel('Year')
-                plt.legend(loc="best",fontsize='medium')
-                plt.grid(True)
-            
-            file_path = os.path.abspath(os.path.join(working_dir,'results/compare_'+str(k+1)+'.pdf'))
-            files.append(file_path)
-            plt.savefig(file_path)
-            
-        if save:
-            outputFile = os.path.abspath(os.path.join(working_dir,"results/compareMPAF.pdf"))
-            merge(outputFile,files)
-            
-                    
-        # Remove pdf files
-        files = glob.glob(os.path.join(working_dir,'results/compare_*.pdf'))
-        for f in files:
-            try:
-                os.remove(f)
-            except:
-                pass
-    
-        plt.close('all')
-     
-    
+
     ################################################################### Graphs
     if Plot:
         ### Observed and Trends
@@ -320,7 +258,6 @@ def kalmanfilter(Plot=False,save=True):
         labels=[['Actual','Predicted'],['Lag','RIR gap','RER gap','Foreign gap','Shock','OtherShock','Output Gap']]
         plotTimeSeries(path_to_dir=path_to_dir,header=header,titles=titles,labels=labels,series=series,sizes=[2,1],save=save)
     
-        
         ### Decomposition          
         header = 'Decomposition'    
         titles = ['MCI decomposition, pp']
@@ -328,9 +265,7 @@ def kalmanfilter(Plot=False,save=True):
                   d["MCI"]]
                  ]
         labels=[['RIR gap','RER gap','MCI']]
-        plotTimeSeries(path_to_dir=path_to_dir,header=header,titles=titles,labels=labels,series=series,sizes=[2,1],save=save)
-    
-        
+        plotTimeSeries(path_to_dir=path_to_dir,header=header,titles=titles,labels=labels,series=series,sizes=[2,1],save=save)     
         
         if save:
             # image list is the list with all image file names
@@ -345,43 +280,6 @@ def kalmanfilter(Plot=False,save=True):
 
     print('Done!')
 
-
-def compare(save = True):
-    """Compare time series in two excel files."""
-    # Read IRIS results
-    file_path = os.path.abspath(os.path.join(working_dir,'data/MPAF/kalm_his0.csv'))
-    df_iris0 = pd.read_csv(file_path,header=0,index_col=0,parse_dates=True)
-    df_iris0 = df_iris0.iloc[6:].astype(float)
-    df_iris0.index = pd.to_datetime(df_iris0.index)
-    var = df_iris0.columns
-    n = len(var)
-    
-    file_path = os.path.abspath(os.path.join(working_dir,'data/MPAF/kalm_his1.csv'))
-    df_iris1 = pd.read_csv(file_path,header=0,index_col=0,parse_dates=True)
-    df_iris1 = df_iris1.iloc[6:].astype(float)
-    df_iris1.index = pd.to_datetime(df_iris1.index)
-    
-    files = []
-    for k in range(0,9,n):
-        plt.figure(figsize=(16,16))
-        for i in range(9):
-            n = var[9*k+i]
-            ax = plt.subplot(3,2,1+i)
-            ax.plot(df_iris0[n],label="model implied asymptotic starting values")
-            ax.plot(df_iris1[n],label="historic starting values")
-            plt.title(n,fontsize = 'x-large')
-            plt.xlabel('Year')
-            plt.legend(loc="best",fontsize='medium')
-            plt.grid(True)
-        
-        file_path = os.path.abspath(os.path.join(working_dir,'results/compare_'+str(k+1)+'.pdf'))
-        files.append(file_path)
-        plt.savefig(file_path)
-    
-    if save:
-        outputFile = os.path.abspath(os.path.join(working_dir,"results/compare1.pdf"))
-        merge(outputFile,files)    
-        
         
 if __name__ == '__main__':
     """

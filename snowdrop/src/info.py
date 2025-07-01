@@ -15,16 +15,16 @@ def display(fname):
     else:
         os.startfile(fpath)
         
-def showManual(fname = os.path.abspath(os.path.join(working_dir,"snowdrop/docs/UserGuide.pdf"))):
+def showManual(fname = os.path.abspath(os.path.join(working_dir,"supplements/docs/UserGuide.pdf"))):
     display(fname)
     
-def showPaper(fname = os.path.abspath(os.path.join(working_dir,"snowdrop/docs/DSGEModelingWithPython.pdf"))):
+def showPaper(fname = os.path.abspath(os.path.join(working_dir,"supplements/docs/DSGEModelingWithPython.pdf"))):
     display(fname)
     
-def showAlgorithms(fname = os.path.abspath(os.path.join(working_dir,"snowdrop/docs/NumericalAlgorithms.pdf"))):
+def showAlgorithms(fname = os.path.abspath(os.path.join(working_dir,"supplements/docs/NumericalAlgorithms.pdf"))):
     display(fname)
     
-def showAPI(fname = os.path.abspath(os.path.join(working_dir,"snowdrop/api_docs/_build/html/index.html"))):
+def showAPI(fname = os.path.abspath(os.path.join(working_dir,"supplements/api_docs/_build/html/index.html"))):
     display(fname)
     
 def show(argv):
@@ -39,19 +39,19 @@ def show(argv):
     doc = args.doc
     
     if doc == "1":
-        fname = "snowdrop/docs/UserGuide.pdf"
+        fname = "supplements/docs/UserGuide.pdf"
         display(fname)
     elif doc == "2":
-        fname = "snowdrop/docs/DSGEModelingWithPython.pdf"
+        fname = "supplements/docs/DSGEModelingWithPython.pdf"
         display(fname)
     elif doc == "3":  
-        fname = "snowdrop/docs/NumericalAlgorithms.pdf"
+        fname = "supplements/docs/NumericalAlgorithms.pdf"
         display(fname)
     elif doc == "4":  
-        fname = "snowdrop/api_docs/_build/html/index.html" 
+        fname = "supplements/api_docs/_build/html/index.html" 
         display(fname)
     else:
-        fname = "snowdrop/docs/UserGuide.pdf"
+        fname = "supplements/docs/UserGuide.pdf"
         display(fname)
         
 

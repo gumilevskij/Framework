@@ -23,14 +23,14 @@ def modelproperties(Plot=False,save=True):
     Simulates a set of basic shocks. 
     """
     fname = 'model.yaml'
-    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/MPAF/'+fname))
+    file_path = os.path.abspath(os.path.join(working_dir,'supplements/models/MPAF/'+fname))
 
     # Create model
     model = importModel(file_path,Solver="Klein")
     
     var_names = model.symbols["variables"]
     # Set starting values
-    hist = os.path.abspath(working_dir + "/snowdrop/data/MPAF/history.xlsx")
+    hist = os.path.abspath(working_dir + "/supplements/data/MPAF/history.xlsx")
     model.setStartingValues(hist=hist)
     
     path_to_dir = os.path.abspath(os.path.join(working_dir,"graphs"))

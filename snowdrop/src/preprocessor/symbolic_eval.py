@@ -67,6 +67,10 @@ class NumericEval:
     def eval_dict(self, d):
         """Evaluate dictionary."""
         return {k: self.eval(e) for k, e in d.items()}
+    
+    def eval_commentedmap(self,d):
+        """Evaluate commented map."""
+        return {k: self.eval(e) for k, e in d.items()}
 
     def eval_ordereddict(self, s):
         """Evaluate ordered dictionary."""

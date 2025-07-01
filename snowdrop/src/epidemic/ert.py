@@ -28,7 +28,6 @@ from snowdrop.src.driver import run as simulate
 from snowdrop.src.driver import importModel
 from snowdrop.src.graphs.util import plotTimeSeries
 #from snowdrop.src.model.util import setCalibration
-#import snowdrop.src.numeric.solver.nonlinear_solver as nls
 #from snowdrop.src.numeric.filters.filters import LRXfilter as lrx
 from snowdrop.src.numeric.solver import nonlinear_solver as ns
 from snowdrop.src.numeric.solver.nonlinear_solver import homotopy_solver
@@ -39,8 +38,8 @@ from snowdrop.src.misc.termcolor import cprint
 
 warnings.filterwarnings('ignore') 
 
-graphs_path = os.path.abspath(os.path.join(working_dir,"snowdrop/graphs"))
-dir_path = os.path.abspath(os.path.join(working_dir,'snowdrop/data/COVID19'))
+graphs_path = os.path.abspath(os.path.join(working_dir,"graphs"))
+dir_path = os.path.abspath(os.path.join(working_dir,'supplements/data/COVID19'))
 
 CALIBRATE = True; HOMOTOPY = True; LOCKDOWN = False; VACCINATION = False 
 
@@ -63,7 +62,7 @@ def main(Plot=False,save=True):
     global Pi1_shr_target,Pi2_shr_target,Pi3_shr_target,RplusD_target
     global vaccination_rate,virus_variant_start,mult,mult2,sigma
     
-    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/COVID19/'+fname))
+    file_path = os.path.abspath(os.path.join(working_dir,'supplements/models/COVID19/'+fname))
 
     # Create model
     model = importModel(file_path,model_info=False,graph_info=False,Solver="LBJ",use_cache=False)
@@ -110,7 +109,7 @@ def main(Plot=False,save=True):
     RplusD_target  = calib["RplusD_target"]
     
     # Read SIR model parameters data
-    data_path  = os.path.abspath(os.path.join(working_dir,"snowdrop/data/COVID19/epidemic.csv"))
+    data_path  = os.path.abspath(os.path.join(working_dir,"supplements/data/COVID19/epidemic.csv"))
     if os.path.exists(data_path):
         df = pd.read_csv(data_path,index_col=0,parse_dates=True)
         # Convert to weekly frequency
@@ -499,10 +498,10 @@ def main(Plot=False,save=True):
         
         
         if Plot:
-            outputFile = os.path.abspath(os.path.join(working_dir,"snowdrop/results/ERT.pdf"))
+            outputFile = os.path.abspath(os.path.join(working_dir,"results/ERT.pdf"))
             files = []
             for f in list_headers:
-                files.append(os.path.abspath((os.path.join(working_dir,"snowdrop/graphs/"+f+".pdf"))))
+                files.append(os.path.abspath((os.path.join(working_dir,"graphs/"+f+".pdf"))))
             merge(outputFile,files)
                       
             if n_lockdown > 1 and n_vaccination > 1:

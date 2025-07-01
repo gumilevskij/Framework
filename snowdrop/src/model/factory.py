@@ -108,8 +108,8 @@ def import_model(fname,order=1,return_interface=True,check=True,hist=None,bounda
         
         eqs,measEqs,params,variables,measVar,measEqs,shocks,measShocks,ss,labels = \
             readIrisModelFile(file_path=fname,bFillValues=False,
-                              strVariables="!transition_variables",strShocks = "!transition_shocks",
-                              strParameters = "!parameters",strEquations = "!transition_equations",
+                              strVariables=["!variables","!transition_variables"],strShocks =  ["!shocks","!transition_shocks"],
+                              strParameters = "!parameters",strEquations = ["!equations","!transition_equations"],
                               strMeasurementVariables="!measurement_variables",
                               strMeasurementEquations="!measurement_equations",
                               strMeasuarementShocks="!measurement_shocks")  
@@ -959,8 +959,8 @@ def getModel(name,eqs,variables,parameters,shocks,exogenous=[],exog_data={},shoc
         return interface
     else:
         model = Model(interface, infos=infos, bCompileAll=bCompileAll)
-        if not "shock_values" in model.options or len(model.options["shock_values"])==0:
-            model.options["shock_values"] = np.zeros(len(model.symbols["shocks"]))
+        # if not "shock_values" in model.options or len(model.options["shock_values"])==0:
+        #     model.options["shock_values"] = np.zeros(len(model.symbols["shocks"]))
         if np.isnan(model.calibration["shocks"]).any():
             model.calibration["shocks"] = np.zeros(len(model.symbols["shocks"]))
         

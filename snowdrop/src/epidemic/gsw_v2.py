@@ -20,10 +20,10 @@ if __name__ == '__main__':
 
     fname = "COVID19/gsw_model.yaml" # GSW model"
     # Path to model file
-    file_path = os.path.abspath(os.path.join(working_dir, 'snowdrop/models', fname))
+    file_path = os.path.abspath(os.path.join(working_dir, 'supplements/models', fname))
     
     # Path to data
-    meas = os.path.abspath(os.path.join(working_dir, 'snowdrop/data/COVID19/country_data.xlsx'))
+    meas = os.path.abspath(os.path.join(working_dir, 'supplements/data/COVID19/country_data.xlsx'))
     
     output_variables = ['y','kpf','lab','c','unempl','inve','pinf','r','labstar'] 
     decomp = ['y','lab','inve','pinf']

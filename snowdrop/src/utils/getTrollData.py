@@ -10,7 +10,7 @@ from snowdrop.src.utils.util import getNamesValues
 known_functions = ['exp','sqrt','SQRT','log','LOG','MAX','Max','MIN','abs','Heaviside','IfThenElse','IfThen']
    
 path = os.path.dirname(os.path.abspath(__file__))
-working_dir = os.path.abspath(os.path.join(path,"../"))
+working_dir = os.path.abspath(os.path.join(path,"../../.."))
 
 def sortOrder(elem):
     ind = elem.find("=")
@@ -237,7 +237,7 @@ def readTrollModelFile(file_path=None,bFillValues=True,debug=False):
         arr = file_path.split("/")
     elif "\\" in file_path:
         arr = file_path.split("\\")
-    fdir = os.path.abspath(working_dir+"/../data/Troll/"+arr[-2])
+    fdir = os.path.abspath(working_dir+"/data/Troll/"+arr[-2])
     # fdb = os.path.abspath(fdir+"/start.mat") 
     m = {}; b = False
     
@@ -1196,7 +1196,7 @@ def getEqsInfo(eqs,eqsLabels):
 if __name__ == '__main__':
     
     path = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(working_dir,'../models/Troll/FSGM3/ISRMOD.inp')
+    file_path = os.path.join(working_dir,'models/Troll/FSGM3/ISRMOD.inp')
     
     name = os.path.basename(file_path)
     fout,ext = os.path.splitext(name)

@@ -7,13 +7,17 @@ This Framework aims to help economists to ease development and run
 of Dynamic Stochastic General Equilibrium (DSGE) models in Python environment.
 
 ## Installation:
-This package is available at PyPi repository and can be installed via pip installer:
 
-pip install pysnowdrop --upgrade
+User is adviced to create a virtual environmemt in Python that isolates this installation along with its packages from the system-wide Python installation and other virtual environments. There are three options to install “Snowdrop” package: 
+1. Clone this GitHub repository to your local drive. Then run command in a command prompt,
+   pip install -r requirements.txt
+   to install packages needed for a project to run. 
+2. Run command: pip install snowdrop-1.0.5-py3-none-any.whl --user
+3. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
  
  ## How to run:
- - Create or modify existing YAML model file in examples/models folder.
- - Open src/tests/test_toy_models.py file and set *fname* to the name of this model file.
+ - Create or modify existing YAML model file in snowdrop/models folder.
+ - Open snowdrop/src/tests/test_toy_models.py file and set *fname* to the name of this model file.
  - Run simulations in Spyder IDE by double-clicking on run button or run python script in a command prompt.
 
 ## Content:

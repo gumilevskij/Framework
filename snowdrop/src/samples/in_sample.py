@@ -25,7 +25,7 @@ def in_sample(Plot=False,save=True):
     """In sample forecast of endogenous variables given user judgements."""
     path_to_dir = os.path.abspath(os.path.join(working_dir,"graphs"))
     fname = 'model.yaml'
-    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/MPAF/'+fname))
+    file_path = os.path.abspath(os.path.join(working_dir,'supplements/models/MPAF/'+fname))
     # Create model
     model = importModel(file_path,Solver="Klein")
     model.anticipate = True
@@ -47,7 +47,7 @@ def in_sample(Plot=False,save=True):
     ## Database preparation
     # Load quarterly data
     skip_rows = 6
-    file_path = os.path.abspath(os.path.join(working_dir,"snowdrop/data/MPAF/kalm_his.csv"))
+    file_path = os.path.abspath(os.path.join(working_dir,"supplements/data/MPAF/kalm_his_new.csv"))
     df = pd.read_csv(filepath_or_buffer=file_path,sep=',',header=0,index_col=0,parse_dates=True,infer_datetime_format=True)
     df = df.iloc[skip_rows:].astype(float)
     df.index = pd.to_datetime(df.index)  # Quartely data frequency

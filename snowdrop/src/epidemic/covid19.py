@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import matplotlib.style as style
 
-working_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
+working_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),"../../.."))
 path_to_dir = os.path.abspath(os.path.join(working_dir,"graphs"))
 
 
@@ -65,8 +65,8 @@ def hp(x):
 
 def run(f1,f2,countries,population):
     """Compare results."""
-    file_path1 = os.path.abspath(working_dir+'/../data/' + f1)
-    file_path2 = os.path.abspath(working_dir + '/../data/' + f2)
+    file_path1 = os.path.abspath(working_dir+'/supplements/data/' + f1)
+    file_path2 = os.path.abspath(working_dir + '/supplements/data/' + f2)
     
     df1 = readData(file_path1)
     #df1.set_index("Country/Region",inplace=True)

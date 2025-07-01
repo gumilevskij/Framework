@@ -308,7 +308,7 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
         txtShocks = arr
             
         if not "Date" in txtShocks:
-            txtShocks.insert(0,"Date : 01/01/2020\n") 
+            txtShocks.insert(0,"Date : 01/01/2020") 
             
         if not txtRange:
             txtRange = "01/01/2020 - 01/01/2100"
@@ -316,7 +316,7 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
         txtEqs = "\n".join(txtEqs)
         txtShocks = "\n".join(txtShocks)
         
-        return txtEqs,txtParams,txtParamsRange,txtEndogVars,txtShocks,txtRange,txtFreq,txtDescription
+        return txtEqs,txtParams,txtParamsRange,txtEndogVars,txtMeasVar,txtShocks,txtRange,txtFreq,txtDescription
     
     else:
         return txtEqs,txtMeasEqs,txtParams,txtEndogVars,txtMeasVar,txtMeasEqs,txtShocks,txtMeasShocks,ss,labels
@@ -452,7 +452,7 @@ def getIrisModel(fpath,calibration={},options={},conditions={},use_cache=False,
 
 if __name__ == '__main__':
     """The main program."""
-    fpath = os.path.abspath(os.path.join(path,'../../models/TOY/RBC.model'))
+    fpath = os.path.abspath(os.path.join(path,'../../../supplements/models/TOY/RBC.model'))
     model = getIrisModel(fpath=fpath,debug=False)
     print(model)
    

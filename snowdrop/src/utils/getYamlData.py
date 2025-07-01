@@ -3,151 +3,97 @@ import re
 
 path = os.path.dirname(os.path.abspath(__file__))
 
-
 def readYamlModelFile(file_path=None,strVariables="variables",strMeasVariables="measurement_variables",
                       strMeasShocks="measurement_shocks",strShocks="shocks",strParameters="parameters",
                       strEquations="equations",strCalibration="calibration",strOptions="options",
-                      strValues="values",strRange="range",strFrequency="frequency"):
+                      strExogenous="exogenous",strValues="values",strRange="range",strFrequency="frequency",
+                      strLabels="labels"):
     """
     Parse YAML model file.
     """
+    import yaml
+    
     if file_path is None:
         path = os.path.dirname(os.path.abspath(__file__))
-        file_path = path + '/../../models/template.yaml'      
+        file_path = path + '/../../../supplements/models/template.yaml'      
     
-    txt=[];txtEqs=[];txtParams=[];txtParamsRange=[];txtEndogVars=[];txtMeasVars=[];txtMeasShocks=[]
-    txtExogVars=[];txtCalibration=[];txtShocks=[];txtOptions=[]
-    txtRange='';txtFreq='';txtDescription=''  
+    arrParamsRange=[];arrEndogVars=[];arrMeasVars=[];arrMeasShocks=[];arrExogVars=[]
+    mapCalibration={};arrShocks=[];mapOptions={};mapLabels={};arrParamsRange=[];arrRange=[]
+    txtEqs='';txtParams='';txtExogVars='';txtRange='';txtFreq='';txtDescription='';txtShocks='' 
     
     frequencies = {"0":"Annually","1":"Quarterly","2":"Monthly","3":"Weekly","4":"Daily"}
-    strName = "name"
     
-    header = None
     with open(file_path, 'r') as f:
-        for line in f:
-            ln = line.strip()
-            ln1 = ln.replace(":"," ")
-            ind = ln1.find(" ")
-            ln1 = ln1[:ind].strip()
-            ln2 = ln[ind:].replace(":","").replace("[","").replace("]","").strip()
-            if ln1 in [strEquations,strCalibration,strOptions]:
-                header = ln1
-                txt = []
-            elif len(txt) > 0 and not ln:
-                if header == strEquations:
-                    txtEqs = txt
-                elif header == strCalibration:
-                    txtCalibration = txt
-                elif header == strOptions:
-                    txtOptions = txt
-                txt = []  
-            else:
-                if ln1 == strName:
-                    txtDescription = re.split('; |, | ',ln2)
-                    txtDescription =  " ".join(txtDescription )
-                elif ln1 == strVariables:
-                    txtEndogVars = re.split('; |, | ',ln2)
-                    txtEndogVars =  " ".join(txtEndogVars)
-                elif ln1 == strMeasVariables:
-                    txtMeasVars = re.split('; |, | ',ln2)
-                    txtMeasVars =  " ".join(txtMeasVars)
-                elif ln1 == strShocks:
-                    txtShocks = re.split('; |, | ',ln2)
-                    txtShocks =  " ".join(txtShocks).strip()
-                elif ln1 == strMeasShocks:
-                    txtMeasShocks = re.split('; |, | ',ln2)
-                    txtMeasShocks =  " ".join(txtMeasShocks).strip()
-                elif ln1 == strParameters:
-                    txtParams = re.split('; |, | ',ln2)
-                    txtParams =  " ".join(txtParams)
-                elif ln:
-                     txt.append(ln.strip(';').strip())
-    
-
-    # Process last line
-    if header == strOptions and txt:
-        txtOptions = txt  
+        data = yaml.load(f,Loader=yaml.FullLoader)
+        if 'name' in data:
+            txtDescription = data['name']
+        if strEquations in data:
+            txtEqs = data[strEquations]
+            txtEqs = "\n".join(txtEqs) 
+        if strCalibration in data:
+            mapCalibration = data[strCalibration]
+        if strOptions in data:
+            mapOptions = data[strOptions]
+        if strLabels in data:
+            mapLabels = data[strLabels]
+        if 'symbols' in data:
+            if strVariables in data['symbols']:
+                arrEndogVars = data['symbols'][strVariables]
+            if strParameters in data['symbols']:
+                arrParams = data['symbols'][strParameters]
+            if strShocks in data['symbols']:
+                arrShocks = data['symbols'][strShocks]
+            if strExogenous in data['symbols']:
+                arrExogVars = data['symbols'][strExogenous]
+            if strMeasVariables in data['symbols']:
+                arrMeasVars = data['symbols'][strMeasVariables]
+            if strMeasShocks in data['symbols']:
+                arrMeasShocks = data['symbols'][strMeasShocks] 
             
-    eqs = []                
-    for e in txtEqs:
-        eq = e.strip()
-        if eq[0] == "-":
-            eq = eq[1:]
-        eqs.append(eq)
-        
-    txtEqs = "\n".join(eqs) 
     
-    arrEndogVars = txtEndogVars.split(",")
-    arrShocks = txtShocks.split(",")
-    arrParams = txtParams.split(",")
+    arrEndogVars = [f'{k} = {mapCalibration[k]}' if k in mapCalibration else k for k in arrEndogVars ]
+    arrParams = [f'{k} = {mapCalibration[k]}' if k in mapCalibration else k for k in arrParams]
+    arrShocks = [f'{k} = {mapCalibration[k]}' if k in mapCalibration else k + ' = 0' for k in arrShocks]
+    arrExogVars = [f'{k} = {mapCalibration[k]}' if k in mapCalibration else k + ' = 0' for k in arrExogVars]
     
-        
-    endogVars = []; exogVars = []; params = []
-    for line in txtCalibration:
-        ln = line.strip()
-        ind = ln.find(":")
-        ln1 = ln[:ind].strip()
-        if ln1 in arrEndogVars:
-            endogVars.append(line.replace(":"," = ").strip())
-        elif ln1 in arrShocks:
-            exogVars.append(line.replace(":"," = ").strip())
-        elif ln1 in arrParams:
-            params.append(line.replace(":"," = ").strip())
-    
-    txtEndogVars = "\n".join(endogVars) 
-    txtExogVars = "\n".join(exogVars) 
-    txtParams = "\n".join(params)
+    txtEndogVars = "\n".join(arrEndogVars) 
+    txtExogVars = "\n".join(arrExogVars) 
+    txtParams = "\n".join(arrParams)
+    txtShocks = "\n".join(arrShocks)
      
-    shocks = []
-    for line in  txtOptions:
-        ln = line.strip()
-        ind = ln.find(":")
-        ln1 = ln[:ind].strip()
-        ln2 = ln[1+ind:].strip()
+    for k in mapOptions:
+        ln1 = k
+        ln2 = mapOptions[k]
         if ln1 == strRange:
-            txtRange = ln2
+            arrRange = ln2
         elif ln1 == strFrequency:
-            freq = ln2.strip()
+            freq = str(ln2).strip()
             if freq in frequencies.keys():
                 txtFreq = frequencies[freq]
             else:
                 txtFreq = "Annually"
-        elif ln1 == strValues:
-            values = ln2.replace("[","").replace("]",",").strip()
-            values = values.replace(",,",",").split(",")
-            i = 0
-            for sh in txtShocks.split(","):
-                if sh and i < len(values):
-                    shocks.append(sh.strip() + " = " + values[i])
-                    i = i + 1
-        elif ln1 in txtParams:
-            txtParamsRange.append(ln.replace(":"," = "))
+        elif ln1 in arrParams:
+            arrParamsRange.append(f" {ln1} = {ln2}")
             
-    arr = []
-    for sh in shocks:
-        if "=" in sh:
-            arr.append(sh)
-        else:
-            arr.append(sh + " = 0")
-            
-    if len(arr) > 0:                
-        txtShocks = "\n".join(arr)    
-        
-    if not "Date" in txtShocks:
-        txtShocks = "Date : 01/01/2001\n" + txtShocks 
-                
-        
-    if txtRange:
-        arr = txtRange.replace("[","").replace("]","").split(",")
-        if len(arr) == 6:
-            txtRange = str(arr[1]) + "/" + str(arr[2])  + "/" +  str(arr[0]) + " - " + str(arr[4]) + "/" + str(arr[5])  + "/" +  str(arr[3])
+    txtShocks = "Date : 01/01/2026\n" + txtShocks 
+                    
+    if len(arrRange) == 2:
+        arr1 = arrRange[0]
+        arr2 = arrRange[1]
+        if ',' in arr1:
+            arr1 = arr1.split(',')
+            arr2 = arr2.split(',')
+        if '/' in arr1:
+            arr1 = arr1.split('/')
+            arr2 = arr2.split('/')
+        txtRange = str(arr1[1]) + "/" + str(arr1[2])  + "/" +  str(arr1[0]) + " - " + str(arr2[1]) + "/" + str(arr2[2])  + "/" +  str(arr2[0])
         
     else:
-        txtRange = "01/01/2000 - 01/01/2100"
-        
-    #print(txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,txtDescription)  
-    return txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,txtDescription
+        txtRange = "01/01/2025 - 01/01/2125"
+         
+    return txtEqs,txtParams,arrParamsRange,txtEndogVars,txtExogVars,txtShocks,mapLabels,txtRange,txtFreq,txtDescription
   
+ 
     
 def getYamlModel(fpath,calibration={},labels={},options={},use_cache=False,debug=False):
     """
@@ -247,9 +193,9 @@ def getYamlModel(fpath,calibration={},labels={},options={},use_cache=False,debug
 if __name__ == "__main__":
     
     path = os.path.dirname(os.path.abspath(__file__))
-    file_path = path + '/../../models/Toy/RBC.yaml'  
+    file_path = os.path.abspath(path + '/../../../supplements/models/TOY/JLMP98.yaml')  
         
-    txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,txtRange,txtFreq,txtDescription = readYamlModelFile(file_path=file_path)
+    txtEqs,txtParams,txtParamsRange,txtEndogVars,txtExogVars,txtShocks,labels,txtRange,txtFreq,txtDescription = readYamlModelFile(file_path=file_path)
     
     print("Exogenous variables:")
     print(txtExogVars)

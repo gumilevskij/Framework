@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 register_matplotlib_converters()
 
 path = os.path.dirname(os.path.abspath(__file__))
-working_dir = os.path.abspath(path+"\\..")   
+working_dir = os.path.abspath(path+"/../../../")   
 
 #STYLE = "seaborn-darkgrid"
 STYLE = "seaborn-v0_8-whitegrid"
@@ -536,7 +536,7 @@ def plot(path_to_dir,data,variable_names,sizes=None,figsize=None,meas_values=Non
         deleteFiles(path_to_dir,"Variables")
     kmax = K1 - 1
     
-    file_path = os.path.abspath(os.path.join(path,"../data/dictionary/symbols_labels.csv"))
+    file_path = os.path.abspath(os.path.join(working_dir,"supplements/data/dictionary/symbols_labels.csv"))
     if os.path.exists(file_path):
         symbolsMap = getMap(file_path)
     else:
@@ -676,7 +676,7 @@ def plot(path_to_dir,data,variable_names,sizes=None,figsize=None,meas_values=Non
                 #plt.close(fig)
             
     if k%(rows*columns) > 0:    
-        plt.tight_layout()
+        plt.tight_layout(pad=2)
         if not header is None:
             make_space_above(fig)
             fig.suptitle(header,fontsize=17,fontweight='normal')
@@ -690,44 +690,85 @@ def plot(path_to_dir,data,variable_names,sizes=None,figsize=None,meas_values=Non
     return figs   
  
    
-def plotSteadyState(path_to_dir,s,arr_ss,par_ss,ext="png"):
+def plotSteadyState(path_to_dir,variables,arr_ss,par_ss,sizes=None,fig_sizes=(12,10),save=False,show=False,ext="png"):
     """
     Plot steady state solution graphs.
     
     Parameters:
         :param path_to_dir: Path to the folder where figures are saved.
         :type path_to_dir: str.
-        :param s: List of variables.
-        :type s: list.
+        :param variables: List of variables.
+        :type variables: list.
         :param arr_ss: Array of steady states.
         :type arr_ss: array.
         :param par_ss: List of parameter names.
         :type par_ss: list.
+        :param sizes: Subplots dimensions.
+        :type sizes: tuple.
         :param ext: Format of the saved file.
         :type ext: str.
     """
-    nVariables = len(s)
+    style.use(STYLE)
+    nVariables = len(variables)
+    
+    if not sizes is None:
+        rows, columns = sizes
+    else:
+        ns = nVariables * len(par_ss)
+        if ns == 1:
+            rows,columns = 1,1
+        elif ns == 2:
+            rows,columns = 2,1
+        elif ns <= 3:
+            rows, columns = 3,1
+        elif ns <= 4:
+            rows, columns = 2,2
+        elif ns <= 6:   
+            rows,columns = 3,2
+        elif ns <= 8:   
+            rows,columns = 4,2
+        elif ns <= 9:   
+            rows,columns = 3,3
+        elif ns <= 12:   
+            rows = 4; columns = 3
+        else:
+            columns = 3
+            rows = int(np.ceil(ns/columns))
+            
+    figs = []
+    chunk = rows*columns
+    m = 0
+
     for k in range(len(arr_ss)):
         arr = arr_ss[k]
         nss = len(arr)
-        plt.figure(figsize=(10, 2*nVariables))
         x = np.zeros((nss,1))
         y = np.zeros((nss,nVariables))
         for i in range(nss):
             ar = arr[i]
             x[i] = ar[0]
             y[i,:] = ar[1:]
-            
+        jj = 0
         for j in range(nVariables):
-            ax = plt.subplot(ceil(nVariables/2),2,1+j)
-            ax.plot(x,y[:,j],label=s[j])
-            plt.title('Steady-State Solution for "' + s[j] + '"',fontsize = 'x-large')
+            if m%chunk == 0 or j == 0:
+                jj = 0
+                fig = plt.figure(figsize=fig_sizes)
+                figs.append(fig)
+            m += 1
+            jj += 1
+            ax = plt.subplot(rows,columns,jj)
+            ax.plot(x,y[:,j],label=variables[j])
+            plt.title('Steady-State Solution for "' + variables[j] + '"',fontsize = 'medium')
             plt.xlabel(par_ss[k])
             plt.grid(True)
-                    
-    plt.savefig(os.path.join(path_to_dir,'Steady_State.'+ext))
-    plt.tight_layout()
-    plt.show(block=False)
+            plt.tight_layout(pad = 5) 
+            
+    if save:
+        plt.savefig(os.path.join(working_dir,'graphs/Steady_State.'+ext))
+    if show: 
+        plt.show(block=False) 
+    
+    return figs
         
  
 def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=(12,10),save=False,highlight=None,stacked=True,isLastLinePlot=True,zero_line=False,show=True,ext=None):
@@ -1485,7 +1526,7 @@ def plotSurface(path_to_dir,data,Time,variable_names,output_variables=None,prefi
     # Delete files
     deleteFiles(path_to_dir, "Convergence")
     
-    file_path = os.path.abspath(os.path.join(path,"../data/dictionary/symbols_labels.csv"))
+    file_path = os.path.abspath(os.path.join(working_dir,"supplements/data/dictionary/symbols_labels.csv"))
     if os.path.exists(file_path):
         symbolsMap = getMap(file_path)
     else:
@@ -1555,7 +1596,7 @@ def bar_plot(path_to_dir=None,var=[],var_names=[],par=None,par_names=None,title=
     
     from snowdrop.src.graphs.util import barPlot
     if path_to_dir is None:
-        path_to_dir = os.path.abspath(os.path.join(path,'../../../snowdrop/graphs'))
+        path_to_dir = os.path.abspath(os.path.join(working_dir,'graphs'))
     
     if plot_variables:
         title = []

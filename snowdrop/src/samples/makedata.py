@@ -42,7 +42,7 @@ def makedata(Plot=False,save=False):
     path_to_dir = os.path.abspath(os.path.join(working_dir,"graphs"))
     
     ## Load quarterly data
-    file_path = os.path.abspath(os.path.join(working_dir, "snowdrop/data/MPAF/data.csv"))
+    file_path = os.path.abspath(os.path.join(working_dir, "supplements/data/MPAF/data.csv"))
     df = pd.read_csv(filepath_or_buffer=file_path,sep=',',header=0,index_col=0,parse_dates=True,infer_datetime_format=True)
     df.index = pd.to_datetime(df.index,format="#Q")  # Quartely data frequency
     
@@ -126,7 +126,7 @@ def makedata(Plot=False,save=False):
     
     
     ### Read model file
-    fmodel = os.path.abspath(os.path.join(working_dir,"snowdrop/models/MPAF/model.yaml")) 
+    fmodel = os.path.abspath(os.path.join(working_dir,"supplements/models/MPAF/model.yaml")) 
      
     txt,_ = read_file_or_url(fmodel)
     data = yaml.load(txt, yaml.RoundTripLoader)
@@ -135,7 +135,7 @@ def makedata(Plot=False,save=False):
     
     ## Save the database
     from snowdrop.src.utils.util import saveTimeSeries as dbsave
-    file_path = os.path.abspath(os.path.join(working_dir,"snowdrop/data/MPAF/history_new.csv"))
+    file_path = os.path.abspath(os.path.join(working_dir,"supplements/data/MPAF/history_new.csv"))
     dbsave(fname=file_path,data=d,variables=var,prefix="OBS_") 
 
     # # Compare

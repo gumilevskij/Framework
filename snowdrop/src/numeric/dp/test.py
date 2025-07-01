@@ -8,7 +8,7 @@ Originally developed by Fabrice Collard.
 Please see Dynamic Programming Notes #7 at:
 http://fabcol.free.fr/pdf/lectnotes7.pdf
 
-Translated from Matlab code to Python by A.Gouilevski
+Translated from Matlab code to Python by A.Goumilevski
 """
 
 import os, math

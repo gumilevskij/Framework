@@ -427,11 +427,14 @@ def readDataFromDatabase(fname=None,Output=True):
 
 def getNamesAndValues(arr):
     names = [];values = []
-    for e in arr.split("\n"):
+    for e in arr:
         els = e.split("=")
         if len(els) == 2:
             names.append(els[0].strip())
             values.append(els[1].strip())
+        else:
+            names.append(els[0].strip())
+            values.append(0)
         
     return names, values
 
@@ -540,8 +543,8 @@ def importModel(file_path,startDate,endDate,shocks=None):
     
 def SaveToYaml(file=None,description="YAML Model",shock_names=[],shock_values=[],
              variables_names=[],variables_init_values=[],param_names=[],
-             param_values=[],exog_var=[],equations=[],eqsLabels=[],comments=None,
-             time_range="",freq="0",periods="",param_range="",bInp=False):
+             param_values=[],exog_var=[],equations=[],varLabels={},eqsLabels=[],
+             comments=None,time_range="",freq="0",periods="",param_range="",bInp=False):
     """
     Write GUI form data to YAML template text file.
     
@@ -566,6 +569,8 @@ def SaveToYaml(file=None,description="YAML Model",shock_names=[],shock_values=[]
         :type exog_var: List.
         :param equations: Model equations.
         :type equations: List.
+        :param varLabels: Variables labels.
+        :type varLabels: List.
         :param eqsLabels: Equations labels.
         :type eqsLabels: List.
         :param comments: Equations comments.
@@ -601,6 +606,8 @@ def SaveToYaml(file=None,description="YAML Model",shock_names=[],shock_values=[]
             file_path_ss = file.replace(name+ext,name+"_ss.yaml")
     
     # Replace curly brackets
+    if isinstance(equations,list):
+        equations = "\n".join(equations)
     equations = equations.replace("{","(").replace("}",")")
     eqs = equations.split("\n")
     eqs = list(filter(None,eqs))
@@ -610,7 +617,9 @@ def SaveToYaml(file=None,description="YAML Model",shock_names=[],shock_values=[]
         eqsLabels = [None]*len(eqs)
             
     temp = []
-    for v in exog_var.split("\n"):
+    if isinstance(exog_var,str):
+        exog_var = exog_var.split("\n")
+    for v in exog_var:
         ind = v.find("=")
         if ind >= 0:
             temp.append(v[:ind].strip())
@@ -622,24 +631,24 @@ def SaveToYaml(file=None,description="YAML Model",shock_names=[],shock_values=[]
         # Create dynamic model file
         Output(True,file_path_dyn,description,variables_names,shock_names,new_param_names,
            eqs,param_names,param_values,exog_var,variables_init_values,time_range,freq,periods,
-           shock_values,param_range,eqsLabels=eqsLabels,comments=comments,bInp=bInp)
+           shock_values,param_range,eqsLabels=eqsLabels,varLabels=varLabels,comments=comments,bInp=bInp)
             
         # Create steady-state model file
         Output(False,file_path_ss,description,variables_names,shock_names,new_param_names,
            eqs,param_names,param_values,exog_var,variables_init_values,time_range,freq,periods,
-           shock_values,param_range,eqsLabels=eqsLabels,comments=comments,bInp=bInp)
+           shock_values,param_range,eqsLabels=eqsLabels,varLabels=varLabels,comments=comments,bInp=bInp)
     
     else:
         
         # Create template model file
         Output(True,file_path,description,variables_names,shock_names,new_param_names,
            eqs,param_names,param_values,exog_var,variables_init_values,time_range,freq,periods,
-           shock_values,param_range,eqsLabels=eqsLabels,comments=comments)
+           shock_values,param_range,eqsLabels=eqsLabels,varLabels=varLabels,comments=comments)
       
         
 def Output(b,file_path,description,variables_names,shock_names,new_param_names,
            eqs,param_names,param_values,exog_var,variables_init_values,time_range,freq,
-           periods,shock_values,param_range,eqsLabels=[],comments=[],bInp=False):
+           periods,shock_values,param_range,eqsLabels=[],varLabels={},comments=[],bInp=False):
     """Output text to YAML model file."""
     if comments is None:
         comments = [None] * len(eqs)
@@ -690,12 +699,16 @@ def Output(b,file_path,description,variables_names,shock_names,new_param_names,
             if p and v:
                 f.write('\n   ' + p + ': ' + v)
         f.write('\n\n   # EXOGENOUS VARIABLES')  
-        for v in exog_var.split("\n"): 
+        for v in exog_var: 
             if v.strip():
                 f.write('\n   ' + v.replace("="," : ").strip())
         f.write('\n\n   # STARTING VALUES OF ENDOGENOUS VARIABLES')
         for n,v in zip(variables_names,variables_init_values):
             f.write('\n   ' + n + ': ' + v)
+        if varLabels:
+            f.write('\n\nlabels:') 
+            for k in varLabels:
+                f.write('\n   ' + k + ': ' + varLabels[k])
         f.write('\n\noptions:')
         if time_range:
             if "[" in time_range:
@@ -704,13 +717,18 @@ def Output(b,file_path,description,variables_names,shock_names,new_param_names,
                 f.write('\n   T : ' + time_range[0])
         if len(shock_values) > 0:
             f.write('\n   frequency : ' + freq)
-            if len(periods.strip()) > 2:
-                f.write('\n   periods : ' + periods)
-            f.write('\n\n   shock_values : [[' + ','.join(shock_values) + ']]')
-        for p in param_range.split("\n"):
-            f.write('\n   ' + p.replace("="," : "))
-                
-                
+            if len(periods) > 0:
+                f.write('\n   periods : ' + str(periods))
+            f.write('\n\n   shock_values : [[' + ','.join([str(x) for x in shock_values]) + ']]')
+        for p in param_range:
+            p = p.replace("="," : ")
+            if ':' in p:
+                left,right = p.split(':')
+                if '-' in right:
+                    tmp = right.split('-')
+                    right = '[' + tmp[0] + ',' + tmp[1] + ']'
+                f.write('\n   ' + left.strip() + ': ' + right.replace(' ',''))
+        
 def getNamesValues(arr):
     """
     Return list of names and values.
@@ -967,8 +985,8 @@ def simulationRange(model,freq=None,T=None):
                     T = model.options['T']
                 else:
                     T = 101
-            start = dt.date(2000,1,1)
-            end = dt.date(2000+T,1,1)
+            start = dt.date(2025,1,1)
+            end = dt.date(2025+T,1,1)
             rng = pd.period_range(start=start,end=end,freq=frequencies[str(freq)])
             if end.year-start.year < 200:
                 dates = rng.to_timestamp()
@@ -1595,7 +1613,7 @@ def getOutputFolderPath():
     if name in os.environ:
         output_dir = os.environ[name]
     else:
-        output_dir = os.path.abspath(working_dir)
+        output_dir = os.path.abspath(os.path.join(working_dir,'../supplements'))
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)      
     return output_dir
@@ -1725,7 +1743,7 @@ if __name__ == '__main__':
     # model_file = os.path.abspath(os.path.join(working_dir,'snowdrop/models/Sirius/chile_model.xml'))
     
     # # Shocks
-    # shocks = {'2001/1/1': {'e_dot_cpi':1, 'e_lgdp_gap':-1}}     
+    # shocks = {'2025/1/1': {'e_dot_cpi':1, 'e_lgdp_gap':-1}}     
     
     # # Instantaiate a model
     # model = importModel(file_path=model_file,startDate='2000/1/1',endDate='2010/1/1',shocks=shocks) 

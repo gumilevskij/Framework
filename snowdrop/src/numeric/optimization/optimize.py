@@ -369,10 +369,10 @@ def run(fpath=None,fout=None,Output=False,plot_variables=None,model_info=False):
         
     if Output:
         # Save results in excel file
-        dir = os.path.dirname(fpath)
+        fdir = os.path.dirname(fpath)
         name, ext = os.path.splitext(fpath)
         if fout is None:
-            fout = os.path.abspath(os.path.join(dir,'../../data/OPT/'+ os.path.basename(name) + '.csv'))
+            fout = os.path.abspath(os.path.join(fdir,'../../../supplements/data/OPT/'+ os.path.basename(name) + '.csv'))
         with open(fout, 'w') as f:
             f.writelines(','.join(var_names) + '\n')
             f.writelines(','.join(str(x) for x in y)  +'\n')

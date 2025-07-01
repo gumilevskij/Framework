@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "pysnowdrop"
-version = "1.0.3"
+version = "1.0.6"
 description = "Python Platform for DSGE Modeling"
 authors = ["Alexei Goumilevski <agoumilevski@hotmail.com>",
            "James Otterson <jjotterson@gmail.com>"]
 maintainers = ["Alexei Goumilevski <Agoumilevski@hotmail.com>",
                "James Otterson <jjotterson@gmail.com>"]
 license = "LGPL-3.0-or-later"
-readme =  "snowdrop/docs/README.md"
+readme =  "README.md"
 keywords = ["DSGE", "Macroeconomic Modeling"]
 classifiers=[
     "Programming Language :: Python",
@@ -24,16 +24,16 @@ packages = [
 
 include = [
     { path = "snowdrop/bin", format = ["sdist", "wheel"] },
-    { path = "snowdrop/data", format = ["sdist", "wheel"] },
-    { path = "snowdrop/models", format = ["sdist", "wheel"] },
-    { path = "snowdrop/docs", format = ["sdist", "wheel"] },
-    { path = "snowdrop/api_docs", format = ["sdist", "wheel"] }
+    { path = "supplements/data", format = ["sdist", "wheel"] },
+    { path = "supplements/models", format = ["sdist", "wheel"] },
+    { path = "supplements/docs", format = ["sdist", "wheel"] },
+    { path = "supplements/api_docs", format = ["sdist", "wheel"] }
 ]
 
-exclude = ["snowdrop/src/troll", "snowdrop/data/IMFE"]
+exclude = ["snowdrop/src/troll", "supplements/data/IMFE"]
 
 [tool.poetry.scripts]
-test = "snowdrop.src.tests.test_toy_models:test"
+test = "tests.test_toy_models:test"
 
 [tool.poetry.urls]
 Repository = "https://github.com/gumilevskij/Framework.git"
@@ -65,7 +65,9 @@ pykalman  =  "^0.9.7"
 pylatex =  "^1.4.2"
 pdfkit = "^1.0.0"
 xlsxwriter = "^3.2.0"
-"ruamel.yaml" = "0.16.3"
+"ruamel.yaml" = "0.17.21"
+dill = "^0.3.8"
+PyYAML = "^6.0.1"
 
 # List of optional dependencies
 compecon = {version="^2024.5.19", optional=true}

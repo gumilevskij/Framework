@@ -25,7 +25,7 @@ from snowdrop.src.numeric.solver import util
 from snowdrop.src.utils.util import getOutputFolderPath
 
 out_dir = getOutputFolderPath()
-figures_dir = os.path.abspath(os.path.abspath(os.path.join(out_dir,'graphs')))
+figures_dir = os.path.abspath(os.path.abspath(os.path.join(out_dir,'../graphs')))
 xl_dir = os.path.abspath(os.path.abspath(os.path.join(out_dir,'data')))
 if not os.path.exists(figures_dir):
     os.makedirs(figures_dir)
@@ -489,7 +489,7 @@ def findSteadyStateSolutions(fname=None,model=None,number_of_steps=10,par_range=
         :type fname: str.
         :param model: Model object.
         :type model: Model.
-        :param number_of_steps: Number of steps.
+        :param number_of_steps: Number of steps of parameter range.
         :type number_of_steps: int.
         :param par_range: Parameters range.
         :type par_range: dictionary.
@@ -504,7 +504,7 @@ def findSteadyStateSolutions(fname=None,model=None,number_of_steps=10,par_range=
     
     if model is None:
         if fname is None:
-            fname = os.path.abspath(os.path.join(path,'../models/template.yaml'))
+            fname = os.path.abspath(os.path.join(path,'../../supplements/models/temp.yaml'))
         # Import model
         model = importModel(fname)
        
@@ -513,10 +513,11 @@ def findSteadyStateSolutions(fname=None,model=None,number_of_steps=10,par_range=
     # Get parameters
     par_names = model.symbols['parameters']
     
-    arr_ss = []; par_ss = []; data = []
-    par_values = model.calibration['parameters']
+    arr_ss = []; par_ss = []; data = []; data2 = {}
+    orig_par_values = model.calibration['parameters']
     for j,par in enumerate(par_names):
-        arr = []; arr2 = []
+        arr = []; arr1 = []; arr2 = []
+        par_values = orig_par_values.copy()
         if par in par_range.keys():
             rng = par_range[par]
         elif par in model.options:
@@ -524,25 +525,28 @@ def findSteadyStateSolutions(fname=None,model=None,number_of_steps=10,par_range=
         else:
             rng = None
         if not rng is None:
-            for i in range(11):
-                new_par = rng[0] + (rng[1]-rng[0])/number_of_steps*i
-                # Set new calibration parameter's value
-                model.set_calibration(par,new_par)
+            for i in range(number_of_steps):
+                if number_of_steps == 1:
+                    new_par = rng[0]
+                else:
+                    new_par = rng[0] + i*(rng[1]-rng[0])/(number_of_steps-1)
+                par_values[j] = new_par
+                # Set new calibration parameters
+                model.calibration['parameters'] = par_values
                 if model.isLinear:
                     ss, ss_growth = linear_solver.find_steady_state(model)
                 else:
                     ss, ss_growth  = nonlinear_solver.find_steady_state(model)
+                #arr.append({par:new_par,'parameters':par_values,'steady_state':ss})
                 arr.append(np.append(new_par,ss))
-                new_par_values = par_values.copy()
-                new_par_values[j] = new_par
-                arr2.append(np.append(new_par_values,ss))
+                arr1.append(np.append(par_values,ss))
+                arr2.append((new_par,ss))
             arr_ss.append(arr)
             par_ss.append(par)
-            data.append(arr2)
-            # Restore model calibration parameter's value
-            model.set_calibration(par,par_values[j])
+            data.append(arr1)
+            data2[par] = arr2
             
-        model.calibration['parameters'] = par_values
+    model.calibration['parameters'] = orig_par_values
             
     if len(data) == 0:
         return
@@ -558,10 +562,10 @@ def findSteadyStateSolutions(fname=None,model=None,number_of_steps=10,par_range=
         
         # Save results in excel file
         if fname is None:
-            ex_name = os.path.abspath(os.path.join(path,'../data/Steady_State.csv'))
+            ex_name = os.path.abspath(os.path.join(path,'../../supplements/data/Steady_State.csv'))
         else:
             name, ext = os.path.splitext(fname)
-            ex_name = os.path.abspath(os.path.join(path,'../data/' + os.path.basename(name) + '_Steady_State.csv'))
+            ex_name = os.path.abspath(os.path.join(path,'.././supplements/data/' + os.path.basename(name) + '_Steady_State.csv'))
         with open(ex_name, 'w') as f:
             f.writelines( ','.join(columns) + '\n')
             for p in range(len(data)):
@@ -573,12 +577,12 @@ def findSteadyStateSolutions(fname=None,model=None,number_of_steps=10,par_range=
 
         # Save steady-state solution in Python database
         if len(columns) < 2000:
-            dbfilename = os.path.abspath(os.path.join(path,'../data/db/ss_param_range.sqlite'))
+            dbfilename = os.path.abspath(os.path.join(path,'../../supplements/data/db/ss_param_range.sqlite'))
             data = np.array(data)
             # Save results in Python database
             saveToDatabase(dbfilename=dbfilename,data=data,columns=columns)
             
-    return arr_ss,par_ss,par_names 
+    return arr_ss,par_ss,par_names,data2
 
 
 def getImpulseResponseFunctions(fname,Plot=False,Output=False):
@@ -1246,8 +1250,8 @@ def run(fname=None,model=None,y0=None,order=1,T=-1,Tmax=1.e6,irf=False,prefix=No
             if model.steady_state is None:
                 # Set shocks to zero
                 if 'shock_values' in model.options:
-                    shock_values = model.options.get('shock_values')
-                    model.options['shock_values'] = shock_values*0
+                    orig_shock_values = model.options.get('shock_values')
+                    model.options['shock_values'] = orig_shock_values*0
                     
                 # Solve equations
                 if model.isLinear:     
@@ -1260,7 +1264,7 @@ def run(fname=None,model=None,y0=None,order=1,T=-1,Tmax=1.e6,irf=False,prefix=No
                                                   y0=y0,Npaths=Npaths,MULT=MULT)
                 
                 if 'shock_values' in model.options:
-                    model.options['shock_values'] = shock_values
+                    model.options['shock_values'] = orig_shock_values
                 
             else:
                 if isinstance(model.steady_state,dict):
