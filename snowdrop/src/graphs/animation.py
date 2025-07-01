@@ -19,7 +19,7 @@ def run(val=None):
     decomp = ['PDOT','RR','RS','Y'] # List of variables for which decomposition plots are produced
 
     # Path to model file
-    file_path = os.path.abspath(os.path.join(working_dir,'snowdrop/models/TOY/JLMP98.yaml'))
+    file_path = os.path.abspath(os.path.join(working_dir,'supplements/models/TOY/JLMP98.yaml'))
     
     # Create model object
     if model is None:

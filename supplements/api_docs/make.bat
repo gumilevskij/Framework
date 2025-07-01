@@ -5,7 +5,7 @@ pushd %~dp0
 
 REM Command file for Sphinx documentation
 del /Q source
-sphinx-apidoc -o source ../../snowdrop
+sphinx-apidoc -o source ../../snowdrop/src
 
 
 if "%SPHINXBUILD%" == "" (

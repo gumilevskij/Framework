@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pysnowdrop"
+name = "snowdrop"
 version = "1.0.6"
 description = "Python Platform for DSGE Modeling"
 authors = ["Alexei Goumilevski <agoumilevski@hotmail.com>",
