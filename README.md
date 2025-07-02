@@ -16,8 +16,8 @@ Users are advised to create a virtual environment in Python to isolate this inst
    python -m venv env
    source env/bin/activate
    pip install -r requirements.txt
-3. Run the command: pip install snowdrop-1.0.6-py3-none-any.whl --user
-4. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
+2. Run the command: pip install snowdrop-1.0.6-py3-none-any.whl --user
+3. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
  
  ## How to run:
  - Create or modify existing YAML model file in the supplements/models folder.
