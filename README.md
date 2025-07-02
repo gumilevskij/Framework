@@ -10,8 +10,7 @@ This Framework is designed to assist economists in the development and execution
 Users are advised to create a virtual environment in Python to isolate this installation and its packages from the system-wide Python installation and other virtual environments. There are three options to install the “Snowdrop” package:
 
 1. Clone this GitHub repository to your local drive. Then install the necessary packages and libraries for this project.
-   The following commands illustrate an example:
-   
+   The following commands illustrate an example: <br />
    cd to_your_working_directory <br />
    git clone https:/github.com/gumilevskij/Framework.git <br />
    python -m venv env <br />
