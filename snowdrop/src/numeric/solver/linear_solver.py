@@ -94,13 +94,13 @@ def simulate(model,T,periods,y0,steady_state,parameters=None,Npaths=1):
     # Solve linear model at steady state
     solve(model=model,p=parameters,steady_state=np.zeros(n))
     # State transition matrix
-    F = model.linear_model["A"]
+    F = np.real(model.linear_model["A"])
     # Array of constants
-    C = model.linear_model["C"]
+    C = np.real(model.linear_model["C"])
     # Matrix of coefficients of shocks
-    R = model.linear_model["R"]
-    U = model.linear_model.get("U",None)  
-    Z = model.linear_model["Z"]
+    R = np.real(model.linear_model["R"])
+    U = np.real(model.linear_model.get("U",None))
+    Z = np.real(model.linear_model["Z"])
       
     N = len(F)
     # Auxiliary matrices

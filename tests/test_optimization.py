@@ -16,12 +16,17 @@ def test(fname='OPT/armington.yaml'):
 
     from snowdrop.src.driver import optimize
 
+    Plot = not 'pytest' in sys.modules
+    
     #fname = 'OPT/melitz.yaml' # Melitz model example 
     #fname = 'OPT/krugman.yaml' # Krugman model example 
     #fname = 'OPT/armington.yaml' # Armington model example 
     #fname = 'OPT/transport.yaml' # Transportation expenses minimization example 
     
-    plot_variables = ["c","Y","Q","P"]
+    if Plot:
+        plot_variables = ["c","Y","Q","P"]
+    else:
+        plot_variables = None
 
     # Path to model file.
     file_path = os.path.abspath(os.path.join(working_dir, 'supplements/models', fname))

@@ -18,6 +18,8 @@ from snowdrop.src.numeric.solver.util import checkSolution
 
 def test_1(fname='../supplements/models/TOY/RBC.yaml',decompose=False,title=None):
 
+    Plot = not 'pytest' in sys.modules
+    
     fout = 'data/test.csv' # Results are saved in this file
     decomp = None # List of variables for which decomposition plots are produced
     output_variables = None #['PDOT','RR','RS','Y','PIE','LGDP','G','L_GDP','L_GDP_GAP']
@@ -31,11 +33,13 @@ def test_1(fname='../supplements/models/TOY/RBC.yaml',decompose=False,title=None
     y,dates = \
     driver.run(fname=file_path,fout=fout,decomp_variables=decomp,
              output_variables=output_variables,header=title,
-             Output=True,Plot=True,Solver="LBJ",
+             Output=True,Plot=Plot,Solver="LBJ",
              graph_info=False,use_cache=False)
 
 
 def test_2(fname='../supplements/models/TOY/JLMP98.yaml',decompose=True,title=None):
+    
+    Plot = not 'pytest' in sys.modules
     
     # Path to model file
     file_path = os.path.abspath(os.path.join(working_dir,'snowdrop', fname))
@@ -83,7 +87,7 @@ def test_2(fname='../supplements/models/TOY/JLMP98.yaml',decompose=True,title=No
     # Function that runs simulations, model parameters estimation, MCMC sampling, etc...
     y,dates = driver.run(model=model,decomp_variables=decomp,
                          output_variables=output_variables, #Solver="ABLR",
-                         header=title,Output=True,Plot=True)
+                         header=title,Output=True,Plot=Plot)
     if 'JLMP98' in fname:
         # Residuals of unrestricted equatinos without user's tunes
         err = checkSolution(model,periods=model.options["periods"],y=y)

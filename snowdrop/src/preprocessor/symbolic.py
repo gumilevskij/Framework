@@ -460,7 +460,7 @@ def get_names(expr):
 def eval_scalar(tree):
     try:
         if isinstance(tree, ast.Num):
-            return tree.n
+            return tree.value
         elif isinstance(tree, ast.UnaryOp):
             if isinstance(tree.op, ast.USub):
                 return -tree.operand.n

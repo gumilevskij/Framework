@@ -24,6 +24,8 @@ from snowdrop.src.graphs.util import plotTimeSeries
 def model_import(file_path, list_variables, list_shocks, shocks, list_titles, irf = True,calibration={}, freq=None, rng=None, sizes = [1,1]):
     """Test import of model files. """
     
+    Plot = not 'pytest' in sys.modules
+    
     # Create model
     model = import_model(file_path,return_interface=False,calibration=calibration)
     
@@ -53,22 +55,23 @@ def model_import(file_path, list_variables, list_shocks, shocks, list_titles, ir
         results,rng_date = run(model=model,irf=irf)
         rows,columns = results.shape
         
-        d = {}
-        for j in range(columns):
-            n = var_names[j]
-            data = results[:,j] 
-            ts = pd.Series(data[1:-1], rng_date)
-            d[n] = ts
-    
-        header = list_titles[i]
-        if len(list_variables) == 1:
-            titles = ['Nominal Interest Rate']
-        else:
-            titles = list_variables
-        series = [[d[k]] for k in list_variables]
-        labels = None
-        plotTimeSeries(path_to_dir=path_to_dir,header=header,titles=titles,labels=labels,series=series,sizes=sizes)
-    
+        if Plot:
+            d = {}
+            for j in range(columns):
+                n = var_names[j]
+                data = results[:,j] 
+                ts = pd.Series(data[1:-1], rng_date)
+                d[n] = ts
+        
+            header = list_titles[i]
+            if len(list_variables) == 1:
+                titles = ['Nominal Interest Rate']
+            else:
+                titles = list_variables
+            series = [[d[k]] for k in list_variables]
+            labels = None
+            plotTimeSeries(path_to_dir=path_to_dir,header=header,titles=titles,labels=labels,series=series,sizes=sizes)
+        
 
 def test(rng= ["2025-1-1","2035-1-1"],freq=1):
     """
