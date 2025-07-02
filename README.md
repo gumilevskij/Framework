@@ -12,14 +12,10 @@ Users are advised to create a virtual environment in Python to isolate this inst
 1. Clone this GitHub repository to your local drive. Then install the necessary packages and libraries for this project.
    The following commands illustrate an example:
    
-   cd to_your_working_directory
-   
-   git clone https:/github.com/gumilevskij/Framework.git
-   
-   python -m venv env
-   
-   source env/bin/activate
-   
+   cd to_your_working_directory <br />
+   git clone https:/github.com/gumilevskij/Framework.git <br />
+   python -m venv env <br />
+   source env/bin/activate <br />
    pip install -r requirements.txt
 3. Run the command: pip install snowdrop-1.0.6-py3-none-any.whl --user
 4. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
