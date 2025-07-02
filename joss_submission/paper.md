@@ -34,17 +34,14 @@ Benchmarking the Python Framework against the *DYNARE* and *IRIS* toolboxes for 
 - `Snowdrop` is a Python package that only uses open source libraries listed in the pypi repository.
 - This package is platform neutral and can be run on Windows, Linux, Unix, and Mac machines.
 - `Snowdrop` models can be written in user-friendly *YAML* format, pure Python scripts, or in a combination of both.
-- Non-linear equations are solved iteratively via Newton's method. `Snowdrop` implements the *ABLR* stacked matrices and *LBJ* [@Juillard] forward-backward substitution method to solve such systems.  Linear models are solved with *Binder Pesaran's* method, *Anderson and More's* method and two generalized *Schur's* method that reproduce calculations employed in *Dynare* and *Iris*.
-- Several desirable computational techniques for *DSGE* models are implemented in `Snowdrop`, including:
-- Non-linear models can be run with time dependents parameters
+- Non-linear equations are solved iteratively via Newton's method. `Snowdrop` implements the *ABLR* stacked matrices and *LBJ* [@Juillard] forward-backward substitution method to solve such systems.
+- Linear models are solved with *Binder Pesaran's* method, *Anderson and More's* method and two generalized *Schur's* method that reproduce calculations employed in *Dynare* and *Iris*.
+- Non-linear models can be run with time dependents parameters.
 - Goodness of fit of model data can be checked via the *Bayesian* approach to the maximization of likelihood functions.
 - Model parameters can be sampled via the *Markov Chain Monte Carlo* affine invariant ensemble sampler algorithm of Jonathan Goodman and an adaptive Metropolis-Hasting’s algorithms of Paul Miles. The former algorithm is useful for sampling badly scaled distributions of parameters. The later algorithm employs adaptive Metropolis methods that incorporate delayed rejection to stimulate samples’ states mixing.
-- Finally, `Snowdrop` streamlines the model production process by aiding users with the plotting and model reporting and storage process
+- Finally, `Snowdrop` streamlines the model production process by aiding users with the plotting and model reporting and storage process.
 
-# Examples of model files and python code
-
-The simplest way to write a `Snowdrop` model, is by specifing it via an *YAML* file in a manner that is familiar to *DYNARE* and *IRIS* users. Overall, the quickest
-way to run a model involves the following steps:
+The simplest way to write a `Snowdrop` model, is by specifing it via an *YAML* file in a manner that is familiar to *DYNARE* and *IRIS* users. Running a model involves the following steps:
 
 1. Create or modify an existing *YAML model file* in the models folder.
 2. Open the *tests/test_toy_models.py* file and set *fname* to the name of your model file.
@@ -52,7 +49,7 @@ way to run a model involves the following steps:
 
 For example, the following specifies a simple monetary policy model with lagged variables.
 
-## Monetary policy model file
+## Example of a model file
 
 ```yaml
     name:  Monetary policy model example
