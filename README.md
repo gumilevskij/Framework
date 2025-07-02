@@ -15,7 +15,7 @@ Users are advised to create a virtual environment in Python to isolate this inst
    git clone https:/github.com/gumilevskij/Framework.git <br />
    python -m venv env <br />
    source env/bin/activate <br />
-   pip install -r requirements.txt
+   pip install -r Framework/requirements.txt
 3. Run the command: pip install snowdrop-1.0.6-py3-none-any.whl --user
 4. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
  
