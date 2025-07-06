@@ -9,11 +9,15 @@ This Framework is designed to assist economists in the development and execution
 
 Users are advised to create a virtual environment in Python to isolate this installation and its packages from the system-wide Python installation and other virtual environments. There are three options to install the “Snowdrop” package:
 
-1. Clone this GitHub repository to your local drive. To install the required packages and libraries for this project, run
-   the following command in a command prompt:
-   pip install -r requirements.txt
-2. Run the command: pip install snowdrop-1.0.6-py3-none-any.whl --user
-3. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
+1. Clone this GitHub repository to your local drive. Then install the necessary packages and libraries for this project.
+   The following commands illustrate an example: <br />
+   cd to_your_working_directory <br />
+   git clone https:/github.com/gumilevskij/Framework.git <br />
+   python -m venv env <br />
+   source env/bin/activate <br />
+   pip install -r Framework/requirements.txt
+3. Run the command: pip install snowdrop-1.0.6-py3-none-any.whl --user
+4. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
  
  ## How to run:
  - Create or modify existing YAML model file in the supplements/models folder.

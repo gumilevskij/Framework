@@ -1,6 +1,6 @@
 # Mandatory dependencies
 pandas >= 2.1.4
-scipy == 1.12.0
+scipy == 1.11.4
 numpy == 1.26.4
 matplotlib >= 3.10.0
 sympy >= 1.12
