@@ -26,7 +26,7 @@ NITERATIONS = 100
 
 NSTEPS = 1; itr = 0
 
-def simulate(model,T,periods,y0,steady_state=None,params=None,order=1,Npaths=1,MULT=1):
+def simulate(model,T,periods,y0,steady_state=None,params=None,cov=None,order=1,Npaths=1,MULT=1):
     """
     Find solution by iterations by applying Newton method.
     
@@ -46,6 +46,8 @@ def simulate(model,T,periods,y0,steady_state=None,params=None,order=1,Npaths=1,M
         :type periods: numpy.ndarray.
         :param params: Values of parameters.
         :type params: numpy.ndarray.
+        :param cov: Covariance matrix of shocks.
+        :type cov: numpy.ndarray.
         :param order: Order of partial derivatives of Jacobian.
         :type order: int.
         :param Npaths: Number of simulation paths. This is the number of paths of stochastic shocks.
@@ -73,20 +75,26 @@ def simulate(model,T,periods,y0,steady_state=None,params=None,order=1,Npaths=1,M
         if model.order == 1:
             count,yy,yyIter,err,elapsed = first_order_solution(model=model,T=T,periods=periods,y0=y0,steady_state=steady_state,params=params,Npaths=Npaths,MULT=MULT)
         elif model.order == 2:
-            count,yy,yyIter,err,elapsed = second_order_solution(model=model,T=T,periods=periods,y0=y0,steady_state=steady_state,params=params,order=model.order,Npaths=Npaths,MULT=MULT)
+            if steady_state is None:
+                steady_state,_ = find_steady_state(model)
+            count,yy,yyIter,err,elapsed = second_order_solution(model=model,T=T,periods=periods,y0=y0,steady_state=steady_state,params=params,cov=cov,order=model.order,Npaths=Npaths,MULT=MULT)
         
     return (count,yy,yyIter,err,elapsed)
     
  
-def second_order_approximation(model,jacobian,hessian,ghy,ghu,Sigma=None):
+def second_order_approximation(model,jacobian,hessian,g_y,g_u,cov=None):
     """
     Compute the second order reduced form solution of the DSGE model.
     
     It implements an algoritm described by Michel Juillard in:
     "Computing first and second order approximation of DSGE models with DYNARE", CEPREMAP
     
+    https://archives.dynare.org/events/paris-1005/first-second-order.pdf%3Fmonth:int=12&year:int=2018&orig_query=
+    https://stephane-adjemian.fr/dynare/slides/dsge-perturbation-method.pdf
+    
     .. note::
-        It is assumed that model is linear to shock variables...
+        THIS CODE CURRENTLY IS UNDER  DEVELOPMENT...
+        It is assumed that model is linear to shock variables (there is no stochastic volatility).
         
     Parameters:
         :param model: The Model object.
@@ -95,68 +103,88 @@ def second_order_approximation(model,jacobian,hessian,ghy,ghu,Sigma=None):
         :type jacobian: numpy.ndarray.
         :param hessian: Hessian matrix (second order derivative with respect to endogenous and shock variables).
         :type hessian: numpy.ndarray.
-        :param ghy: Transition matrix.
-        :type ghy: numpy.ndarray.
-        :param ghu: Matrix of shocks.
-        :type ghu: numpy.ndarray.
-        :param Sigma: Matrix of error covariances.
-        :type Sigma: numpy.ndarray.
+        :param g_y: Transition matrix.
+        :type g_y: numpy.ndarray.
+        :param g_u: Matrix of shocks.
+        :type g_u: numpy.ndarray.
+        :param sigma: Matrix of error covariances.
+        :type sigma: numpy.ndarray.
         
     """
-    from snowdrop.src.numeric.solvers import sylvester_solver
-    ghyy,ghuu,ghyu,ghss = None,None,None,None
+    from snowdrop.src.numeric.solver.solvers import sylvester_solver
     
-    var = model.symbols["variables"]
+    var    = model.symbols["variables"]
     shocks = model.symbols["shocks"]
-    n   = len(var)
-    n_shk= len(shocks)
+    n      = len(var)
+    n_shk  = len(shocks)
     
-    Fyp   = jacobian[:,:n]
-    Fyc   = jacobian[:,n:2*n]
-#    Fym   = jacobian[n:2*n,2*n:3*n]
-#    Fu    = jacobian[3*n:]
-    Fyy = hessian[:,n:2*n,n:2*n]        
-    #Fuy = hessian[:,3*n:,n:2*n]
-    Fyu = hessian[:,n:2*n,3*n:,]
-    Fuu = hessian[:,3*n:,3*n:]
+    # First order derivatives
+    F_yp = jacobian[:n,:n]
+    F_yc = jacobian[:n,n:2*n]
+    
+    # Second order derivatives
+    F_yc_yc = hessian[:n,n:2*n,n:2*n] 
+    F_yp_yp = hessian[:n,:n,:n] 
+    F_ym_ym = hessian[:n,2*n:3*n,2*n:3*n] 
+    F_ym_u  = hessian[:n,2*n:3*n,3*n:,]
+    F_y_u   = hessian[:n,n:2*n,3*n:,]
+    F_u_u   = hessian[:n,3*n:,3*n:]
+    #F_yp_u  = hessian[:n,:n,3*n:,]
+    #F_u_y   = hessian[:n,3*n:,n:2*n]
+    #F_y_u   = hessian[:n,2*n:3*n:,3*n:]
             
-    # Compute matrix G_y_y
-    A     = Fyp @ ghy + Fyc
-    B     = Fyp
-    zyy   = ghy @ ghy
-    C     = zyy
-    D     = -Fyy @ zyy
-    ghyy  = sylvester_solver(A=A,B=B,C=C,D=D)
+    # Compute matrix g_y_y
+    A     = F_yp @ g_y + F_yc
+    B     = F_yp
+    C     = la.kron(g_y, g_y)
+    D     = F_ym_ym + F_yc_yc @ g_y @ g_y 
+    # Solve Sylvester equation: A*x + B*x*C = D
+    g_y_y = sylvester_solver(A=A,B=B,C=C,D=-D)
 
-    # Compute matrix G_y_u
-    zyu   = ghy @ ghu
-    rhs   = -Fyp @ ghyy @ zyu
-    for i in range(Fyu.shape[0]):
-        for j in range(Fyu.shape[1]):
-            for k in range(Fyu.shape[2]):
-                rhs[i,j,k]  -= Fyu[i,j,k] * zyu[j,k]
-    ghyu  = la.solve(A,rhs)
+    # Compute matrix g_y_u
+    rhs    = F_ym_u # + F_y_u @ g_y @ g_u + F_yp @ g_y_y @ (g_y ⊗ g_u) + ...
+    for i in range(n):
+        for j in range(n):
+            for k in range(n_shk):
+                rhs[i,j,k] += F_y_u[i,j,k] * g_y[i,j] * g_u[i,k]
+                for m in range(n):
+                    rhs[i,j,k] += F_yp[i,j] * g_y_y[i,j,m] * g_y[i,j] * g_u[m,k]            
+    g_y_u  = la.solve(A,-rhs)
     
-    # Compute matrix G_u_u
-    zuu  = ghu @ ghu.T
-    rhs  =  -Fuu @ ghu.T @ ghu
-    for i in range(Fyp.shape[0]):
-        for j in range(ghyy.shape[0]):
-            for k in range(ghyy.shape[1]):
-                rhs[i]  -= Fyp[i,j] * ghyy[i,j,k] * zuu[j,k]
-    ghuu = la.solve(A,np.ravel(rhs))
-    ghuu = np.reshape(ghuu,(rhs.shape[0],n_shk,n_shk)) 
+    # Compute matrix g_u_u
+    # rhs   = F_u_u + F_y_u @ g_u @ g_u + F_yp @ g_y_y @ (g_u ⊗ g_u) + ...
+    rhs   = np.zeros((n,n,n_shk))
+    for i in range(n):
+        for j in range(n_shk):
+            for k in range(n_shk):
+                rhs[i,j,k] += F_u_u[i,j,k]
+                
+    for i in range(n):
+        for j in range(n):
+            for k in range(n_shk):
+                rhs[i,j,k] += F_y_u[i,j,k] * g_u[i,k] * g_u[j,k]
+                for m in range(n):
+                    rhs[i,j,k] += F_yp[i,j] * g_y_y[i,j,m] * g_u[i,k] * g_u[m,k]              
+    g_u_u = la.solve(A,-rhs)
     
-    # Compute matrix G_sigma_sigma
-    if not Sigma is None:
-        tmp  = -(Fyy @ zuu + Fyp @ ghuu)
-        rhs  = tmp @ Sigma
-        ghss = la.solve(A,rhs)
+    # Compute matrix g_s_s
+    if not cov is None:
+        rhs = F_yp @ g_u_u
+        E = F_yp @ (np.eye(len(g_y)) + g_y) + F_yc
+        E = np.dot(E,cov)
+        for i in range(n):
+            for j in range(n):
+                for k in range(n_shk):
+                    for m in range(n):
+                        rhs[i,j,k] += F_yp_yp[i,j,m] * g_u[i,k] * g_u[m,k] 
+        g_s_s = la.solve(E,-rhs) 
+    else:
+        g_s_s = None
     
-    return ghyy,ghyu,ghuu,ghss
+    return g_y_y,g_y_u,g_u_u,g_s_s
 
 
-def second_order_solution(model,T,periods,y0,steady_state=None,params=None,order=2,Npaths=1,MULT=1):
+def second_order_solution(model,T,periods,y0,steady_state=None,params=None,cov=None,order=2,Npaths=1,MULT=1):
     """
     Find the second order approximation solution.
     
@@ -174,7 +202,8 @@ def second_order_solution(model,T,periods,y0,steady_state=None,params=None,order
         :param periods: Array of endogenous variables.
         :type periods: numpy.ndarray.
         :param params: Values of parameters.
-        :type params: numpy.ndarray.
+        :type cov: Covariance matrix of stochastic shock.
+        :type cov: numpy.ndarray.
         :param order: Order of partial derivatives of Jacobian.
         :type order: int.
         :param Npaths: Number of simulation paths. This is the number of paths of stochastic shocks.
@@ -185,11 +214,10 @@ def second_order_solution(model,T,periods,y0,steady_state=None,params=None,order
         :returns: Second order approximation to numerical solution.
         
     """
-    count = 1; err = 0
+    count = 0; err = 1;  yIter = []
     t0 = time()
-    #var_names = model.symbols['variables']
-    var = model.calibration['variables']
-    n, = var.shape
+    var = model.symbols['variables']
+    n = len(var)
     if params is None:
         params = model.calibration['parameters']
         
@@ -198,51 +226,57 @@ def second_order_solution(model,T,periods,y0,steady_state=None,params=None,order
        
     all_shocks = getAllShocks(model,periods,n_shocks,Npaths,T)
     
-    # Find deviation of solution from a steady state
-    yy = []
-    
+    # Find deviation of solution from the steady state
+    y = np.empty((T+1, n))
+    y[:] = y0 - steady_state
+ 
     for path in range(Npaths):
         # Get first order approximation solution
         solve(model,p=params,steady_state=steady_state)
-        # State transition matrix
-        F = model.linear_model["A"]
-        # Matrix of coefficients of shocks
-        R = model.linear_model["R"]
-        # Array of constants
-        C = model.linear_model["C"]
-        
-        # Compute Jacobian and Hessian matrices at the solution.
-        # We calculate system derivatives only one time at steady state
-        # Because of that the second order approximation is valid only for stationary models.
-        # For non-stationary models the jacobian and hessian shold be computed 
-        # at each time step and the procedure iterated until solution converges.
-        fn,jacobian,hessian = get_function_and_jacobian(model=model,y=np.vstack((steady_state,steady_state,steady_state)),params=params,order=order)
-        Sigma = None
-        
-        # Get second order derivatives
-        ghxx,ghxu,ghuu,ghss = second_order_approximation(model=model,jacobian=jacobian,hessian=hessian,ghy=F[:n,:n],ghu=R[:n],Sigma=Sigma)
-
-        yIter = []
+        yy = []
         shocks = np.array(all_shocks[path])
-        tmp = y0[0] - steady_state
-        if model.SOLVER.value == SolverMethod.Sims.value:
-            y = np.zeros((T+1,2*n))
-            y[:] = np.concatenate((tmp,tmp),axis=0)
-        else:
-            y = np.zeros((T+1,n))
-            y[:] = tmp
-        
-        # Simulate
-        for t in range(T):
-            # First order approximation
-            u      = shocks[t]
-            y[t+1] = F @ y[t] + C + R @ u
-            v      = y[t,:n]
-            # Correct solution with the second order approximation
-            tmp  = np.ravel(np.squeeze(ghxx @ v) @ v)
-            tmp += np.ravel(np.squeeze(ghxu @ u) @ v)
-            tmp += np.ravel(ghuu @ u @ u.T)
-            y[t+1,:n] += tmp
+   
+        while (err > TOLERANCE and count < NITERATIONS):
+            count += 1
+            y_prev = np.copy(y)
+            
+            # State transition matrix
+            F = model.linear_model["A"]
+            # Matrix of coefficients of shocks
+            R = model.linear_model["R"]
+            # Array of constants
+            C = model.linear_model["C"]
+            
+            # Compute Jacobian and Hessian matrices at the solution.
+            # We calculate system derivatives only one time at steady state
+            # Because of that the second order approximation is valid only for stationary models.
+            # For non-stationary models the jacobian and hessian should be computed 
+            # at each time step and the procedure iterated until solution converges.
+            fn,jacobian,hessian = get_function_and_jacobian(model=model,y=np.vstack((y,y,y)),params=params,order=order)
+            
+            # Get second order derivatives
+            g_xx,g_xu,g_u_u,g_s_s = second_order_approximation(model=model,jacobian=np.real(jacobian),hessian=np.real(hessian),g_y=np.real(F[:n,:n]),g_u=np.real(R[:n]),cov=cov)
+    
+            # Simulate
+            for t in range(T):
+                # First order approximation
+                u      = shocks[t]
+                y[t+1] = F @ y[t] + C + R @ u
+                v      = y[t,:n]
+                # Correct solution with the second order approximation
+                second_order_approx = np.zeros(n)
+                for i in range(n):
+                    for j in range(n):
+                        for k in range(n):
+                            second_order_approx[i] += g_xx[i,j,k] * v[j] * v[k]
+                        for m in range(n_shocks):
+                            second_order_approx[i] += g_xu[i,j,m] * v[j] * u[m] + g_u_u[i,j,m] * u[m] * u[m]
+                            
+                    if not cov is None:
+                        second_order_approx[i] += g_s_s
+                #y[t+1,:n] += 0.5*second_order_approx
+            
+                err = la.norm(y_prev-y)/max(1.e-10,la.norm(y))
         
         # Add steady state to deviations to arrive to solution
         sol = y[:,:n] + steady_state
@@ -332,8 +366,7 @@ def first_order_solution(model,T,periods,y0,steady_state=None,params=None,Npaths
     bHasAttrABLSolver       = hasattr(ABLRsolver,"py_func")
     
     for path in range(Npaths):
-        err = 1.0
-        count = 0
+        err = 1.0; count = 0
         y = np.copy(y0); y_prev = np.copy(y)
         yprev = np.copy(y)
         shocks = all_shocks[path]
@@ -874,3 +907,58 @@ def predict(model:Model,T:int,y:np.array,params:list=None,shocks:list=None,debug
     print(f"Elapsed time: {elapsed:.2f} (sec.), total # of iterations: {1+itr-itr0}, Error: {np.sum(err)/T:.1e}")
     
     return y
+
+
+if __name__ == '__main__':
+    """ Formulas for second derivatives."""
+    from sympy import symbols, diff, hessian
+    from sympy import Function,simplify,latex
+    from IPython.display import display, Math
+    
+    x,u,s,up = symbols('x u s up')
+    f = Function('f')
+    g = Function('g')
+    
+    # Functional form
+    func = f(g(g(x,u,s),up,s),g(x,u,s),x,u,s)
+    
+    print('\nF_x_x:')
+    h = func.diff(x).diff(x)
+    h = simplify(h)
+    fxx = latex(h)
+    display(Math(fxx))
+    
+    """
+    func = f(h,k,x,u,s); h = y+, k = y
+    d²f/dx² = (f_hh * (g_x')² + f_h * g_xx' ) + (f_hk * g_x' * g_x * 2) + (f_kk * (g_x)² + f_k * g_xx)
+    g' = g(g(x,u,s),up,s)
+    g1 = g(x,u,s)
+    f_h = df/dh
+    f_k = df/dk
+    f_x = df/dx
+    g_x = dg/dx
+    g_x' = dg'/dx
+    g_xx = d²g/dx²
+    g_xx' = d²g'/dx²
+    f_hh = d²f/dh²
+    f_hk = d²f/(dhdk)
+    f_kk = d²f/dk
+    """
+                                                 
+    # print('\nF_x_u:')
+    # h = func.diff(x).diff(u)
+    # h = simplify(h)
+    # fxu = latex(h)
+    # display(Math(fxu))
+            
+    # print('\nF_u_u:')
+    # h = func.diff(u).diff(u)
+    # h = simplify(h)
+    # fuu = latex(h)
+    # display(Math(fuu))
+        
+    # print('\nF_s_s:')
+    # h = func.diff(s).diff(s)
+    # h = simplify(h)
+    # fss = latex(h)
+    # display(Math(fss))

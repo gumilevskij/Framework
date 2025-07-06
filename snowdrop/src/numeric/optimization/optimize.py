@@ -369,13 +369,17 @@ def run(fpath=None,fout=None,Output=False,plot_variables=None,model_info=False):
         
     if Output:
         # Save results in excel file
-        fdir = os.path.dirname(fpath)
-        name, ext = os.path.splitext(fpath)
         if fout is None:
-            fout = os.path.abspath(os.path.join(fdir,'../../../supplements/data/OPT/'+ os.path.basename(name) + '.csv'))
-        with open(fout, 'w') as f:
-            f.writelines(','.join(var_names) + '\n')
-            f.writelines(','.join(str(x) for x in y)  +'\n')
+            fdir = os.path.dirname(fpath)
+            name, ext = os.path.splitext(fpath)
+            fout = os.path.abspath(os.path.join(fdir,'../../../../output/OPT/'+ os.path.basename(name) + '.csv'))
+        else:
+            fdir = os.path.dirname(fout)
+            if not os.path.exists(fdir):
+                os.makedirs(fdir)
+            with open(fout, 'w') as f:
+                f.writelines(','.join(var_names) + '\n')
+                f.writelines(','.join(str(x) for x in y)  +'\n')
             
         pTable = PrettyTable(['Var Name','Var Value','Var Name ','Var Value '])
         for i in range(n):

@@ -30,7 +30,10 @@ def kalmanfilter(Plot=False,save=True):
     """Run Kalman filter and smoother."""
     path_to_dir = os.path.join(working_dir,'graphs')
     meas = os.path.abspath(os.path.join(working_dir,'supplements/data/MPAF/history_new.csv'))
-    fout = os.path.abspath(os.path.join(working_dir,'supplements/data/MPAF/results.csv'))     # Results are saved in this file
+    fout = os.path.abspath(os.path.join(working_dir,'output/data/MPAF/results.csv'))     # Results are saved in this file
+    fdir = os.path.dirname(fout)
+    if not os.path.exists(fdir):
+        os.makedirs(fdir)
     
     # Read historic data
     #df = pd.read_excel(io=meas,header=0,index_col=0,parse_dates=True,infer_datetime_format=True)

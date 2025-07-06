@@ -269,15 +269,13 @@ class Model:
             self.__update_from_symbolic__()
 
 
-    def __compile_functions__(self,order=1):
+    def __compile_functions__(self):
         """
         Compile model equations function and compute Jacobian matrix up to the third order.
             
         Parameters:
             :param self: Parameter.
             :type self: Model.
-            :param order: Maximum order of partial equations derivatives.
-            :type order: int.
             :returns:  List of functions.
         """ 
         from snowdrop.src.preprocessor.function_compiler_sympy import compile_higher_order_function
@@ -435,19 +433,19 @@ class Model:
             
             if self.autodiff:
                 from autograd import jacobian,hessian  
-                if order <= 1:
+                if self.order <= 1:
                     f_jacob = jacobian(func)
-                elif order <= 2:
+                elif self.order <= 2:
                     f_hessian = hessian(func)
-                elif order <= 3:
+                elif self.order <= 3:
                     f_tensor = jacobian(hessian)
             elif self.jaxdiff:
                 from jax import jacobian,hessian,jit
-                if order <= 1:
+                if self.order <= 1:
                     f_jacob = jit(jacobian(func),backend='cpu')
-                elif order <= 2:
+                elif self.order <= 2:
                     f_hessian = jit(hessian(func),backend='cpu')
-                elif order <= 3:
+                elif self.order <= 3:
                     f_tensor = jit(jacobian(hessian),backend='cpu')
                 func = jit(func,backend='cpu')
             
@@ -456,7 +454,7 @@ class Model:
             if True or self.bSparse:
                 # Compile dynamic function and compute its partial derivatives  
                 f_sparse,txt_sparse,txt_der,txt_der2,txt_der3,src_sparse = compile_higher_order_function(
-                        equations=eqs,syms=syms,params=params,syms_exog=syms_exog,eq_vars=self.eq_vars,order=order,
+                        equations=eqs,syms=syms,params=params,syms_exog=syms_exog,eq_vars=self.eq_vars,order=self.order,
                         function_name='f_sparse',out='f_sparse',bSparse=True,b=b,model_name=self.infos["name"],log_variables=logv)
             else:
                 f_sparse = txt_sparse = src_sparse = None
@@ -464,7 +462,7 @@ class Model:
             # Compile dynamic function and compute its partial derivatives  
             f_dynamic,txt_dynamic,txt_der,txt_der2,txt_der3,src_dynamic = compile_higher_order_function(
                     equations=eqs,syms=syms,params=params,syms_exog=syms_exog,eq_vars=self.eq_vars,
-                    order=order,function_name='f_dynamic',out='f_dynamic',b=b,
+                    order=self.order,function_name='f_dynamic',out='f_dynamic',b=b,
                     model_name=self.infos["name"],log_variables=logv)
 
             # Compile steady-state function

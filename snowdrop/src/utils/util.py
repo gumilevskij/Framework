@@ -11,7 +11,7 @@ from datetime import datetime
 from snowdrop.src.utils.db import create_sqlitefile,insert_values,get_data,print_data
    
 path = os.path.dirname(os.path.abspath(__file__))
-working_dir = os.path.abspath(os.path.join(path,"../.."))
+working_dir = os.path.abspath(os.path.join(path,"../../.."))
 
 
 def caseInsensitiveDict(d):
@@ -1459,8 +1459,8 @@ def compareTrollFiles(fpath1,fpath2):
     import numpy as np
     
     # Read data
-    file_path1 = os.path.abspath(os.path.join(working_dir,"snowdrop/data/Troll/FSGM3", fpath1))
-    file_path2 = os.path.abspath(os.path.join(working_dir,"snowdrop/data/Troll/FSGM3", fpath2))
+    file_path1 = os.path.abspath(os.path.join(working_dir,"supplements/data/Troll/FSGM3", fpath1))
+    file_path2 = os.path.abspath(os.path.join(working_dir,"supplements/data/Troll/FSGM3", fpath2))
     fout = os.path.abspath(os.path.join(working_dir,"data/Troll/FSGM3/comparison.csv"))
     
     
@@ -1613,7 +1613,7 @@ def getOutputFolderPath():
     if name in os.environ:
         output_dir = os.environ[name]
     else:
-        output_dir = os.path.abspath(os.path.join(working_dir,'../supplements'))
+        output_dir = os.path.abspath(os.path.join(working_dir,'output'))
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)      
     return output_dir

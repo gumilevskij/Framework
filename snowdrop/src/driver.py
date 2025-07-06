@@ -32,7 +32,7 @@ if not os.path.exists(figures_dir):
 if not os.path.exists(xl_dir):
     os.makedirs(xl_dir)
 
-def setParameters(model, order, Solver, Filter, Smoother, 
+def setParameters(model, Solver, Filter, Smoother, 
                   Prior, InitCondition, SamplingMethod=None):
     """
     Set model parameters.
@@ -40,8 +40,6 @@ def setParameters(model, order, Solver, Filter, Smoother,
     Parameters:
         :param model: Model object.
         :type fname: Model.
-        :param order: Approximation order of solution of non-linear system of equations.
-        :type order: int.
         :param Solver: Solver algorithm.
         :type Solver: str.
         :param Filter: KF filter algorithm.
@@ -318,9 +316,10 @@ def importModel(fname, order=1, hist=None, boundary_conditions_path=None, exogen
             
         model = Model(interface=smodel,anticipate=anticipate,infos=infos)
         model.estimate = estimate
+        model.order = order
         
         # Set model parameters
-        model = setParameters(model,order,Solver,Filter,Smoother,Prior,InitCondition,SamplingMethod)
+        model = setParameters(model,Solver,Filter,Smoother,Prior,InitCondition,SamplingMethod)
         simulationRange(model)
         
         # Serialize model into file
@@ -931,10 +930,15 @@ def run(fname=None,model=None,y0=None,order=1,T=-1,Tmax=1.e6,irf=False,prefix=No
         
     else:
         # Set model parameters
-        model = setParameters(model,order,Solver,Filter,Smoother,Prior,InitCondition)
+        model = setParameters(model,Solver,Filter,Smoother,Prior,InitCondition)
         if not anticipate is None:
             model.anticipate = anticipate
             
+    if model.order == 2:
+        # # Solving non-linear model by linear solver.  Just kidding...
+        from snowdrop.src.utils.equations import topology
+        topology(model)
+        
     model.count += 1
     meas_df = None
     
@@ -1342,6 +1346,10 @@ def run(fname=None,model=None,y0=None,order=1,T=-1,Tmax=1.e6,irf=False,prefix=No
             fout = os.path.abspath(os.path.join(xl_dir,'Data.csv'))
         elif not os.path.exists(os.path.dirname(fout)):
             fout = os.path.abspath(os.path.join(xl_dir,os.path.basename(fout)))
+                
+        fdir = os.path.dirname(fout)
+        if not os.path.exists(fdir):
+            os.makedirs(fdir)
             
         var_labels = model.symbols["variables_labels"]
         saveToExcel(fname=fout,data=y,variable_names=variables,

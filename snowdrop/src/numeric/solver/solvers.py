@@ -199,15 +199,7 @@ def lyapunov_solver(T,R,Q,N,n_shocks,method=1,options=None):
            nsh*nsh matrix.
  
     Algorithms:
-      options:
-          steady: The transition matrix is decomposed into stable and unstable parts. For the stable part we solve the Lyapinov equation with the help of the scipy package Lyapunov solver.
-          
-          fp:     True iteration-based fixed point algorithm is used.
-          
-          db:     Then doubling algorithm is used.
-          
-          If none of these algorithms is selected then the reordered Schur decomposition, a.k.a. 
-          Bartels-Stewart algorithm is used.
+      Bartels-Stewart algorithm.
           
     """
     Q2 = 0
@@ -246,6 +238,40 @@ def lyapunov_solver(T,R,Q,N,n_shocks,method=1,options=None):
    
     return np.real(P)
 
+
+def Sylvester_solver_vec(A, B, C, D):
+    """
+    Solves the generalized Sylvester equation A*X + B*X*C = D in vectorized form.
+    
+    Uses identity:
+        ..math:
+            vec(B*X*C) = (C.T ⊗ B) * vec(X)
+
+    Args:
+        A (numpy.ndarray): Matrix A.
+        B (numpy.ndarray): Matrix B.
+        C (numpy.ndarray): Matrix C.
+        D (numpy.ndarray): Matrix D.
+
+    Returns:
+        numpy.ndarray: Solution matrix X.
+    """
+    n = A.shape[0]
+
+    # Construct the matrix M = (I ⊗ A) + (C.T ⊗ B)
+    I = np.eye(n*n)
+    M = la.kron(I,A) + la.kron(C.T,B)
+
+    # Vectorize the right-hand side D
+    vec_D = D.flatten()
+
+    # Solve the linear system M vec(X) = vec(D)
+    vec_X = linalg_solve(M, vec_D)
+
+    # Reshape the vectorized solution back to matrix X
+    X = vec_X.reshape(n, n, n)
+
+    return X
 
 def disclyap_fast(G,V,tol=1.e-16,check_flag=None):
     """
@@ -449,17 +475,20 @@ def sylvester_solver(A,C,D,B=None):
         A*x + B*x*C = D
     """
     if B is None:
+        # Solves: A*x + x*C = D
         x = la.solve_sylvester(A,C,D)
     else:
         if np.ndim(B) == 2 and B.shape[0] == B.shape[1] and la.det(B) > 0:
+            # Solves: B^{-1}*A*x + x*C = B^{-1}*D
             b_inv = la.inv(B)
-            x  = la.solve_sylvester(b_inv @ A,b_inv @ C,b_inv @ D)
+            x  = la.solve_sylvester(b_inv @ A,C,b_inv @ D)
         else:
-            x = Sylvester_solver(A=A,B=B,C=C,D=D)
+            #x = Sylvester_solver_schur(A=A,B=B,C=C,D=D)
+            x = Sylvester_solver_vec(A=A,B=B,C=C,D=D)
     
-#    err = np.max(A@x+B@x@C-D)
-#    if err > 1.e-10:
-#        cprint("Sylvester equation solver error: large residual - {}".format(np.round(err,2)),"red")
+    # err = np.max(A@x+B@x@C-D)
+    # if err > 1.e-8:
+    #     cprint("Sylvester equation solver error: large residual - {}".format(np.round(err,2)),"red")
         
     return x
 
@@ -494,9 +523,9 @@ def Sylvester_iterative_solver(x0,A,B,C,D):
     return x0, flag, it
 
 
-def Sylvester_solver(A,B,C,D):
+def Sylvester_solver_schur(A,B,C,D):
     """"
-    Solves Silvester equation.
+    Solves Silvester equation with Schud decompostion
         
     .. math:: 
         
@@ -578,18 +607,12 @@ def Sylvester_solver(A,B,C,D):
 def test1():
     """Test Lypunov equations solvers."""
     # Solves the Lyapunov equation x-a*x*a' = b, for b and x symmetric matrices.
-    # n = 5
-    # a = np.random.rand(n,n); a += a.T
-    # b = np.random.rand(n,n); b += b.T
-    # a = np.round(a,2)
-    # b = np.round(b,2)
-    # print(a)
-    # print(b)
     a = np.array([[0.29,1.47,0.62,0.77,1.71],
                  [1.47,1.27,1.24,1.68,0.3 ],
                  [0.62,1.24,1.58,1.04,0.51],
                  [0.77,1.68,1.04,0.87,1.31],
                  [1.71,0.3,0.51,1.31,1.56 ]])
+    
     b =  np.array([[0.87,1.35,0.8,1.12,0.8 ],
                  [1.35,0.52,1.21,1.18,0.57],
                  [0.8,1.21,1.34,1.87,1.17 ],
@@ -607,20 +630,16 @@ def test1():
    # -0.0837   -0.0446    0.0047    0.1008    0.0151
         
     print(x)
-    print()
-    print("Error:")
-    err = x + a@x@a.T - b
-    print(err)
        
     # Test Silvester equation solver: a*x + b*x*c = d
     a = np.array([[-3, -.2, 0], [-1, -.1, 0], [0, -.5, -1]])
-#    c = np.ones((1,1)) #np.array([[ 2,  4,-1], [-1, -1, 0], [0, -5, -1]])
-    b = np.array([[ .3,  .1,-.1], [-.1, +.1, .3], [0, +.5, +1]])
-#    d = np.ones((3,1,3))
-#    x =  sylvester_solver(A=a,B=b,C=c,D=np.copy(d))
-#    print()
-#    print("Sylvester solution:")
-#    print(x)
+    c = np.array([[ 2,  4,-1], [-1, -1, 0], [0, -5, -1]])
+    b = np.array([[ .3,  .1,-.1], [-.1, +.1, .3], [1, +.5, +1]])
+    d = np.ones((3,3))
+    x =  Sylvester_solver(A=a,B=b,C=c,D=d)
+    print()
+    print("Sylvester solution:")
+    print(x)
     
     #print()
     #x = la.solve_discrete_lyapunov(a,b,method='direct')  
@@ -687,7 +706,11 @@ def test2():
                  [0,0,-1.02740233382816,0]
                  ])
     Q = np.eye(4)
-    Pstable = lyapunov_solver(T,R,Q,N=0,n_shocks=R.shape[1],options="steady_state")#"equilibrium","steady_state","doubling_algorithm"
+    
+    # options : discrete,steady_state,symmetric,doubling_algorithm,stochastic
+    option="steady_state"
+    Pstable = lyapunov_solver(T,R,Q,N=0,n_shocks=R.shape[1],options=option)
+    print(f"\nLyapunov solution ({option}):")
     print(Pstable)
     # Matlab results
    #  Pa0stable =
@@ -699,4 +722,5 @@ def test2():
     
 if __name__ == "__main__":
     """Main entry point."""
+    test1()
     test2()

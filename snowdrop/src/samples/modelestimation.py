@@ -17,8 +17,12 @@ def estimate(fname='TOY/Ireland2004.yaml',fmeas='supplements/data/gpr_1948.csv')
     from snowdrop.src.driver import importModel, estimate
 
     #fname = 'TOY/Ireland2004.yaml' # Ireland NK model example
-    fout = os.path.abspath(os.path.join(working_dir,'supplements/data/results.csv')) # Results are saved in this file
+    fout = os.path.abspath(os.path.join(working_dir,'output/data/Estimate/results.csv')) # Results are saved in this file
     output_variables = None  # List of variables that will be plotted or displayed
+    
+    fdir = os.path.dirname(fout)
+    if not os.path.exists(fdir):
+        os.makedirs(fdir)
 
     # Path to measurement data
     meas = os.path.abspath(os.path.join(working_dir,fmeas))

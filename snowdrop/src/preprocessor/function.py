@@ -65,60 +65,7 @@ def correct(n,max_lead_shock,min_lag_shock,indexEndogVariables,derivative):
         derivative[np.array(indexEndogVariables)+2*n] = 0
         
     return derivative
-            
-            
-def flip(n,order,indEndog,indExog,max_lead_shock,min_lag_shock,derivatives):
-    """
-    Swap indices of endogenous and exogenous variables.
-
-    Parameters:
-        :param order: Order of partial derivatives of the system of equations.
-        :type order: int
-        :param endogVariables: list
-        :type endogVariables: Endogenous variables to be flipped
-        :param exogVariables: list
-        :type exogVariables: Exogenous variables to be flipped
-        :returns: Function, Jacobian, Hessian, and third order derivatives matrices.
-    """
-    #TODO: Need testing
-    if indEndog is None or indExog is None:
-        return derivatives
-    
-    elif not len(indEndog) == len(indExog):
-        from snowdrop.src.misc.termcolor import cprint
-        cprint(f"Number of flipped endogenous varaibles {len(indEndog)} and exogenous variables {len(indExog)} is different.","red")
-        return derivatives
-    
-    if order == 0:
-        return derivatives
-    
-    elif order == 1:
-        tmp0 = derivatives[0]
-        tmp1 = derivatives[1]
-        tmp1[:,indExog],tmp1[:,indEndog] = tmp1[:,indEndog],tmp1[:,indExog]
-        return tmp0,tmp1
-    
-    elif order == 2:
-        tmp0 = derivatives[0]
-        tmp1 = derivatives[1]
-        tmp2 = derivatives[2]
-        tmp1[:,indExog],tmp1[:,indEndog] = tmp1[:,indEndog],tmp1[:,indExog]
-        tmp2[:,indExog,indExog],tmp2[:,indEndog,indEndog] = tmp2[:,indEndog,indEndog],tmp2[:,indExog,indExog]
-        return tmp0,tmp1,tmp2
-        
-    elif order == 3:
-        tmp0 = derivatives[0]
-        tmp1 = derivatives[1]
-        tmp2 = derivatives[2]
-        tmp3 = derivatives[3]
-        tmp1[:,indExog],tmp1[:,indEndog] = tmp1[:,indEndog],tmp1[:,indExog]
-        tmp2[:,indExog,indExog],tmp2[:,indEndog,indEndog] = tmp2[:,indEndog,indEndog],tmp2[:,indExog,indExog]
-        tmp3[:,indExog,indExog,indExog],tmp3[:,indEndog,indEndog,indEndog] = tmp3[:,indEndog,indEndog,indEndog],tmp3[:,indExog,indExog,indExog]        
-        return tmp0,tmp1,tmp2,tmp3
-    
-    else:
-        return derivatives
-        
+          
     
 def get_function_and_jacobian(model,params=None,y=None,shock=None,t=0,order=1,bSparse=False,exog=None,debug=False):
     """
@@ -260,8 +207,6 @@ def get_function_and_jacobian(model,params=None,y=None,shock=None,t=0,order=1,bS
                 derivatives = func(yy,params,exog=exog,order=order)
             
     return derivatives
-    # return flip(n,order,model.indexOfFlippedEndogVariables,model.indexOfFlippedExogVariables,
-    #             model.max_lead_shock,model.min_lag_shock,derivatives)
  
   
 def get_function(model,y,func=None,params=None,shock=None,exog=None,t=0,debug=False):
