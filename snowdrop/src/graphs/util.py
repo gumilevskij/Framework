@@ -110,6 +110,8 @@ def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,perio
     from snowdrop.src.utils.util import deleteFiles,correctLabel
     from snowdrop.src.numeric.solver.util import decompose
     from snowdrop.src.utils.util import getMap
+    from matplotlib.ticker import PercentFormatter
+    import matplotlib.ticker as mtick
     from textwrap import wrap
     
     global K2
@@ -121,6 +123,7 @@ def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,perio
     
     figs = []
     style.use(STYLE)
+    formatter = mtick.PercentFormatter(xmax=1.0,decimals=1) 
     
     years = dates.YearLocator()   # every year
     yearsFmt = dates.DateFormatter('%Y')
@@ -183,6 +186,7 @@ def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,perio
                 k += 1
                 m += 1
                 ax = plt.subplot(rows,columns,m)
+                ax.yaxis.set_major_formatter(formatter)
                 if rng is None:
                     ind = np.arange(T)   
                     series = pd.Series(data=y[:,j])
@@ -590,6 +594,7 @@ def plot(path_to_dir,data,variable_names,sizes=None,figsize=None,meas_values=Non
         if k%(rows*columns) == 0:
             m = 0
             fig = plt.figure(figsize=figsize)
+            
         k += 1
         m += 1
         ax = plt.subplot(rows,columns,m)
@@ -658,6 +663,7 @@ def plot(path_to_dir,data,variable_names,sizes=None,figsize=None,meas_values=Non
         else:
             plt.title(n,fontsize=12)
         plt.grid(True)
+        
         # format the ticks
         # ax.xaxis.set_minor_locator(years)
         # ax.xaxis.set_major_formatter(yearsFmt)
@@ -771,7 +777,7 @@ def plotSteadyState(path_to_dir,variables,arr_ss,par_ss,sizes=None,fig_sizes=(12
     return figs
         
  
-def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=(12,10),save=False,highlight=None,stacked=True,isLastLinePlot=True,zero_line=False,show=True,ext=None):
+def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=(12,10),save=False,highlight=None,stacked=True,isLastLinePlot=True,zero_line=False,bPercent=False,show=True,ext=None):
     """    
     Plot time series.
     
@@ -794,6 +800,8 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
         :type stacked: bool.
         :param isLastLinePlot: If True the last series plot will be drawn as line plots.
         :type isLastLinePlot: bool.
+        :param bPercent: If True show yaxis in percentage points.
+        :type bPercent: bool.
         :param show: If True display plots.
         :type zero_line: bool.
         :param zero_line: If True adds zero line.
@@ -803,6 +811,12 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
     """
     #import matplotlib.gridspec as gridspec
     #from datetime import datetime 
+    
+    from matplotlib.ticker import PercentFormatter
+    import matplotlib.ticker as mtick
+    
+    formatter = mtick.PercentFormatter(xmax=100.,decimals=1) 
+    
     
     style.use(STYLE)
     colors = getColors()
@@ -886,6 +900,7 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
                     #ax.set_position(np.array([left_,bottom_,width_,height_]))
                     #print([left_,bottom_,width_,height_])
                     ax.set_title(t,loc='center',wrap=True)
+                    if bPercent: ax.yaxis.set_major_formatter(formatter)
                     data = {}
                     for j in range(n):
                         if entries[j] is None:

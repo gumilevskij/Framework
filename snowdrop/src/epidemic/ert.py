@@ -429,7 +429,7 @@ def main(Plot=False,save=True):
                           [100*d["dd"][1.e-6:T],d_obs[1.e-6:]]]
             labels=[['Forecast','Current Cases'],['Forecast','Data']]
 
-        plotTimeSeries(path_to_dir=graphs_path,header=header,titles=titles,labels=labels,series=series,sizes=[1,2],stacked=False,fig_sizes=(10,5),save=save)
+        plotTimeSeries(path_to_dir=graphs_path,header=header,titles=titles,labels=labels,series=series,sizes=[1,2],stacked=False,fig_sizes=(10,5),bPercent=True,save=save)
 
 
         # ERT model economy forecast
@@ -483,7 +483,7 @@ def main(Plot=False,save=True):
                   'Work Hours of Susceptibles ','Work Hours of Infected ','Work Hours of Recovered'
                  ]
         labels=[['Sticky Price Economy','Flexible Price Economy'],[],[],[],[],[]]
-        plotTimeSeries(path_to_dir=graphs_path,header=header,titles=titles,labels=labels,series=series,sizes=[2,3],highlight=highlight,stacked=False,fig_sizes=(10,6),save=save)
+        plotTimeSeries(path_to_dir=graphs_path,header=header,titles=titles,labels=labels,series=series,sizes=[2,3],highlight=highlight,stacked=False,fig_sizes=(10,6),bPercent=True,save=save)
 
     else:
         list_headers = ['SIR Model Forecast','Sticky and Flexible Prices Economies','Economies']

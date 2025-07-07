@@ -82,13 +82,14 @@ def simulate(model,T,periods,y0,steady_state=None,params=None,cov=None,order=1,N
     return (count,yy,yyIter,err,elapsed)
     
  
-def second_order_approximation(model,jacobian,hessian,g_y,g_u,cov=None):
+def second_order_derivatives(model,jacobian,hessian,g_y,g_u,cov=None):
     """
     Compute the second order reduced form solution of the DSGE model.
     
-    It implements an algoritm described by Michel Juillard in:
+    It implements the algoritm described by Michel Juillard in
     "Computing first and second order approximation of DSGE models with DYNARE", CEPREMAP
     
+    For references please see: 
     https://archives.dynare.org/events/paris-1005/first-second-order.pdf%3Fmonth:int=12&year:int=2018&orig_query=
     https://stephane-adjemian.fr/dynare/slides/dsge-perturbation-method.pdf
     
@@ -107,6 +108,8 @@ def second_order_approximation(model,jacobian,hessian,g_y,g_u,cov=None):
         :type g_y: numpy.ndarray.
         :param g_u: Matrix of shocks.
         :type g_u: numpy.ndarray.
+        :param g_xx: Second derivative of of policy function.
+        :type g_xx: numpy.ndarray.
         :param sigma: Matrix of error covariances.
         :type sigma: numpy.ndarray.
         
@@ -127,59 +130,65 @@ def second_order_approximation(model,jacobian,hessian,g_y,g_u,cov=None):
     F_yp_yp = hessian[:n,:n,:n] 
     F_ym_ym = hessian[:n,2*n:3*n,2*n:3*n] 
     F_ym_u  = hessian[:n,2*n:3*n,3*n:,]
-    F_y_u   = hessian[:n,n:2*n,3*n:,]
+    F_yp_yc = hessian[:n,:n,n:2*n] 
+    F_yp_ym = hessian[:n,:n,2*n:3*n] 
+    F_yc_ym = hessian[:n,n:2*n,2*n:3*n]
+    F_y_yp  =  hessian[:n,n:2*n,:n]
     F_u_u   = hessian[:n,3*n:,3*n:]
-    #F_yp_u  = hessian[:n,:n,3*n:,]
-    #F_u_y   = hessian[:n,3*n:,n:2*n]
-    #F_y_u   = hessian[:n,2*n:3*n:,3*n:]
+    F_ym_yc = hessian[:n,2*n:3*n,n:2*n]
+    F_yc_u  = hessian[:n,n:2*n,3*n:]
+    F_yp_u  = hessian[:n,:n,3*n:]
             
     # Compute matrix g_y_y
-    A     = F_yp @ g_y + F_yc
-    B     = F_yp
-    C     = la.kron(g_y, g_y)
-    D     = F_ym_ym + F_yc_yc @ g_y @ g_y 
+    A  = F_yp @ g_y + F_yc
+    B  = F_yp
+    C  = la.kron(g_y, g_y)
+    D  = F_ym_ym 
+    D += 3*F_yc_yc @ g_y @ g_y @ g_y @ g_y 
+    D += 3*F_y_yp @ g_y @ g_y @ g_y 
+    D += F_yc_yc @ g_y 
+    D += F_yc_ym @ g_y
+    D += F_yc_yc @ g_y @ g_y
+    D += 3*F_yp_ym @ g_y @ g_y
+    D += F_yp_yc @ g_y @ g_y @ g_y 
+    
     # Solve Sylvester equation: A*x + B*x*C = D
     g_y_y = sylvester_solver(A=A,B=B,C=C,D=-D)
 
     # Compute matrix g_y_u
-    rhs    = F_ym_u # + F_y_u @ g_y @ g_u + F_yp @ g_y_y @ (g_y ⊗ g_u) + ...
-    for i in range(n):
-        for j in range(n):
-            for k in range(n_shk):
-                rhs[i,j,k] += F_y_u[i,j,k] * g_y[i,j] * g_u[i,k]
-                for m in range(n):
-                    rhs[i,j,k] += F_yp[i,j] * g_y_y[i,j,m] * g_y[i,j] * g_u[m,k]            
+    rhs  = F_ym_u
+    rhs += 3*F_yc_yc @ g_y @ g_u @ g_y @ g_u
+    rhs += 3*F_yp_yc @ g_y @ g_u @ g_y
+    rhs += F_yp_yc @ g_y @ g_u @ g_y
+    rhs += F_yc_yc @ g_y @ g_u 
+    rhs += 2*F_yp_ym @ g_y @ g_u 
+    rhs += F_ym_yc @ g_u 
+    rhs += F_yc_u @ g_y @ g_u
+    rhs += F_yp_u @ g_y @ g_u
+    rhs += F_ym_yc @ g_u
     g_y_u  = la.solve(A,-rhs)
     
     # Compute matrix g_u_u
-    # rhs   = F_u_u + F_y_u @ g_u @ g_u + F_yp @ g_y_y @ (g_u ⊗ g_u) + ...
-    rhs   = np.zeros((n,n,n_shk))
-    for i in range(n):
-        for j in range(n_shk):
-            for k in range(n_shk):
-                rhs[i,j,k] += F_u_u[i,j,k]
-                
-    for i in range(n):
-        for j in range(n):
-            for k in range(n_shk):
-                rhs[i,j,k] += F_y_u[i,j,k] * g_u[i,k] * g_u[j,k]
-                for m in range(n):
-                    rhs[i,j,k] += F_yp[i,j] * g_y_y[i,j,m] * g_u[i,k] * g_u[m,k]              
+    rhs  = F_u_u
+    rhs += 3*F_yc_yc @ g_y @ g_u @ g_y @ g_u  
+    rhs += 3*F_yp_yc @ g_y @ g_u @ g_u
+    rhs += F_yp_yc @ g_y @ g_u @ g_y
+    rhs += F_yc_yc @ g_u @ g_u 
+    rhs += F_yc_u @ g_y @ g_u
+    rhs += 3*F_yc_ym @ g_y @ g_u
+    rhs += F_yc_yc @ g_u
+    rhs += F_yc_u @ g_u
     g_u_u = la.solve(A,-rhs)
     
     # Compute matrix g_s_s
-    if not cov is None:
+    if cov is None:
+        g_s_s = None
+    else:
         rhs = F_yp @ g_u_u
+        rhs += np.reshape(np.reshape(F_yp_yp,(n,n*n)) @ la.kron(g_u, g_u),(n,n,n))
         E = F_yp @ (np.eye(len(g_y)) + g_y) + F_yc
         E = np.dot(E,cov)
-        for i in range(n):
-            for j in range(n):
-                for k in range(n_shk):
-                    for m in range(n):
-                        rhs[i,j,k] += F_yp_yp[i,j,m] * g_u[i,k] * g_u[m,k] 
         g_s_s = la.solve(E,-rhs) 
-    else:
-        g_s_s = None
     
     return g_y_y,g_y_u,g_u_u,g_s_s
 
@@ -247,17 +256,14 @@ def second_order_solution(model,T,periods,y0,steady_state=None,params=None,cov=N
             # Array of constants
             C = model.linear_model["C"]
             
-            # Compute Jacobian and Hessian matrices at the solution.
-            # We calculate system derivatives only one time at steady state
-            # Because of that the second order approximation is valid only for stationary models.
-            # For non-stationary models the jacobian and hessian should be computed 
-            # at each time step and the procedure iterated until solution converges.
+            # Compute Jacobian and Hessian matrices.
+            # We calculate system derivatives only one time at the steady state.
             fn,jacobian,hessian = get_function_and_jacobian(model=model,y=np.vstack((y,y,y)),params=params,order=order)
             
             # Get second order derivatives
-            g_xx,g_xu,g_u_u,g_s_s = second_order_approximation(model=model,jacobian=np.real(jacobian),hessian=np.real(hessian),g_y=np.real(F[:n,:n]),g_u=np.real(R[:n]),cov=cov)
+            g_xx,g_xu,g_uu,g_ss = second_order_derivatives(model=model,jacobian=np.real(jacobian),hessian=np.real(hessian),g_y=np.real(F[:n,:n]),g_u=np.real(R[:n]),cov=cov)
     
-            # Simulate
+            # Simulate,
             for t in range(T):
                 # First order approximation
                 u      = shocks[t]
@@ -270,11 +276,11 @@ def second_order_solution(model,T,periods,y0,steady_state=None,params=None,cov=N
                         for k in range(n):
                             second_order_approx[i] += g_xx[i,j,k] * v[j] * v[k]
                         for m in range(n_shocks):
-                            second_order_approx[i] += g_xu[i,j,m] * v[j] * u[m] + g_u_u[i,j,m] * u[m] * u[m]
+                            second_order_approx[i] += g_xu[i,j,m] * v[j] * u[m] + g_uu[i,j,m] * u[m] * u[m]
                             
                     if not cov is None:
-                        second_order_approx[i] += g_s_s
-                #y[t+1,:n] += 0.5*second_order_approx
+                        second_order_approx[i] += g_ss
+                y[t+1,:n] += 0.5*second_order_approx
             
                 err = la.norm(y_prev-y)/max(1.e-10,la.norm(y))
         
@@ -911,15 +917,14 @@ def predict(model:Model,T:int,y:np.array,params:list=None,shocks:list=None,debug
 
 if __name__ == '__main__':
     """ Formulas for second derivatives."""
-    from sympy import symbols, diff, hessian
-    from sympy import Function,simplify,latex
+    from sympy import symbols,Function,simplify,latex
     from IPython.display import display, Math
     
     x,u,s,up = symbols('x u s up')
     f = Function('f')
     g = Function('g')
     
-    # Functional form
+    # Functional form:
     func = f(g(g(x,u,s),up,s),g(x,u,s),x,u,s)
     
     print('\nF_x_x:')
@@ -945,20 +950,20 @@ if __name__ == '__main__':
     f_kk = d²f/dk
     """
                                                  
-    # print('\nF_x_u:')
-    # h = func.diff(x).diff(u)
-    # h = simplify(h)
-    # fxu = latex(h)
-    # display(Math(fxu))
+    print('\nF_x_u:')
+    h = func.diff(x).diff(u)
+    h = simplify(h)
+    fxu = latex(h)
+    display(Math(fxu))
             
-    # print('\nF_u_u:')
-    # h = func.diff(u).diff(u)
-    # h = simplify(h)
-    # fuu = latex(h)
-    # display(Math(fuu))
+    print('\nF_u_u:')
+    h = func.diff(u).diff(u)
+    h = simplify(h)
+    fuu = latex(h)
+    display(Math(fuu))
         
-    # print('\nF_s_s:')
-    # h = func.diff(s).diff(s)
-    # h = simplify(h)
-    # fss = latex(h)
-    # display(Math(fss))
+    print('\nF_s_s:')
+    h = func.diff(s).diff(s)
+    h = simplify(h)
+    fss = latex(h)
+    display(Math(fss))
