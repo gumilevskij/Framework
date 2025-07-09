@@ -78,35 +78,7 @@ def loadLibrary():
         
     return libc
 
-
-def getIndex(e,ind):    
-    """
-    Find the first matching occurance of open bracket.
-
-    Parameters:
-        :param e: Expression.
-        :type e: str.
-        :param ind: Starting index.
-        :type ind: int.
-        :returns: Index of the matching open bracket.
-    """
-    ind1 = [i for i in range(len(e)) if i>ind and e[i]=="("]
-    ind2 = [i for i in range(len(e)) if i>ind and e[i]==")"]
-    index = sorted(ind1+ind2)
-    s = 0
-    for i in index:
-        if i in ind1:
-            s += +1
-        elif i in ind2:
-            s += -1
-        if s == 0:
-            index = 1+i
-            break
-       
-    return index
-        
-
-def expand_obj_func_sum(categories,sub,expr):
+def expand_obj_func(categories,sub,expr,symb="+"):
     """
     Iterates thru a list of indices and categories, 
     substitutes an index in a variable name with a corresponding category, 
@@ -119,25 +91,22 @@ def expand_obj_func_sum(categories,sub,expr):
         :type sub: str.
         :param expr: Text.
         :type expr: str.
-        :returns: Text representation of sum operation.
+        :returns: Text representation of sum or product operation.
     """
     arr = []
     # Loop over items in a set
     for c in categories:
         arr.append(replace_all(sub,"_"+c,expr))
      
-    out = "+".join(arr)
+    out = symb.join(arr)
     return out
-
 
 def expand_sum(sets,indices,txt): 
     return expand_sum_or_prod(sets,indices,txt,symb="+")
 
-
 def expand_prod(sets,indices,txt): 
     return expand_sum_or_prod(sets,indices,txt,symb="*")
     
-
 def expand_sum_or_prod(sets,indices,txt,symb): 
     """ 
     Iterates thru a list of indices and categories,  
@@ -169,7 +138,6 @@ def expand_sum_or_prod(sets,indices,txt,symb):
     out = symb.join(arr) 
      
     return "(" + out + ")" 
-
 
 def expand_minmax(b,sets,indices,txt):    
     """
@@ -206,7 +174,6 @@ def expand_minmax(b,sets,indices,txt):
     else:
         return "max(" + out + ")"        
     
-    
 def expand_loop(categories,sub,expr):    
     """
     Iterates thru a list of indices and categories, 
@@ -223,7 +190,6 @@ def expand_loop(categories,sub,expr):
         :returns: Text representation of sum operation.
     """
     
-
 def expand_list(sets,indices,arr,objFunc=False,loop=False):
     """
     Iterates thru a list of indices and categories, 
@@ -247,15 +213,14 @@ def expand_list(sets,indices,arr,objFunc=False,loop=False):
         return arr
     
     out = [] 
-
     if objFunc:
         # Loop over items in array
         for ieq,eq in enumerate(arr):
             e = eq.replace(" ","")
             
-            if "sum(" in e:
+            if "sum(" in e or "prod(" in e:
                 # Loop over indices
-                ind1 = e.index("sum(")
+                ind1 = e.index("sum(") if "sum(" in e else  e.index("prod(") 
                 ind2 = getIndex(e,ind1)
                 op = e[ind1+4:ind2-1]
                 ind = op.index(",")
@@ -263,12 +228,12 @@ def expand_list(sets,indices,arr,objFunc=False,loop=False):
                 for i,index in enumerate(indices):
                     sub = "("+index+")"
                     if sub in e:
-                        txt = expand_obj_func_sum(sets[index],sub,txt)
+                        txt = expand_obj_func(sets[index],sub,txt,"+" if "sum(" in e else "*")
                         for c in sets[index]:
                             n = replace_all(sub,"_"+c,txt)
                 arr[ieq] = e[:ind1] + "(" + txt + ")" + e[2+ind2:]
-                
-                   
+                        
+           
         for i,index in enumerate(indices): 
             sub = "("+index+")" 
             for e in arr: 
@@ -350,8 +315,67 @@ def expand_list(sets,indices,arr,objFunc=False,loop=False):
                 break
         if b:
             arr.append(x)
+            
+    # Treat any hard-coded indices
+    for i,x in enumerate(arr):
+        x = x.replace(')(','_')
+        x = x.replace('(','_')
+        x = x.replace(')','_')
+        if x[-1] == "_":
+            x = x[:-1]
+        if x[0] == '_':
+            x = x[1:]
     
     return arr
+
+   
+def expand(sets,indices,expr,objFunc=False,loop=False):
+    """
+    Expands expression.
+
+    Parameters:
+        :param sets: Dictionary of categories.
+        :type sets: dict.
+        :param indices: List of indeces.
+        :type indices: list.
+        :param expr: Object.
+        :type expr: list or dict.
+        :returns: objFunc: True if expanding expression for objective function.
+        :type objFunc: bool.
+        :returns: Expanded expression.
+    """
+    if isinstance(expr,list):
+        return expand_list(sets,indices,expr,objFunc=objFunc,loop=loop)
+    elif isinstance(expr,dict):
+        return expand_map(sets,indices,expr)
+
+def getIndex(e,ind):    
+    """
+    Find the first matching occurance of open bracket.
+
+    Parameters:
+        :param e: Expression.
+        :type e: str.
+        :param ind: Starting index.
+        :type ind: int.
+        :returns: Index of the matching open bracket.
+    """
+    ind1 = [i for i in range(len(e)) if i>ind and e[i]=="("]
+    ind2 = [i for i in range(len(e)) if i>ind and e[i]==")"]
+    index = sorted(ind1+ind2)
+    s = 0
+    for i in index:
+        if i in ind1:
+            s += +1
+        elif i in ind2:
+            s += -1
+        if s == 0:
+            index = 1+i
+            break
+       
+    return index
+    
+
 
 
 def expand_map(sets,indices,m):
@@ -433,26 +457,6 @@ def expand_map(sets,indices,m):
             
     return out
  
-    
-def expand(sets,indices,expr,objFunc=False,loop=False):
-    """
-    Expands expression.
-
-    Parameters:
-        :param sets: Dictionary of categories.
-        :type sets: dict.
-        :param indices: List of indeces.
-        :type indices: list.
-        :param expr: Object.
-        :type expr: list or dict.
-        :returns: objFunc: True if expanding expression for objective function.
-        :type objFunc: bool.
-        :returns: Expanded expression.
-    """
-    if isinstance(expr,list):
-        return expand_list(sets,indices,expr,objFunc=objFunc,loop=loop)
-    elif isinstance(expr,dict):
-        return expand_map(sets,indices,expr)
  
     
 def fix(eqs,model_eqs):

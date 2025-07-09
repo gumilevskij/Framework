@@ -92,7 +92,8 @@ def solver(model):
         for i,v in enumerate(var_names):
             loc[v] = x[i]
         f = sign*eval(obj_func,{},loc)
-
+        if np.isnan(f):
+            f = it + 1.e20
         return f
     
     # Function and Jacobian
@@ -317,6 +318,15 @@ def run(fpath=None,fout=None,Output=False,plot_variables=None,model_info=False):
     shock_names = []; shock_values = []
     T = 1
     
+    method = model.symbolic.METHOD
+    if method is None:
+        sign = 1
+    else:
+        method = method.lower()
+        if method == "minimize":
+            sign = 1 
+        elif method == "maximize":
+            sign = -1
     if model.symbolic.SOLVER == "PATH":
         from snowdrop.src.utils.util import create_config_file
         create_config_file(T,var_names,var_values,shock_names,shock_values,par_names,par_values,model.options)
@@ -337,7 +347,7 @@ def run(fpath=None,fout=None,Output=False,plot_variables=None,model_info=False):
     
     if bool(model.symbolic.objective_function):
         #cprint(f"\nObjective function:\n {model.symbolic.objective_function}","blue")
-        cprint("\nObjective function value: {:.2e}".format(func),"green")
+        cprint("\nObjective function value: {:.2e}".format(sign*func),"green")
     
     cprint(f"Solution status: {status}","green")
     cprint(f"Number of function calls: {nfev}","green")
@@ -382,7 +392,7 @@ def run(fpath=None,fout=None,Output=False,plot_variables=None,model_info=False):
                 f.writelines(','.join(str(x) for x in y)  +'\n')
             
         pTable = PrettyTable(['Var Name','Var Value','Var Name ','Var Value '])
-        for i in range(n):
+        for i in range(0,n,2):
             if i+1 < n:
                 row = [var_names[i], y[i], var_names[1+i], y[1+i]]
             else:

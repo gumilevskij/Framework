@@ -66,7 +66,7 @@
 
 <div class="viewcode-block" id="setParameters">
 <a class="viewcode-back" href="../../../source/snowdrop.src.html#snowdrop.src.driver.setParameters">[docs]</a>
-<span class="k">def</span> <span class="nf">setParameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">Filter</span><span class="p">,</span> <span class="n">Smoother</span><span class="p">,</span> 
+<span class="k">def</span> <span class="nf">setParameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">Filter</span><span class="p">,</span> <span class="n">Smoother</span><span class="p">,</span> 
                   <span class="n">Prior</span><span class="p">,</span> <span class="n">InitCondition</span><span class="p">,</span> <span class="n">SamplingMethod</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Set model parameters.</span>
@@ -74,8 +74,6 @@
 <span class="sd">    Parameters:</span>
 <span class="sd">        :param model: Model object.</span>
 <span class="sd">        :type fname: Model.</span>
-<span class="sd">        :param order: Approximation order of solution of non-linear system of equations.</span>
-<span class="sd">        :type order: int.</span>
 <span class="sd">        :param Solver: Solver algorithm.</span>
 <span class="sd">        :type Solver: str.</span>
 <span class="sd">        :param Filter: KF filter algorithm.</span>
@@ -355,9 +353,10 @@
             
         <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">smodel</span><span class="p">,</span><span class="n">anticipate</span><span class="o">=</span><span class="n">anticipate</span><span class="p">,</span><span class="n">infos</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">estimate</span> <span class="o">=</span> <span class="n">estimate</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">order</span>
         
         <span class="c1"># Set model parameters</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">setParameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">order</span><span class="p">,</span><span class="n">Solver</span><span class="p">,</span><span class="n">Filter</span><span class="p">,</span><span class="n">Smoother</span><span class="p">,</span><span class="n">Prior</span><span class="p">,</span><span class="n">InitCondition</span><span class="p">,</span><span class="n">SamplingMethod</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">setParameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">Solver</span><span class="p">,</span><span class="n">Filter</span><span class="p">,</span><span class="n">Smoother</span><span class="p">,</span><span class="n">Prior</span><span class="p">,</span><span class="n">InitCondition</span><span class="p">,</span><span class="n">SamplingMethod</span><span class="p">)</span>
         <span class="n">simulationRange</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
         
         <span class="c1"># Serialize model into file</span>
@@ -992,10 +991,15 @@
         
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Set model parameters</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">setParameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">order</span><span class="p">,</span><span class="n">Solver</span><span class="p">,</span><span class="n">Filter</span><span class="p">,</span><span class="n">Smoother</span><span class="p">,</span><span class="n">Prior</span><span class="p">,</span><span class="n">InitCondition</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">setParameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">Solver</span><span class="p">,</span><span class="n">Filter</span><span class="p">,</span><span class="n">Smoother</span><span class="p">,</span><span class="n">Prior</span><span class="p">,</span><span class="n">InitCondition</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">anticipate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">model</span><span class="o">.</span><span class="n">anticipate</span> <span class="o">=</span> <span class="n">anticipate</span>
             
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># # Solving non-linear model by linear solver.  Just kidding...</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.utils.equations</span> <span class="kn">import</span> <span class="n">topology</span>
+        <span class="n">topology</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        
     <span class="n">model</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="n">meas_df</span> <span class="o">=</span> <span class="kc">None</span>
     
@@ -1403,6 +1407,10 @@
             <span class="n">fout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">xl_dir</span><span class="p">,</span><span class="s1">&#39;Data.csv&#39;</span><span class="p">))</span>
         <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fout</span><span class="p">)):</span>
             <span class="n">fout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">xl_dir</span><span class="p">,</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fout</span><span class="p">)))</span>
+                
+        <span class="n">fdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fdir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">fdir</span><span class="p">)</span>
             
         <span class="n">var_labels</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;variables_labels&quot;</span><span class="p">]</span>
         <span class="n">saveToExcel</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">fout</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">variable_names</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span>

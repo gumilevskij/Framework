@@ -69,7 +69,7 @@ def plotEigenValues(path_to_dir,ev,show=True,save=True,ext="png"):
         plt.close(fig)
      
  
-def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,periods,isKF=False,header=None,sizes=(2,2),Tmax=50,rng=None,figsize=None,show=True,save=True,ext="png"):
+def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,periods,isKF=False,header=None,sizes=(2,2),Tmax=50,rng=None,figsize=None,bPercent=False,show=True,save=True,ext="png"):
     """
     Plot contributions of different soures to endogenous variable.
     
@@ -98,6 +98,8 @@ def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,perio
         :type rng: list.
         :param sizes: Figure sizes.
         :type sizes: tuple.
+        :param bPercent: If True show yaxis in percentage points.
+        :type bPercent: bool.
         :param show: Boolean variable.  If set to True shows graphs.
         :type show: bool.
         :param save: Boolean variable.  If set to True saves graphs.
@@ -186,7 +188,8 @@ def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,perio
                 k += 1
                 m += 1
                 ax = plt.subplot(rows,columns,m)
-                ax.yaxis.set_major_formatter(formatter)
+                if bPercent:
+                    ax.yaxis.set_major_formatter(formatter)
                 if rng is None:
                     ind = np.arange(T)   
                     series = pd.Series(data=y[:,j])

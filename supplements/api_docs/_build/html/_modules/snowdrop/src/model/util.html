@@ -43,6 +43,7 @@
 <span class="kn">import</span> <span class="nn">ruamel.yaml</span> <span class="k">as</span> <span class="nn">yaml</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.optimization.util</span> <span class="kn">import</span> <span class="n">expand</span>
 
 <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
 <span class="n">working_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">fpath</span> <span class="o">+</span> <span class="s2">&quot;../..&quot;</span><span class="p">)))</span>
@@ -60,14 +61,12 @@
     <span class="n">nfev</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
 
     
-    
 <div class="viewcode-block" id="replace_all">
 <a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.replace_all">[docs]</a>
 <span class="k">def</span> <span class="nf">replace_all</span><span class="p">(</span><span class="n">old</span><span class="p">,</span><span class="n">new</span><span class="p">,</span><span class="n">expr</span><span class="p">):</span>
     <span class="k">while</span> <span class="n">old</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">:</span>
         <span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">old</span><span class="p">,</span><span class="n">new</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">expr</span></div>
-
 
 
 <div class="viewcode-block" id="loadLibrary">
@@ -120,7 +119,6 @@
     <span class="k">return</span> <span class="n">libc</span></div>
 
 
-
 <div class="viewcode-block" id="getIndex">
 <a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.getIndex">[docs]</a>
 <span class="k">def</span> <span class="nf">getIndex</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">ind</span><span class="p">):</span>    
@@ -151,382 +149,8 @@
 
         
 
-<div class="viewcode-block" id="expand_obj_func_sum">
-<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.expand_obj_func_sum">[docs]</a>
-<span class="k">def</span> <span class="nf">expand_obj_func_sum</span><span class="p">(</span><span class="n">categories</span><span class="p">,</span><span class="n">sub</span><span class="p">,</span><span class="n">expr</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Iterates thru a list of indices and categories, </span>
-<span class="sd">    substitutes an index in a variable name with a corresponding category, </span>
-<span class="sd">    and builds a list of new variables.</span>
-
-<span class="sd">    Parameters:</span>
-<span class="sd">        :param categories: Categories.</span>
-<span class="sd">        :type categories: list.</span>
-<span class="sd">        :param sub: Sub-string to replace.</span>
-<span class="sd">        :type sub: str.</span>
-<span class="sd">        :param expr: Text.</span>
-<span class="sd">        :type expr: str.</span>
-<span class="sd">        :returns: Text representation of sum operation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="c1"># Loop over items in a set</span>
-    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">:</span>
-        <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">replace_all</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">c</span><span class="p">,</span><span class="n">expr</span><span class="p">))</span>
-     
-    <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">out</span></div>
-
-
-
-<div class="viewcode-block" id="expand_sum">
-<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.expand_sum">[docs]</a>
-<span class="k">def</span> <span class="nf">expand_sum</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">txt</span><span class="p">):</span> 
-    <span class="k">return</span> <span class="n">expand_sum_or_prod</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">txt</span><span class="p">,</span><span class="n">symb</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="expand_prod">
-<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.expand_prod">[docs]</a>
-<span class="k">def</span> <span class="nf">expand_prod</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">txt</span><span class="p">):</span> 
-    <span class="k">return</span> <span class="n">expand_sum_or_prod</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">txt</span><span class="p">,</span><span class="n">symb</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">)</span></div>
-
-    
-
-<div class="viewcode-block" id="expand_sum_or_prod">
-<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.expand_sum_or_prod">[docs]</a>
-<span class="k">def</span> <span class="nf">expand_sum_or_prod</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">txt</span><span class="p">,</span><span class="n">symb</span><span class="p">):</span> 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
-<span class="sd">    Iterates thru a list of indices and categories,  </span>
-<span class="sd">    substitutes an index in a variable name with a corresponding category,  </span>
-<span class="sd">    and builds a list of new variables. </span>
-<span class="sd"> </span>
-<span class="sd">    Parameters: </span>
-<span class="sd">        :param sets: Dictionary of categories. </span>
-<span class="sd">        :type sets: dict. </span>
-<span class="sd">        :param indices: List of indeces. </span>
-<span class="sd">        :type indices: list. </span>
-<span class="sd">        :param txt: Text. </span>
-<span class="sd">        :type txt: str. </span>
-<span class="sd">        :param symb: Symbol &quot;+&quot; or &quot;*&quot;. </span>
-<span class="sd">        :type txt: str. </span>
-<span class="sd">        :returns: Text representation of summation or product operation. </span>
-<span class="sd">    &quot;&quot;&quot;</span> 
-    <span class="n">ind</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> 
-    <span class="n">args</span> <span class="o">=</span> <span class="n">txt</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)</span> 
-    <span class="n">expr</span> <span class="o">=</span> <span class="n">txt</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> 
-    <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span> 
-    <span class="c1"># Loop over indices </span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span> 
-        <span class="k">if</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span> 
-            <span class="n">cat</span> <span class="o">=</span> <span class="n">sets</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> 
-            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cat</span><span class="p">:</span> 
-                <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">replace_all</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">index</span><span class="o">+</span><span class="s2">&quot;)&quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">c</span><span class="p">,</span><span class="n">expr</span><span class="p">))</span> 
-      
-    <span class="n">out</span> <span class="o">=</span> <span class="n">symb</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> 
-     
-    <span class="k">return</span> <span class="s2">&quot;(&quot;</span> <span class="o">+</span> <span class="n">out</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span> </div>
-
-
-
-<div class="viewcode-block" id="expand_minmax">
-<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.expand_minmax">[docs]</a>
-<span class="k">def</span> <span class="nf">expand_minmax</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">txt</span><span class="p">):</span>    
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Iterates thru a list of indices and categories, </span>
-<span class="sd">    substitutes an index in a variable name with a corresponding category, </span>
-<span class="sd">    and builds a list of new variables.</span>
-
-<span class="sd">    Parameters:</span>
-<span class="sd">        :param b: True if minimum and False if maximum.</span>
-<span class="sd">        :type b: bool.</span>
-<span class="sd">        :param sets: Dictionary of categories. </span>
-<span class="sd">        :type sets: dict. </span>
-<span class="sd">        :param indices: List of indeces. </span>
-<span class="sd">        :type indices: list. </span>
-<span class="sd">        :param txt: Text. </span>
-<span class="sd">        :type txt: str. </span>
-<span class="sd">        :returns: Text representation of min/max operation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>    
-    <span class="n">ind</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> 
-    <span class="n">args</span> <span class="o">=</span> <span class="n">txt</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)</span> 
-    <span class="n">expr</span> <span class="o">=</span> <span class="n">txt</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> 
-    <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span> 
-    <span class="c1"># Loop over indices </span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span> 
-        <span class="k">if</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span> 
-            <span class="n">cat</span> <span class="o">=</span> <span class="n">sets</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> 
-            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cat</span><span class="p">:</span> 
-                <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">replace_all</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">index</span><span class="o">+</span><span class="s2">&quot;)&quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">c</span><span class="p">,</span><span class="n">expr</span><span class="p">))</span> 
-                
-    <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> 
-    
-    <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;min(&quot;</span> <span class="o">+</span> <span class="n">out</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;max(&quot;</span> <span class="o">+</span> <span class="n">out</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>        </div>
-
-    
-    
-<div class="viewcode-block" id="expand_loop">
-<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.expand_loop">[docs]</a>
-<span class="k">def</span> <span class="nf">expand_loop</span><span class="p">(</span><span class="n">categories</span><span class="p">,</span><span class="n">sub</span><span class="p">,</span><span class="n">expr</span><span class="p">):</span>    
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Iterates thru a list of indices and categories, </span>
-<span class="sd">    substitutes an index in a variable name with a corresponding category, </span>
-<span class="sd">    and builds a list of new variables.</span>
-
-<span class="sd">    Parameters:</span>
-<span class="sd">        :param categories: Categories.</span>
-<span class="sd">        :type categories: list.</span>
-<span class="sd">        :param sub: Sub-string to replace.</span>
-<span class="sd">        :type sub: str.</span>
-<span class="sd">        :param expr: Text.</span>
-<span class="sd">        :type expr: str.</span>
-<span class="sd">        :returns: Text representation of sum operation.</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
-
-    
-
-<div class="viewcode-block" id="expand_list">
-<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.expand_list">[docs]</a>
-<span class="k">def</span> <span class="nf">expand_list</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">arr</span><span class="p">,</span><span class="n">objFunc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">loop</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Iterates thru a list of indices and categories, </span>
-<span class="sd">    substitutes an index of a variable name with a corresponding category, </span>
-<span class="sd">    and builds a list of new variables.</span>
-
-<span class="sd">    Parameters:</span>
-<span class="sd">        :param sets: Dictionary of categories.</span>
-<span class="sd">        :type sets: dict.</span>
-<span class="sd">        :param indices: List of indeces.</span>
-<span class="sd">        :type indices: list.</span>
-<span class="sd">        :param arr: List of indeces.</span>
-<span class="sd">        :type arr: list.</span>
-<span class="sd">        :param: objFunc: True if expanding expression for objective function.</span>
-<span class="sd">        :type objFunc: bool.</span>
-<span class="sd">        :param loop: True if expanding expression for objective function.</span>
-<span class="sd">        :type loop: bool.</span>
-<span class="sd">        :returns: list object.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">arr</span>
-    
-    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span> 
-
-    <span class="k">if</span> <span class="n">objFunc</span><span class="p">:</span>
-        <span class="c1"># Loop over items in array</span>
-        <span class="k">for</span> <span class="n">ieq</span><span class="p">,</span><span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
-            <span class="n">e</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            
-            <span class="k">if</span> <span class="s2">&quot;sum(&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
-                <span class="c1"># Loop over indices</span>
-                <span class="n">ind1</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;sum(&quot;</span><span class="p">)</span>
-                <span class="n">ind2</span> <span class="o">=</span> <span class="n">getIndex</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span>
-                <span class="n">op</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">ind1</span><span class="o">+</span><span class="mi">4</span><span class="p">:</span><span class="n">ind2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                <span class="n">ind</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-                <span class="n">txt</span> <span class="o">=</span> <span class="n">op</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind</span><span class="p">:]</span>
-                <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
-                    <span class="n">sub</span> <span class="o">=</span> <span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">index</span><span class="o">+</span><span class="s2">&quot;)&quot;</span>
-                    <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="n">txt</span> <span class="o">=</span> <span class="n">expand_obj_func_sum</span><span class="p">(</span><span class="n">sets</span><span class="p">[</span><span class="n">index</span><span class="p">],</span><span class="n">sub</span><span class="p">,</span><span class="n">txt</span><span class="p">)</span>
-                        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">[</span><span class="n">index</span><span class="p">]:</span>
-                            <span class="n">n</span> <span class="o">=</span> <span class="n">replace_all</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">c</span><span class="p">,</span><span class="n">txt</span><span class="p">)</span>
-                <span class="n">arr</span><span class="p">[</span><span class="n">ieq</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;(&quot;</span> <span class="o">+</span> <span class="n">txt</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span> <span class="o">+</span> <span class="n">e</span><span class="p">[</span><span class="mi">2</span><span class="o">+</span><span class="n">ind2</span><span class="p">:]</span>
-                
-                   
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span> 
-            <span class="n">sub</span> <span class="o">=</span> <span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">index</span><span class="o">+</span><span class="s2">&quot;)&quot;</span> 
-            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span> 
-                <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span> 
-                <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>   
-                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">[</span><span class="n">index</span><span class="p">]:</span> 
-                        <span class="n">n</span> <span class="o">=</span> <span class="n">replace_all</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">c</span><span class="p">,</span><span class="n">e</span><span class="p">)</span> 
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span> 
-                            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> 
-                <span class="k">else</span><span class="p">:</span> 
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span> 
-                        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> 
-            <span class="n">arr</span> <span class="o">=</span> <span class="n">out</span> 
-                  
-    <span class="k">else</span><span class="p">:</span>
-        
-        <span class="c1"># Expand loop statements</span>
-        <span class="k">if</span> <span class="n">loop</span><span class="p">:</span>
-            <span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span> 
-                <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span> 
-                <span class="k">if</span> <span class="s2">&quot;loop(&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">ind1</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;loop(&quot;</span><span class="p">)</span> 
-                    <span class="n">ind2</span> <span class="o">=</span> <span class="n">getIndex</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span>
-                    <span class="n">op</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">ind1</span><span class="o">+</span><span class="mi">5</span><span class="p">:</span><span class="n">ind2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> 
-                    <span class="n">stmts</span> <span class="o">=</span> <span class="n">expand_loop</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">op</span><span class="p">)</span> 
-                    <span class="n">lst</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">stmts</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="n">arr</span> <span class="o">=</span> <span class="n">lst</span>
-            
-        <span class="c1"># Loop over indices </span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span> 
-            <span class="n">sub</span> <span class="o">=</span> <span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">index</span><span class="o">+</span><span class="s2">&quot;)&quot;</span> 
-            <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span> 
-                <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span> 
-                <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>                     
-                    <span class="k">if</span> <span class="s2">&quot;MIN(&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span> 
-                        <span class="n">ind1</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;MIN(&quot;</span><span class="p">)</span> 
-                        <span class="n">ind2</span> <span class="o">=</span> <span class="n">getIndex</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span>
-                        <span class="n">op</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">ind1</span><span class="o">+</span><span class="mi">4</span><span class="p">:</span><span class="n">ind2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> 
-                        <span class="n">txt</span> <span class="o">=</span> <span class="n">expand_minmax</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">op</span><span class="p">)</span> 
-                        <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span> <span class="o">+</span> <span class="n">txt</span> <span class="o">+</span> <span class="n">e</span><span class="p">[</span><span class="n">ind2</span><span class="p">:]</span>
-                    <span class="k">elif</span> <span class="s2">&quot;MAX(&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span> 
-                        <span class="n">ind1</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;MAX(&quot;</span><span class="p">)</span> 
-                        <span class="n">ind2</span> <span class="o">=</span> <span class="n">getIndex</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span>
-                        <span class="n">op</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">ind1</span><span class="o">+</span><span class="mi">4</span><span class="p">:</span><span class="n">ind2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> 
-                        <span class="n">txt</span> <span class="o">=</span> <span class="n">expand_minmax</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">op</span><span class="p">)</span> 
-                        <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span> <span class="o">+</span> <span class="n">txt</span> <span class="o">+</span> <span class="n">e</span><span class="p">[</span><span class="n">ind2</span><span class="p">:]</span>
-                    <span class="k">while</span> <span class="s2">&quot;sum(&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span> 
-                        <span class="n">ind1</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;sum(&quot;</span><span class="p">)</span> 
-                        <span class="n">ind2</span> <span class="o">=</span> <span class="n">getIndex</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span>
-                        <span class="n">op</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">ind1</span><span class="o">+</span><span class="mi">4</span><span class="p">:</span><span class="n">ind2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> 
-                        <span class="n">txt</span> <span class="o">=</span> <span class="n">expand_sum</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">op</span><span class="p">)</span> 
-                        <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span> <span class="o">+</span> <span class="n">txt</span> <span class="o">+</span> <span class="n">e</span><span class="p">[</span><span class="n">ind2</span><span class="p">:]</span> 
-                    <span class="k">while</span> <span class="s2">&quot;prod(&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span> 
-                        <span class="n">ind1</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;prod(&quot;</span><span class="p">)</span> 
-                        <span class="n">ind2</span> <span class="o">=</span> <span class="n">getIndex</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span> 
-                        <span class="n">op</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">ind1</span><span class="o">+</span><span class="mi">5</span><span class="p">:</span><span class="n">ind2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> 
-                        <span class="n">txt</span> <span class="o">=</span> <span class="n">expand_prod</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">op</span><span class="p">)</span> 
-                        <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span> <span class="o">+</span> <span class="n">txt</span> <span class="o">+</span> <span class="n">e</span><span class="p">[</span><span class="n">ind2</span><span class="p">:]</span> 
-                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">[</span><span class="n">index</span><span class="p">]:</span> 
-                        <span class="n">n</span> <span class="o">=</span> <span class="n">replace_all</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">c</span><span class="p">,</span><span class="n">e</span><span class="p">)</span> 
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span> 
-                            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> 
-                <span class="k">else</span><span class="p">:</span> 
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span> 
-                        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> 
-            <span class="n">arr</span> <span class="o">=</span> <span class="n">out</span> 
-        
-    <span class="c1"># Clean left over indices that might be left.</span>
-    <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">out</span><span class="p">):</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
-            <span class="n">sub</span> <span class="o">=</span> <span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">index</span><span class="o">+</span><span class="s2">&quot;)&quot;</span>
-            <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
-                <span class="n">b</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="k">break</span>
-        <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
-            <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    
-    <span class="k">return</span> <span class="n">arr</span></div>
-
-
-
-<div class="viewcode-block" id="expand_map">
-<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.expand_map">[docs]</a>
-<span class="k">def</span> <span class="nf">expand_map</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">m</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Iterates thru a list of indices and categories, </span>
-<span class="sd">    substitutes an index in a variable name with a corresponding category, </span>
-<span class="sd">    and builds a list of new variables.</span>
-
-<span class="sd">    Parameters:</span>
-<span class="sd">        :param sets: Dictionary of categories.</span>
-<span class="sd">        :type sets: dict.</span>
-<span class="sd">        :param indices: List of indeces.</span>
-<span class="sd">        :type indices: list.</span>
-<span class="sd">        :param m: Map.</span>
-<span class="sd">        :type m: dict.</span>
-<span class="sd">        :returns: Dictionary object.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">m</span>
-    
-    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="c1"># Loop over indices</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">m</span><span class="p">:</span>
-            <span class="n">sub</span> <span class="o">=</span> <span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">index</span><span class="o">+</span><span class="s2">&quot;)&quot;</span>
-            <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
-                <span class="n">values</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-                <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sets</span><span class="p">[</span><span class="n">index</span><span class="p">]):</span>
-                    <span class="n">key</span> <span class="o">=</span> <span class="n">replace_all</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">c</span><span class="p">,</span><span class="n">k</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
-                        <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
-                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
-                        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="s2">&quot;MIN(&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span> 
-                            <span class="n">ind1</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;MIN(&quot;</span><span class="p">)</span> 
-                            <span class="n">ind2</span> <span class="o">=</span> <span class="n">getIndex</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span>
-                            <span class="n">op</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">ind1</span><span class="o">+</span><span class="mi">4</span><span class="p">:</span><span class="n">ind2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> 
-                            <span class="n">txt</span> <span class="o">=</span> <span class="n">expand_minmax</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">op</span><span class="p">)</span> 
-                            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span> <span class="o">+</span> <span class="n">txt</span> <span class="o">+</span> <span class="n">values</span><span class="p">[</span><span class="n">ind2</span><span class="p">:]</span>
-                        <span class="k">elif</span> <span class="s2">&quot;MAX(&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span> 
-                            <span class="n">ind1</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;MAX(&quot;</span><span class="p">)</span> 
-                            <span class="n">ind2</span> <span class="o">=</span> <span class="n">getIndex</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span>
-                            <span class="n">op</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">ind1</span><span class="o">+</span><span class="mi">4</span><span class="p">:</span><span class="n">ind2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> 
-                            <span class="n">txt</span> <span class="o">=</span> <span class="n">expand_minmax</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">op</span><span class="p">)</span> 
-                            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span> <span class="o">+</span> <span class="n">txt</span> <span class="o">+</span> <span class="n">values</span><span class="p">[</span><span class="n">ind2</span><span class="p">:]</span>
-                        <span class="k">while</span> <span class="s2">&quot;sum(&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span> 
-                            <span class="n">ind1</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;sum(&quot;</span><span class="p">)</span> 
-                            <span class="n">ind2</span> <span class="o">=</span> <span class="n">getIndex</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span> 
-                            <span class="n">op</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">ind1</span><span class="o">+</span><span class="mi">4</span><span class="p">:</span><span class="n">ind2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> 
-                            <span class="n">txt</span> <span class="o">=</span> <span class="n">expand_sum</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">op</span><span class="p">)</span> 
-                            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span> <span class="o">+</span> <span class="n">txt</span> <span class="o">+</span> <span class="n">values</span><span class="p">[</span><span class="n">ind2</span><span class="p">:]</span> 
-                        <span class="k">while</span> <span class="s2">&quot;prod(&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span> 
-                            <span class="n">ind1</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;prod(&quot;</span><span class="p">)</span> 
-                            <span class="n">ind2</span> <span class="o">=</span> <span class="n">getIndex</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="n">ind1</span><span class="p">)</span> 
-                            <span class="n">op</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">ind1</span><span class="o">+</span><span class="mi">5</span><span class="p">:</span><span class="n">ind2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> 
-                            <span class="n">txt</span> <span class="o">=</span> <span class="n">expand_prod</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">op</span><span class="p">)</span> 
-                            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:</span><span class="n">ind1</span><span class="p">]</span> <span class="o">+</span> <span class="n">txt</span> <span class="o">+</span> <span class="n">values</span><span class="p">[</span><span class="n">ind2</span><span class="p">:]</span> 
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span> 
-                            <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">replace_all</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">c</span><span class="p">,</span><span class="n">values</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span> 
-                            <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span> 
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span> 
-                    <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    
-    <span class="c1"># Clean left over</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">m</span><span class="p">:</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
-            <span class="n">sub</span> <span class="o">=</span> <span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">index</span><span class="o">+</span><span class="s2">&quot;)&quot;</span>
-            <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
-                <span class="n">b</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="k">break</span>
-        <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
-            <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-            
-    <span class="k">return</span> <span class="n">out</span></div>
 
  
-    
-<div class="viewcode-block" id="expand">
-<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.expand">[docs]</a>
-<span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">expr</span><span class="p">,</span><span class="n">objFunc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">loop</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Expands expression.</span>
-
-<span class="sd">    Parameters:</span>
-<span class="sd">        :param sets: Dictionary of categories.</span>
-<span class="sd">        :type sets: dict.</span>
-<span class="sd">        :param indices: List of indeces.</span>
-<span class="sd">        :type indices: list.</span>
-<span class="sd">        :param expr: Object.</span>
-<span class="sd">        :type expr: list or dict.</span>
-<span class="sd">        :returns: objFunc: True if expanding expression for objective function.</span>
-<span class="sd">        :type objFunc: bool.</span>
-<span class="sd">        :returns: Expanded expression.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">expand_list</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">expr</span><span class="p">,</span><span class="n">objFunc</span><span class="o">=</span><span class="n">objFunc</span><span class="p">,</span><span class="n">loop</span><span class="o">=</span><span class="n">loop</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">expand_map</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">expr</span><span class="p">)</span></div>
-
- 
-    
 <div class="viewcode-block" id="fix">
 <a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.fix">[docs]</a>
 <span class="k">def</span> <span class="nf">fix</span><span class="p">(</span><span class="n">eqs</span><span class="p">,</span><span class="n">model_eqs</span><span class="p">):</span>
@@ -577,7 +201,6 @@
     <span class="k">return</span> <span class="n">arr</span><span class="p">,</span><span class="n">complementarity</span>   </div>
 
         
-
 <div class="viewcode-block" id="getLabels">
 <a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.getLabels">[docs]</a>
 <span class="k">def</span> <span class="nf">getLabels</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span><span class="n">m</span><span class="p">):</span>
@@ -595,7 +218,6 @@
             
     <span class="k">return</span> <span class="n">labels</span>    </div>
 
-    
         
 <div class="viewcode-block" id="importModel">
 <a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.importModel">[docs]</a>
@@ -700,7 +322,6 @@
         <span class="c1"># Optional section</span>
         <span class="n">options</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;options&#39;</span><span class="p">,{})</span>
 
-
         <span class="c1"># Expand expressions</span>
         <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
             <span class="n">obj</span>     <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span><span class="n">indices</span><span class="p">,</span><span class="n">obj</span><span class="p">,</span><span class="n">objFunc</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
@@ -740,8 +361,7 @@
                 <span class="n">equations_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="s2">&quot;   -  &quot;</span> <span class="o">+</span> <span class="n">labels</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">equations_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-                
-        
+                      
         <span class="c1"># Read calibration values from excel file</span>
         <span class="n">options</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;options&#39;</span><span class="p">,{})</span>
         <span class="k">if</span> <span class="s2">&quot;file&quot;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
@@ -785,7 +405,7 @@
                         <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">variables</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cal</span><span class="p">:</span>
                             <span class="n">cal</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>                       
                         <span class="k">elif</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">parameters</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cal</span><span class="p">:</span>
-                            <span class="n">cal</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.e-6</span>
+                            <span class="n">cal</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
                         <span class="k">elif</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
                             <span class="n">m</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="k">try</span><span class="p">:</span>
@@ -813,7 +433,6 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
         
-
 <div class="viewcode-block" id="getLimits">
 <a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.getLimits">[docs]</a>
 <span class="k">def</span> <span class="nf">getLimits</span><span class="p">(</span><span class="n">var_names</span><span class="p">,</span><span class="n">constraints</span><span class="p">,</span><span class="n">cal</span><span class="p">):</span>
@@ -989,8 +608,6 @@
     <span class="k">return</span> <span class="n">A</span><span class="p">,</span><span class="n">lb</span><span class="p">,</span><span class="n">ub</span></div>
 
 
-
-    
 <div class="viewcode-block" id="print_path_solution_status">
 <a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.print_path_solution_status">[docs]</a>
 <span class="k">def</span> <span class="nf">print_path_solution_status</span><span class="p">(</span><span class="n">status</span><span class="p">):</span>
@@ -1035,9 +652,8 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">i</span><span class="p">,</span><span class="n">v</span>
         
-    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>   </div>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>     </div>
 
-    
 
 <div class="viewcode-block" id="lastNonZero">
 <a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.lastNonZero">[docs]</a>
@@ -1056,7 +672,6 @@
     <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
     
     <span class="k">return</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> </div>
-
 
 
 <div class="viewcode-block" id="getStartingValues">
@@ -1299,7 +914,6 @@
                             <span class="n">calib</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
                             <span class="n">bSet</span> <span class="o">=</span> <span class="kc">True</span>
                     
-                
             <span class="k">if</span> <span class="ow">not</span> <span class="n">bSet</span><span class="p">:</span>
                 <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">debug</span> <span class="ow">and</span> <span class="ow">not</span> <span class="s2">&quot;_plus_&quot;</span> <span class="ow">in</span> <span class="n">var</span> <span class="ow">and</span> <span class="ow">not</span> <span class="s2">&quot;_minus_&quot;</span> <span class="ow">in</span> <span class="n">var</span><span class="p">:</span>
@@ -1326,7 +940,6 @@
                          
     <span class="c1"># x = dict(zip(var_names,var_values))</span>
     <span class="k">return</span> <span class="n">var_values</span><span class="p">,</span><span class="n">calib</span><span class="p">,</span><span class="n">missing</span></div>
-
 
 
 <span class="c1"># def setShocks(model,d,start=None,reset=False):</span>
@@ -1360,7 +973,6 @@
     
 <span class="c1">#     return</span>
   
-    
 <span class="c1"># def setCalibration(model,param_name,param_value):</span>
 <span class="c1">#     &quot;&quot;&quot;</span>
 <span class="c1">#     Set calibration dictionary values given the time of their appearance.</span>
@@ -1388,7 +1000,6 @@
         
 <span class="c1">#     model.calibration[&quot;parameters&quot;] = param_values</span>
     
-    
 <span class="c1"># def setParameters(model,d,start=None):</span>
 <span class="c1">#     &quot;&quot;&quot;</span>
 <span class="c1">#     Set parameters values given the time of their appearance.</span>
@@ -1411,8 +1022,7 @@
 <span class="c1">#     calib,_,_ = setValues(model=model,d=d,names=param_names,values=param_values,start=start,isShock=False)</span>
     
 <span class="c1">#     model.calibration[&quot;parameters&quot;] = calib</span>
-    
-    
+      
 <div class="viewcode-block" id="setValues">
 <a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.setValues">[docs]</a>
 <span class="k">def</span> <span class="nf">setValues</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">names</span><span class="p">,</span><span class="n">values</span><span class="p">,</span><span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">isShock</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -1465,7 +1075,6 @@
         <span class="n">interval</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
         
     <span class="n">max_size</span> <span class="o">=</span> <span class="mi">0</span>
-    
     <span class="c1"># Get maximum length of values.</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
@@ -1592,8 +1201,7 @@
     
     <span class="k">return</span> <span class="n">calib</span><span class="p">,</span><span class="n">start</span><span class="p">,</span><span class="n">interval</span></div>
 
-
-          
+         
 <div class="viewcode-block" id="getEquationsLables">
 <a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.util.getEquationsLables">[docs]</a>
 <span class="k">def</span> <span class="nf">getEquationsLables</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
@@ -1676,7 +1284,6 @@
     <span class="n">model</span><span class="o">.</span><span class="n">eqLabels</span> <span class="o">=</span> <span class="n">eqsLabels</span></div>
 
                
-
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The test program.</span>

@@ -1242,14 +1242,18 @@ have lead variables nor shocks.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="snowdrop.src.numeric.solver.nonlinear_solver.second_order_approximation">
-<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.solver.nonlinear_solver.</span></span><span class="sig-name descname"><span class="pre">second_order_approximation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacobian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ghy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ghu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/solver/nonlinear_solver.html#second_order_approximation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.solver.nonlinear_solver.second_order_approximation" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="snowdrop.src.numeric.solver.nonlinear_solver.second_order_derivatives">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.solver.nonlinear_solver.</span></span><span class="sig-name descname"><span class="pre">second_order_derivatives</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacobian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/solver/nonlinear_solver.html#second_order_derivatives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.solver.nonlinear_solver.second_order_derivatives" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the second order reduced form solution of the DSGE model.</p>
-<p>It implements an algoritm described by Michel Juillard in:
+<p>It implements the algoritm described by Michel Juillard in
 “Computing first and second order approximation of DSGE models with DYNARE”, CEPREMAP</p>
+<p>For references please see: 
+<a class="reference external" href="https://archives.dynare.org/events/paris-1005/first-second-order.pdf%3Fmonth:int=12&amp;year:int=2018&amp;orig_query=">https://archives.dynare.org/events/paris-1005/first-second-order.pdf%3Fmonth:int=12&amp;year:int=2018&amp;orig_query=</a>
+<a class="reference external" href="https://stephane-adjemian.fr/dynare/slides/dsge-perturbation-method.pdf">https://stephane-adjemian.fr/dynare/slides/dsge-perturbation-method.pdf</a></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>It is assumed that model is linear to shock variables…</p>
+<p>THIS CODE CURRENTLY IS UNDER  DEVELOPMENT…
+It is assumed that model is linear to shock variables (there is no stochastic volatility).</p>
 </div>
 <dl class="simple">
 <dt>Parameters:</dt><dd><dl class="field-list simple">
@@ -1271,22 +1275,28 @@ have lead variables nor shocks.</p>
 <dt class="field-even">type hessian<span class="colon">:</span></dt>
 <dd class="field-even"><p>numpy.ndarray.</p>
 </dd>
-<dt class="field-odd">param ghy<span class="colon">:</span></dt>
+<dt class="field-odd">param g_y<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Transition matrix.</p>
 </dd>
-<dt class="field-even">type ghy<span class="colon">:</span></dt>
+<dt class="field-even">type g_y<span class="colon">:</span></dt>
 <dd class="field-even"><p>numpy.ndarray.</p>
 </dd>
-<dt class="field-odd">param ghu<span class="colon">:</span></dt>
+<dt class="field-odd">param g_u<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Matrix of shocks.</p>
 </dd>
-<dt class="field-even">type ghu<span class="colon">:</span></dt>
+<dt class="field-even">type g_u<span class="colon">:</span></dt>
 <dd class="field-even"><p>numpy.ndarray.</p>
 </dd>
-<dt class="field-odd">param Sigma<span class="colon">:</span></dt>
+<dt class="field-odd">param g_xx<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Second derivative of of policy function.</p>
+</dd>
+<dt class="field-even">type g_xx<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.ndarray.</p>
+</dd>
+<dt class="field-odd">param sigma<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Matrix of error covariances.</p>
 </dd>
-<dt class="field-even">type Sigma<span class="colon">:</span></dt>
+<dt class="field-even">type sigma<span class="colon">:</span></dt>
 <dd class="field-even"><p>numpy.ndarray.</p>
 </dd>
 </dl>
@@ -1296,7 +1306,7 @@ have lead variables nor shocks.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="snowdrop.src.numeric.solver.nonlinear_solver.second_order_solution">
-<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.solver.nonlinear_solver.</span></span><span class="sig-name descname"><span class="pre">second_order_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steady_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Npaths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MULT</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/solver/nonlinear_solver.html#second_order_solution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.solver.nonlinear_solver.second_order_solution" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.solver.nonlinear_solver.</span></span><span class="sig-name descname"><span class="pre">second_order_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steady_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Npaths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MULT</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/solver/nonlinear_solver.html#second_order_solution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.solver.nonlinear_solver.second_order_solution" title="Link to this definition">¶</a></dt>
 <dd><p>Find the second order approximation solution.</p>
 <p>This algorithm uses the Jacobian (first order derivatives) and the Hessian (second oredr derivatives).</p>
 <dl class="simple">
@@ -1334,30 +1344,33 @@ have lead variables nor shocks.</p>
 <dt class="field-odd">param params<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Values of parameters.</p>
 </dd>
-<dt class="field-even">type params<span class="colon">:</span></dt>
-<dd class="field-even"><p>numpy.ndarray.</p>
+<dt class="field-even">type cov<span class="colon">:</span></dt>
+<dd class="field-even"><p>Covariance matrix of stochastic shock.</p>
 </dd>
-<dt class="field-odd">param order<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Order of partial derivatives of Jacobian.</p>
+<dt class="field-odd">type cov<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray.</p>
 </dd>
-<dt class="field-even">type order<span class="colon">:</span></dt>
-<dd class="field-even"><p>int.</p>
+<dt class="field-even">param order<span class="colon">:</span></dt>
+<dd class="field-even"><p>Order of partial derivatives of Jacobian.</p>
 </dd>
-<dt class="field-odd">param Npaths<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Number of simulation paths. This is the number of paths of stochastic shocks.</p>
+<dt class="field-odd">type order<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int.</p>
 </dd>
-<dt class="field-even">type Npaths<span class="colon">:</span></dt>
-<dd class="field-even"><p>int.</p>
+<dt class="field-even">param Npaths<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of simulation paths. This is the number of paths of stochastic shocks.</p>
 </dd>
-<dt class="field-odd">param MULT<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Multiplier defining terminal time.  If set greater than one than 
+<dt class="field-odd">type Npaths<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int.</p>
+</dd>
+<dt class="field-even">param MULT<span class="colon">:</span></dt>
+<dd class="field-even"><p>Multiplier defining terminal time.  If set greater than one than 
 the solution will be computed for this extended time range interval.</p>
 </dd>
-<dt class="field-even">type MULT<span class="colon">:</span></dt>
-<dd class="field-even"><p>int.</p>
+<dt class="field-odd">type MULT<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int.</p>
 </dd>
-<dt class="field-odd">returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Second order approximation to numerical solution.</p>
+<dt class="field-even">returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Second order approximation to numerical solution.</p>
 </dd>
 </dl>
 </dd>
@@ -1366,7 +1379,7 @@ the solution will be computed for this extended time range interval.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="snowdrop.src.numeric.solver.nonlinear_solver.simulate">
-<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.solver.nonlinear_solver.</span></span><span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steady_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Npaths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MULT</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/solver/nonlinear_solver.html#simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.solver.nonlinear_solver.simulate" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.solver.nonlinear_solver.</span></span><span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steady_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Npaths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MULT</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/solver/nonlinear_solver.html#simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.solver.nonlinear_solver.simulate" title="Link to this definition">¶</a></dt>
 <dd><p>Find solution by iterations by applying Newton method.</p>
 <p>It iterates until either the change in subsequent iterations of this solution is less 
 than TOLEARANCE level or the number of iterations exceeds NITERATIONS.</p>
@@ -1406,6 +1419,12 @@ than TOLEARANCE level or the number of iterations exceeds NITERATIONS.</p>
 <dd class="field-odd"><p>Values of parameters.</p>
 </dd>
 <dt class="field-even">type params<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.ndarray.</p>
+</dd>
+<dt class="field-odd">param cov<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Covariance matrix of shocks.</p>
+</dd>
+<dt class="field-even">type cov<span class="colon">:</span></dt>
 <dd class="field-even"><p>numpy.ndarray.</p>
 </dd>
 <dt class="field-odd">param order<span class="colon">:</span></dt>
@@ -1485,13 +1504,33 @@ the solution will be computed for this extended time range interval.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="snowdrop.src.numeric.solver.solvers.Sylvester_solver">
-<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.solver.solvers.</span></span><span class="sig-name descname"><span class="pre">Sylvester_solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/solver/solvers.html#Sylvester_solver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.solver.solvers.Sylvester_solver" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="snowdrop.src.numeric.solver.solvers.Sylvester_solver_schur">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.solver.solvers.</span></span><span class="sig-name descname"><span class="pre">Sylvester_solver_schur</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/solver/solvers.html#Sylvester_solver_schur"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.solver.solvers.Sylvester_solver_schur" title="Link to this definition">¶</a></dt>
 <dd><p>”
-Solves Silvester equation.</p>
+Solves Silvester equation with Schud decompostion</p>
 <div class="math notranslate nohighlight">
 \[A*x + B*x*C = D\]</div>
 <p>where D is n*m*p matrix</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.solver.solvers.Sylvester_solver_vec">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.solver.solvers.</span></span><span class="sig-name descname"><span class="pre">Sylvester_solver_vec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/solver/solvers.html#Sylvester_solver_vec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.solver.solvers.Sylvester_solver_vec" title="Link to this definition">¶</a></dt>
+<dd><p>Solves the generalized Sylvester equation A*X + B*X*C = D in vectorized form.</p>
+<dl class="simple">
+<dt>Uses identity:</dt><dd><dl class="simple">
+<dt>..math:</dt><dd><p>vec(B*X*C) = (C.T ⊗ B) * vec(X)</p>
+</dd>
+</dl>
+</dd>
+<dt>Args:</dt><dd><p>A (numpy.ndarray): Matrix A.
+B (numpy.ndarray): Matrix B.
+C (numpy.ndarray): Matrix C.
+D (numpy.ndarray): Matrix D.</p>
+</dd>
+<dt>Returns:</dt><dd><p>numpy.ndarray: Solution matrix X.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -1522,7 +1561,7 @@ is positive definite and generate an error message if it is not</p>
 <dd><p>Solve the Lyapunov equation: P = T*P*T’ + R*Q*R’.</p>
 <p>This equation arising in a state-space
 system, where P is the variance of the states.</p>
-<dl>
+<dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
 <dt>T:  double      </dt><dd><p>n*n matrix</p>
 </dd>
@@ -1545,14 +1584,7 @@ system, where P is the variance of the states.</p>
 </dd>
 </dl>
 </dd>
-<dt>Algorithms:</dt><dd><dl>
-<dt>options:</dt><dd><p>steady: The transition matrix is decomposed into stable and unstable parts. For the stable part we solve the Lyapinov equation with the help of the scipy package Lyapunov solver.</p>
-<p>fp:     True iteration-based fixed point algorithm is used.</p>
-<p>db:     Then doubling algorithm is used.</p>
-<p>If none of these algorithms is selected then the reordered Schur decomposition, a.k.a. 
-Bartels-Stewart algorithm is used.</p>
-</dd>
-</dl>
+<dt>Algorithms:</dt><dd><p>Bartels-Stewart algorithm.</p>
 </dd>
 </dl>
 </dd></dl>

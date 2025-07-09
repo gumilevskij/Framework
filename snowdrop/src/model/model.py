@@ -395,7 +395,7 @@ class Model:
             fc.skip = True
             meas_params = self.symbols['measurement_parameters']
             f_measurement = compile_higher_order_function(equations=meas_eqs,syms=meas_syms,
-                                                          params=meas_params,syms_exog=syms_exog,order=order,
+                                                          params=meas_params,syms_exog=syms_exog,order=self.order,
                                                           function_name='f_measurement',out='f_measurement',
                                                           model_name=self.infos["name"],log_variables=logv)
             f_measurement = f_measurement[0]
@@ -986,6 +986,20 @@ file: "{filename}\n'''.format(**self.infos)
         if not self.SAMPLING_ALGORITHM is None:
             ss += colored(f"\nSampling algorithm: {self.SAMPLING_ALGORITHM.name}\n","blue")
             
+        # Print parameters and variables starting values
+        if hasattr(self.symbolic,"METHOD"):
+            var_names = self.symbols['variables']
+            var_values = self.calibration['variables']
+            ss += colored("\nVariables Starting Values: \n","blue")
+            for n,v in zip(var_names,var_values):
+                ss += f"   {n} = {v}\n"
+                
+            par_names = self.symbols['parameters']
+            par_values = self.calibration['parameters']
+            ss += colored("\nParameters: \n","blue")
+            for n,v in zip(par_names,par_values):
+                ss += f"   {n} = {v}\n"
+        
         if bool(self.symbolic.objective_function):
             ss += colored("\nObjective Function: \n","blue")
             ss += f"func = {self.symbolic.objective_function}\n"
@@ -998,6 +1012,7 @@ file: "{filename}\n'''.format(**self.infos)
                 c = c.replace(".le.", " <= ")
                 c = c.replace(".gt.", " > ")
                 c = c.replace(".ge.", " >= ")
+                c = c.replace(".eq.", " = ")
                 ss += f"   {c}\n"
             
         s += ss

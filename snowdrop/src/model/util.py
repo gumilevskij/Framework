@@ -11,6 +11,7 @@ import numpy as np
 import ruamel.yaml as yaml
 from dataclasses import dataclass
 from snowdrop.src.misc.termcolor import cprint
+from snowdrop.src.numeric.optimization.util import expand
 
 fpath = os.path.dirname(os.path.abspath(__file__))
 working_dir = os.path.abspath(os.path.join(os.path.abspath(fpath + "../..")))
@@ -25,12 +26,10 @@ class Data:
     fun: float
     nfev: int = 0
     
-    
 def replace_all(old,new,expr):
     while old in expr:
         expr = expr.replace(old,new)
     return expr
-
 
 def loadLibrary(lib="libpath"):
     """ 
@@ -79,7 +78,6 @@ def loadLibrary(lib="libpath"):
                                 ]
     return libc
 
-
 def getIndex(e,ind):    
     """
     Find the first matching occurance of open bracket.
@@ -107,355 +105,8 @@ def getIndex(e,ind):
     return index
         
 
-def expand_obj_func_sum(categories,sub,expr):
-    """
-    Iterates thru a list of indices and categories, 
-    substitutes an index in a variable name with a corresponding category, 
-    and builds a list of new variables.
 
-    Parameters:
-        :param categories: Categories.
-        :type categories: list.
-        :param sub: Sub-string to replace.
-        :type sub: str.
-        :param expr: Text.
-        :type expr: str.
-        :returns: Text representation of sum operation.
-    """
-    arr = []
-    # Loop over items in a set
-    for c in categories:
-        arr.append(replace_all(sub,"_"+c,expr))
-     
-    out = "+".join(arr)
-    return out
-
-
-def expand_sum(sets,indices,txt): 
-    return expand_sum_or_prod(sets,indices,txt,symb="+")
-
-
-def expand_prod(sets,indices,txt): 
-    return expand_sum_or_prod(sets,indices,txt,symb="*")
-    
-
-def expand_sum_or_prod(sets,indices,txt,symb): 
-    """ 
-    Iterates thru a list of indices and categories,  
-    substitutes an index in a variable name with a corresponding category,  
-    and builds a list of new variables. 
  
-    Parameters: 
-        :param sets: Dictionary of categories. 
-        :type sets: dict. 
-        :param indices: List of indeces. 
-        :type indices: list. 
-        :param txt: Text. 
-        :type txt: str. 
-        :param symb: Symbol "+" or "*". 
-        :type txt: str. 
-        :returns: Text representation of summation or product operation. 
-    """ 
-    ind = txt.index(",") 
-    args = txt[:ind].split(";") 
-    expr = txt[1+ind:].strip() 
-    arr = [] 
-    # Loop over indices 
-    for i,index in enumerate(indices): 
-        if index in args: 
-            cat = sets[index] 
-            for c in cat: 
-                arr.append(replace_all("("+index+")","_"+c,expr)) 
-      
-    out = symb.join(arr) 
-     
-    return "(" + out + ")" 
-
-
-def expand_minmax(b,sets,indices,txt):    
-    """
-    Iterates thru a list of indices and categories, 
-    substitutes an index in a variable name with a corresponding category, 
-    and builds a list of new variables.
-
-    Parameters:
-        :param b: True if minimum and False if maximum.
-        :type b: bool.
-        :param sets: Dictionary of categories. 
-        :type sets: dict. 
-        :param indices: List of indeces. 
-        :type indices: list. 
-        :param txt: Text. 
-        :type txt: str. 
-        :returns: Text representation of min/max operation.
-    """    
-    ind = txt.index(",") 
-    args = txt[:ind].split(";") 
-    expr = txt[1+ind:].strip() 
-    arr = [] 
-    # Loop over indices 
-    for i,index in enumerate(indices): 
-        if index in args: 
-            cat = sets[index] 
-            for c in cat: 
-                arr.append(replace_all("("+index+")","_"+c,expr)) 
-                
-    out = ", ".join(arr) 
-    
-    if b:
-        return "min(" + out + ")"
-    else:
-        return "max(" + out + ")"        
-    
-    
-def expand_loop(categories,sub,expr):    
-    """
-    Iterates thru a list of indices and categories, 
-    substitutes an index in a variable name with a corresponding category, 
-    and builds a list of new variables.
-
-    Parameters:
-        :param categories: Categories.
-        :type categories: list.
-        :param sub: Sub-string to replace.
-        :type sub: str.
-        :param expr: Text.
-        :type expr: str.
-        :returns: Text representation of sum operation.
-    """
-    
-
-def expand_list(sets,indices,arr,objFunc=False,loop=False):
-    """
-    Iterates thru a list of indices and categories, 
-    substitutes an index of a variable name with a corresponding category, 
-    and builds a list of new variables.
-
-    Parameters:
-        :param sets: Dictionary of categories.
-        :type sets: dict.
-        :param indices: List of indeces.
-        :type indices: list.
-        :param arr: List of indeces.
-        :type arr: list.
-        :param: objFunc: True if expanding expression for objective function.
-        :type objFunc: bool.
-        :param loop: True if expanding expression for objective function.
-        :type loop: bool.
-        :returns: list object.
-    """
-    if len(indices) == 0:
-        return arr
-    
-    out = [] 
-
-    if objFunc:
-        # Loop over items in array
-        for ieq,eq in enumerate(arr):
-            e = eq.replace(" ","")
-            
-            if "sum(" in e:
-                # Loop over indices
-                ind1 = e.index("sum(")
-                ind2 = getIndex(e,ind1)
-                op = e[ind1+4:ind2-1]
-                ind = op.index(",")
-                txt = op[1+ind:]
-                for i,index in enumerate(indices):
-                    sub = "("+index+")"
-                    if sub in e:
-                        txt = expand_obj_func_sum(sets[index],sub,txt)
-                        for c in sets[index]:
-                            n = replace_all(sub,"_"+c,txt)
-                arr[ieq] = e[:ind1] + "(" + txt + ")" + e[2+ind2:]
-                
-                   
-        for i,index in enumerate(indices): 
-            sub = "("+index+")" 
-            for e in arr: 
-                e = e.replace(" ","") 
-                if sub in e:   
-                    for c in sets[index]: 
-                        n = replace_all(sub,"_"+c,e) 
-                        if not n in out: 
-                            out.append(n) 
-                else: 
-                    if not e in out: 
-                        out.append(e) 
-            arr = out 
-                  
-    else:
-        
-        # Expand loop statements
-        if loop:
-            lst = []
-            for e in arr: 
-                e = e.replace(" ","") 
-                if "loop(" in e:
-                    ind1 = e.index("loop(") 
-                    ind2 = getIndex(e,ind1)
-                    op = e[ind1+5:ind2-1] 
-                    stmts = expand_loop(sets,indices,op) 
-                    lst.extend(stmts)
-                else:
-                    lst.append(e)
-            arr = lst
-            
-        # Loop over indices 
-        for i,index in enumerate(indices): 
-            sub = "("+index+")" 
-            for j,e in enumerate(arr): 
-                e = e.replace(" ","") 
-                if sub in e:                     
-                    if "MIN(" in e: 
-                        ind1 = e.index("MIN(") 
-                        ind2 = getIndex(e,ind1)
-                        op = e[ind1+4:ind2-1] 
-                        txt = expand_minmax(True,sets,indices,op) 
-                        e = e[:ind1] + txt + e[ind2:]
-                    elif "MAX(" in e: 
-                        ind1 = e.index("MAX(") 
-                        ind2 = getIndex(e,ind1)
-                        op = e[ind1+4:ind2-1] 
-                        txt = expand_minmax(False,sets,indices,op) 
-                        e = e[:ind1] + txt + e[ind2:]
-                    while "sum(" in e: 
-                        ind1 = e.index("sum(") 
-                        ind2 = getIndex(e,ind1)
-                        op = e[ind1+4:ind2-1] 
-                        txt = expand_sum(sets,indices,op) 
-                        e = e[:ind1] + txt + e[ind2:] 
-                    while "prod(" in e: 
-                        ind1 = e.index("prod(") 
-                        ind2 = getIndex(e,ind1) 
-                        op = e[ind1+5:ind2-1] 
-                        txt = expand_prod(sets,indices,op) 
-                        e = e[:ind1] + txt + e[ind2:] 
-                    for c in sets[index]: 
-                        n = replace_all(sub,"_"+c,e) 
-                        if not n in out: 
-                            out.append(n) 
-                else: 
-                    if not e in out: 
-                        out.append(e) 
-            arr = out 
-        
-    # Clean left over indices that might be left.
-    arr = []
-    for i,x in enumerate(out):
-        b = True
-        for index in indices:
-            sub = "("+index+")"
-            if sub in x:
-                b = False
-                break
-        if b:
-            arr.append(x)
-    
-    return arr
-
-
-def expand_map(sets,indices,m):
-    """
-    Iterates thru a list of indices and categories, 
-    substitutes an index in a variable name with a corresponding category, 
-    and builds a list of new variables.
-
-    Parameters:
-        :param sets: Dictionary of categories.
-        :type sets: dict.
-        :param indices: List of indeces.
-        :type indices: list.
-        :param m: Map.
-        :type m: dict.
-        :returns: Dictionary object.
-    """
-    if len(indices) == 0:
-        return m
-    
-    out = {}
-    # Loop over indices
-    for i,index in enumerate(indices):
-        for k in m:
-            sub = "("+index+")"
-            if sub in k:
-                values = m[k]
-                for j,c in enumerate(sets[index]):
-                    key = replace_all(sub,"_"+c,k)
-                    if isinstance(values,list) and j < len(values):
-                        out[key] = values[j]
-                    elif isinstance(values,str):
-                        values = values.replace(" ","")
-                        if "MIN(" in values: 
-                            ind1 = values.index("MIN(") 
-                            ind2 = getIndex(values,ind1)
-                            op = values[ind1+4:ind2-1] 
-                            txt = expand_minmax(True,sets,indices,op) 
-                            values = values[:ind1] + txt + values[ind2:]
-                        elif "MAX(" in values: 
-                            ind1 = values.index("MAX(") 
-                            ind2 = getIndex(values,ind1)
-                            op = values[ind1+4:ind2-1] 
-                            txt = expand_minmax(False,sets,indices,op) 
-                            values = values[:ind1] + txt + values[ind2:]
-                        while "sum(" in values: 
-                            ind1 = values.index("sum(") 
-                            ind2 = getIndex(values,ind1) 
-                            op = values[ind1+4:ind2-1] 
-                            txt = expand_sum(sets,indices,op) 
-                            values = values[:ind1] + txt + values[ind2:] 
-                        while "prod(" in values: 
-                            ind1 = values.index("prod(") 
-                            ind2 = getIndex(values,ind1) 
-                            op = values[ind1+5:ind2-1] 
-                            txt = expand_prod(sets,indices,op) 
-                            values = values[:ind1] + txt + values[ind2:] 
-                        if not key in out: 
-                            out[key] = replace_all(sub,"_"+c,values)
-                    else:
-                        if not key in out: 
-                            out[key] = values 
-            else:
-                if not k in out: 
-                    out[k] = m[k]
-        m = out.copy()
-    
-    # Clean left over
-    out = {}
-    for k in m:
-        b = True
-        for index in indices:
-            sub = "("+index+")"
-            if sub in k:
-                b = False
-                break
-        if b:
-            out[k] = m[k]
-            
-    return out
- 
-    
-def expand(sets,indices,expr,objFunc=False,loop=False):
-    """
-    Expands expression.
-
-    Parameters:
-        :param sets: Dictionary of categories.
-        :type sets: dict.
-        :param indices: List of indeces.
-        :type indices: list.
-        :param expr: Object.
-        :type expr: list or dict.
-        :returns: objFunc: True if expanding expression for objective function.
-        :type objFunc: bool.
-        :returns: Expanded expression.
-    """
-    if isinstance(expr,list):
-        return expand_list(sets,indices,expr,objFunc=objFunc,loop=loop)
-    elif isinstance(expr,dict):
-        return expand_map(sets,indices,expr)
- 
-    
 def fix(eqs,model_eqs):
     """
     Get equations, labels of equations and complementarity conditions.
@@ -503,7 +154,6 @@ def fix(eqs,model_eqs):
         
     return arr,complementarity   
         
-
 def getLabels(keys,m):
     
     labels = {}
@@ -518,7 +168,6 @@ def getLabels(keys,m):
             labels[k] = m[k]
             
     return labels    
-    
         
 def importModel(fpath):
     """
@@ -621,7 +270,6 @@ def importModel(fpath):
         # Optional section
         options = data.get('options',{})
 
-
         # Expand expressions
         if bool(obj):
             obj     = expand(sets,indices,obj,objFunc=True)[0]
@@ -661,8 +309,7 @@ def importModel(fpath):
                 equations_labels.append(x + "   -  " + labels[x])
             else:
                 equations_labels.append(x)
-                
-        
+                      
         # Read calibration values from excel file
         options = data.get('options',{})
         if "file" in options:
@@ -706,7 +353,7 @@ def importModel(fpath):
                         if x in variables and not x in cal:
                             cal[x] = 0                       
                         elif x in parameters and not x in cal:
-                            cal[x] = 1.e-6
+                            cal[x] = 0
                         elif not x in parameters:
                             m[x] = 0
                 try:
@@ -733,7 +380,6 @@ def importModel(fpath):
     
     return model
         
-
 def getLimits(var_names,constraints,cal):
     """Find variables upper and lower limits."""
     Il, Iu = None,None
@@ -903,8 +549,6 @@ def getConstraints(n,constraints,cal,eqLabels,jacobian):
                 
     return A,lb,ub
 
-
-    
 def print_path_solution_status(status):
     if status == 1:
         cprint("A solution to the problem was found.","green")
@@ -944,8 +588,7 @@ def firstNonZero(vals):
         else:
             return i,v
         
-    return -1,np.nan   
-    
+    return -1,np.nan     
 
 def lastNonZero(vals):
     """
@@ -962,7 +605,6 @@ def lastNonZero(vals):
     k = len(vals) - i - 1
     
     return k,v 
-
 
 def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=False):
     """    
@@ -1202,7 +844,6 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
                             calib[var] = val
                             bSet = True
                     
-                
             if not bSet:
                 missing.append(var)
                 if debug and not "_plus_" in var and not "_minus_" in var:
@@ -1229,7 +870,6 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
                          
     # x = dict(zip(var_names,var_values))
     return var_values,calib,missing
-
 
 # def setShocks(model,d,start=None,reset=False):
 #     """
@@ -1262,7 +902,6 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
     
 #     return
   
-    
 # def setCalibration(model,param_name,param_value):
 #     """
 #     Set calibration dictionary values given the time of their appearance.
@@ -1290,7 +929,6 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
         
 #     model.calibration["parameters"] = param_values
     
-    
 # def setParameters(model,d,start=None):
 #     """
 #     Set parameters values given the time of their appearance.
@@ -1313,8 +951,7 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
 #     calib,_,_ = setValues(model=model,d=d,names=param_names,values=param_values,start=start,isShock=False)
     
 #     model.calibration["parameters"] = calib
-    
-    
+      
 def setValues(model,d,names,values,start=None,isShock=True):
     """
     Set shocks values given the time of their appearance.
@@ -1365,7 +1002,6 @@ def setValues(model,d,names,values,start=None,isShock=True):
         interval = rd.relativedelta(months=12)
         
     max_size = 0
-    
     # Get maximum length of values.
     for k in d:
         if k in names:
@@ -1491,8 +1127,7 @@ def setValues(model,d,names,values,start=None,isShock=True):
     calib = np.array(calib)
     
     return calib,start,interval
-
-          
+         
 def getEquationsLables(model):
     """
     Build partite graph relating equations numbers to endogenous variables.
@@ -1572,7 +1207,6 @@ def getEquationsLables(model):
                 
     model.eqLabels = eqsLabels
                
-
 if __name__ == '__main__':
     """
     The test program.

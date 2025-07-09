@@ -2,7 +2,7 @@ name: Transportation expenses minimization model
 
 sets:
    plants  i: [Seattle, SanDiego]
-   markets j: [NewYork, Chicago, Topeka, Dallas]
+   markets j: [NewYork, Chicago, Topeka]
    
 symbols:
    variables:  [x(i)(j)]
@@ -15,10 +15,10 @@ equations:
 calibration:
     f: 90
     a(i): [350, 600]
-    b(j): [325, 300, 100, 200]
+    b(j): [325, 300, 275]
     x(i)(j): [[0,0,0,0],[0,0,0,0]]
-    d(i)(j): [[2.5, 1.7, 1.8, 3.0], 
-              [2.5, 1.8, 1.4, 2.0]]
+    d(i)(j): [[2.5, 1.7, 1.8], 
+              [2.5, 1.8, 1.4]]
     cost(i)(j): f*d(i)(j)/1000 # Transport cost in 1000s of dollars per case
    
 objective_function: 
