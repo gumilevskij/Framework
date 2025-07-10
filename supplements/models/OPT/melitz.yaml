@@ -77,25 +77,25 @@ calibration:
       
 constraints:
    # Positive Variables
-   - Q(h)(r) .ge. 0
-   - P(h)(r) .ge. 0
-   - M(h)(r) .ge. 0
-   - N(h)(r)(s) .ge. 0
-   - QF(h)(r)(s) .ge. 0
-   - PF(h)(r)(s) .ge. 0
-   - PHI(h)(r)(s) .ge. 0
-   - c(h)(r) .ge. 0
-   - Y(h)(r) .ge. 0
+   - Q(h)(r) >= 0
+   - P(h)(r) >= 0
+   - M(h)(r) >= 0
+   - N(h)(r)(s) >= 0
+   - QF(h)(r)(s) >= 0
+   - PF(h)(r)(s) >= 0
+   - PHI(h)(r)(s) >= 0
+   - c(h)(r) >= 0
+   - Y(h)(r) >= 0
    # Positive LHS of equations    
-   - DEM(h)(r) .ge. 0
-   - DS(h)(s) .ge. 0
-   - DEMF(h)(r)(s) .ge. 0
-   - MKUP(h)(r)(s) .ge. 0
-   - FE(h)(r) .ge. 0
-   - ZCP(h)(r)(s) .ge. 0
-   - PAR(h)(r)(s) .ge. 0
-   - MKT(h)(r) .ge. 0
-   - SUP(h)(r) .ge. 0
+   - DEM(h)(r) >= 0
+   - DS(h)(s) >= 0
+   - DEMF(h)(r)(s) >= 0
+   - MKUP(h)(r)(s) >= 0
+   - FE(h)(r) >= 0
+   - ZCP(h)(r)(s) >= 0
+   - PAR(h)(r)(s) >= 0
+   - MKT(h)(r) >= 0
+   - SUP(h)(r) >= 0
 
 labels:
     # Variables
@@ -139,6 +139,6 @@ labels:
     SUP:  Input supply (output)
     
 Model: [DEM.P,DS.Q,FE.M,ZCP.N,DEMF.PF,MKUP.QF,PAR.PHI,MKT.c,SUP.Y]
-Solver: 'MCP'   # 'MCP','PATH', 'CONSTRAINED_OPTIMIZATION', 'ROOT'
+Solver: 'MCP'   # 'MCP', 'CONSTRAINED_OPTIMIZATION', 'ROOT'
 
     

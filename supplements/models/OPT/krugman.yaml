@@ -63,21 +63,21 @@ calibration:
       
 constraints:
    # Positive Variables
-   - Q(k)(r) .ge. 0
-   - P(k)(r) .ge. 0
-   - N(k)(r) .ge. 0
-   - QF(k)(r)(s) .ge. 0
-   - PF(k,r,s) .ge. 0
-   - c(k)(r) .ge. 0
-   - Y(k)(r) .ge. 0
+   - Q(k)(r) >= 0
+   - P(k)(r) >= 0
+   - N(k)(r) >= 0
+   - QF(k)(r)(s) >= 0
+   - PF(k,r,s) >= 0
+   - c(k)(r) >= 0
+   - Y(k)(r) >= 0
    # Positive LHS of equations    
-   - DEM(k)(r) .ge. 0
-   - DS(k)(s) .ge. 0
-   - FE(k)(r) .ge. 0
-   - DEMF(k)(r)(s) .ge. 0
-   - MKUP(k)(r)(s) .ge. 0
-   - MKT(k)(r) .ge. 0
-   - SUP(k)(r) .ge. 0
+   - DEM(k)(r) >= 0
+   - DS(k)(s) >= 0
+   - FE(k)(r) >= 0
+   - DEMF(k)(r)(s) >= 0
+   - MKUP(k)(r)(s) >= 0
+   - MKT(k)(r) >= 0
+   - SUP(k)(r) >= 0
 
 labels:
     # Variables
@@ -113,6 +113,6 @@ labels:
     SUP:  Input supply (output)
     
 Model: [DEM.Q,DS.N,FE.QF,DEMF.P,MKUP.PF,MKT.c,SUP.Y]
-Solver: 'ROOT'   # 'MCP','PATH', 'CONSTRAINED_OPTIMIZATION','ROOT'
+Solver: 'MCP'   # 'MCP', 'CONSTRAINED_OPTIMIZATION','ROOT'
 
     

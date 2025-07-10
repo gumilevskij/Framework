@@ -675,7 +675,7 @@ def importModel(fpath):
         
     delimiters = " ",",","^","*","/","+","-","(",")","<",">","=","max","min"
     regexPattern = '|'.join(map(re.escape, delimiters))
-    regexFloat = '[+-]?[0-9]+\.[0-9]+'
+    regexFloat = r'[+-]?[0-9]+\.[0-9]+'
     # Resolve calibration references
     nprev_str = 1; n_str = i = 0; m = {}
     cal = calibration.copy()

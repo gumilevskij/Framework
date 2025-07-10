@@ -16,7 +16,8 @@ from dataclasses import dataclass
 from snowdrop.src.misc.termcolor import cprint
 from snowdrop.src.model.util import importModel
 #from snowdrop.src.model.util import loadLibrary
-from snowdrop.src.model.util import getLimits, getConstraints
+from snowdrop.src.model.util import getLimits, getConstraints 
+from snowdrop.src.model.util import getNonlinearConstraints
 #from snowdrop.src.model.util import print_path_solution_status
 from snowdrop.src.graphs.util import bar_plot
 from snowdrop.src.preprocessor.function import get_function_and_jacobian as fun
@@ -207,17 +208,17 @@ def solver(model):
             A,lb,ub = getConstraints(n,constraints,cal,eqs_labels,jacobian)
             constraint = LinearConstraint(A,lb,ub)
         else:
-            ind = [True]*n
-            for i in range(n):
-                if upper[i] == np.inf and lower[i] == -np.inf:
-                    ind[i] = False
-            Lower = lower[ind]; Upper = upper[ind]
-            if model.order == 2:
-                constraint = NonlinearConstraint(func,Lower,Upper,jac=jacob,hess=hess)
-            elif model.order == 1:
-                constraint = NonlinearConstraint(func,Lower,Upper,jac=jacob)
-            elif model.order == 0:
-                constraint = NonlinearConstraint(func,Lower,Upper)
+            if not eqs_labels is None:
+                Lower, Upper = getNonlinearConstraints(constraints, eqs_labels, cal)
+   
+                if model.order == 2:
+                    constraint = NonlinearConstraint(func,Lower,Upper,jac=jacob,hess=hess)
+                elif model.order == 1:
+                    constraint = NonlinearConstraint(func,Lower,Upper,jac=jacob)
+                elif model.order == 0:
+                    constraint = NonlinearConstraint(func,Lower,Upper)
+            else:
+                constraint = None
         
         if solver in ['trust-constr','SLSQP']:            
             results = minimize(fun=fobj,x0=x0,method=solver,bounds=bounds,constraints=constraint,tol=1.e-10,options={'disp':False,'maxiter':MAXITER})

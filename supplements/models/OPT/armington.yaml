@@ -48,15 +48,15 @@ calibration:
       
 constraints:
    # Positive Variables
-   - Q(j)(r) .ge. 5.1
-   - P(j)(r) .ge. 0
-   - c(j)(r) .ge. 0
-   - Y(j)(r) .ge. 0
+   - Q(j)(r) >= 5.1
+   - P(j)(r) >= 0
+   - c(j)(r) >= 0
+   - Y(j)(r) >= 0
    # Positive LHS of equations    
-   - DEM(j)(r) .ge. 0
-   - ARM(j)(s) .ge. 0
-   - MKT(j)(r) .ge. 0
-   - SUP(j)(r) .ge. 0
+   - DEM(j)(r) >= 0
+   - ARM(j)(s) >= 0
+   - MKT(j)(r) >= 0
+   - SUP(j)(r) >= 0
 
 labels:
     # Variables
@@ -82,6 +82,6 @@ labels:
     SUP:  Input supply (output)
     
 Model: [DEM.Q,ARM.P,MKT.c,SUP.Y]
-Solver: 'CONSTRAINED_OPTIMIZATION'   # 'MCP','PATH', 'CONSTRAINED_OPTIMIZATION', 'ROOT'
+Solver: 'CONSTRAINED_OPTIMIZATION'   # 'MCP', 'CONSTRAINED_OPTIMIZATION', 'ROOT'
 
     

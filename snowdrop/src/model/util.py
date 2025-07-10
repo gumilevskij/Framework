@@ -389,22 +389,14 @@ def getLimits(var_names,constraints,cal):
         for c in constraints:
             lb = ub = None
             if v in c:
-                if '.lt.' in c:
+                if '.le.' in c or '<=' in c:
                     Iu = True
-                    ind = c.index('.lt.')
-                    s = c[4+ind:].strip()
-                    if s in cal:
-                        val = cal[s]
+                    if '.le.' in c:
+                        ind = c.index('.le.')
+                        s = c[4+ind:].strip()
                     else:
-                        try:
-                            val = float(s)
-                        except:
-                            val = np.inf
-                    ub = float(val)-1.e-10
-                elif '.le.' in c:
-                    Iu = True
-                    ind = c.index('.le.')
-                    s = c[4+ind:].strip()
+                        ind = c.index('<=')
+                        s = c[2+ind:].strip()
                     if s in cal:
                         val = cal[s]
                     else:
@@ -413,22 +405,30 @@ def getLimits(var_names,constraints,cal):
                         except:
                             val = np.inf
                     ub = float(val)
-                elif '.gt.' in c:
-                    Il = True
-                    ind = c.index('.gt.')
-                    s = c[4+ind:].strip()
+                elif '.lt.' in c or '<' in c:
+                    Iu = True
+                    if '.lt.' in c:
+                        ind = c.index('.lt.')
+                        s = c[4+ind:].strip()
+                    else:
+                        ind = c.index('<')
+                        s = c[1+ind:].strip()
                     if s in cal:
                         val = cal[s]
                     else:
                         try:
                             val = float(s)
                         except:
-                            val = -np.inf
-                    lb = float(val)+1.e-10
-                elif '.ge.' in c:
+                            val = np.inf
+                    ub = float(val)-1.e-10
+                elif '.ge.' in c or '>=' in c:
                     Il = True
-                    ind = c.index('.ge.')
-                    s = c[4+ind:].strip()
+                    if '.ge.' in c:
+                        ind = c.index('.ge.')
+                        s = c[4+ind:].strip()
+                    else:
+                        ind = c.index('>=')
+                        s = c[2+ind:].strip()
                     if s in cal:
                         val = cal[s]
                     else:
@@ -437,9 +437,29 @@ def getLimits(var_names,constraints,cal):
                         except:
                             val = -np.inf
                     lb = float(val)
-                elif '.eq.' in c:
-                    ind = c.index('.eq.')
-                    s = c[1+ind:].strip()
+                elif '.gt.' in c or '>' in c:
+                    Il = True
+                    if '.gt.' in c:
+                        ind = c.index('.gt.')
+                        s = c[4+ind:].strip()
+                    else:
+                        ind = c.index('>')
+                        s = c[1+ind:].strip()
+                    if s in cal:
+                        val = cal[s]
+                    else:
+                        try:
+                            val = float(s)
+                        except:
+                            val = -np.inf
+                    lb = float(val)+1.e-10
+                elif '.eq.' in c or '=' in c:
+                    if '.eq.' in c:
+                        ind = c.index('.eq.')
+                        s = c[4+ind:].strip()
+                    else:
+                        ind = c.index('=')
+                        s = c[1+ind:].strip()
                     if s in cal:
                         val = cal[s]
                         lb = ub = val
@@ -448,6 +468,7 @@ def getLimits(var_names,constraints,cal):
                             val = float(s)
                         except:
                             val = None
+                        lb = ub = val
             arr.append([lb, ub])
             
         lb = ub = None
@@ -473,28 +494,19 @@ def getConstraints(n,constraints,cal,eqLabels,jacobian):
     lb = np.zeros(n) - np.inf
     ub = np.zeros(n) + np.inf
     for c in constraints:
-        if '.lt.' in c:
-            ind = c.index('.lt.')
-            label = c[:ind]
+        if '.le.' in c or '<=' in c:
+            if '.le.' in c:
+                ind = c.index('.le.')
+                label = c[:ind]
+                shift = 4
+            else:
+                ind = c.index('<=')
+                label = c[:ind]
+                shift = 2
             if label in eqs_labels:
                 i = eqs_labels.index(label)
                 A[i] = jacobian[i]
-                s = c[4+ind:].strip()
-                if s in cal:
-                    val = cal[s]
-                else:
-                    try:
-                        val = float(s)
-                    except:
-                        val = np.inf
-                ub[i] = float(val)-1.e-10
-        elif '.le.' in c:
-            ind = c.index('.le.')
-            label = c[:ind]
-            if label in eqs_labels:
-                i = eqs_labels.index(label)
-                A[i] = jacobian[i]
-                s = c[4+ind:].strip()
+                s = c[shift+ind:].strip()
                 if s in cal:
                     val = cal[s]
                 else:
@@ -503,28 +515,40 @@ def getConstraints(n,constraints,cal,eqLabels,jacobian):
                     except:
                         val = np.inf
                 ub[i] = float(val)
-        elif '.gt.' in c:
-            ind = c.index('.gt.')
-            label = c[:ind]
+        elif '.lt.' in c or '<' in c:
+            if '.lt.' in c:
+                ind = c.index('.lt.')
+                label = c[:ind]
+                shift = 4
+            else:
+                ind = c.index('<')
+                label = c[:ind]
+                shift = 1
             if label in eqs_labels:
                 i = eqs_labels.index(label)
                 A[i] = jacobian[i]
-                s = c[4+ind:].strip()
+                s = c[shift+ind:].strip()
                 if s in cal:
                     val = cal[s]
                 else:
                     try:
                         val = float(s)
                     except:
-                        val = -np.inf
-            lb[i] = float(val)+1.e-10
-        elif '.ge.' in c:
-            ind = c.index('.ge.')
-            label = c[:ind]
+                        val = np.inf
+                ub[i] = float(val)-1.e-10
+        elif '.ge.' in c or '>=' in c:
+            if '.ge.' in c:
+                ind = c.index('.ge.')
+                label = c[:ind]
+                shift = 4
+            else:
+                ind = c.index('>=')
+                label = c[:ind]
+                shift = 2
             if label in eqs_labels:
                 i = eqs_labels.index(label)
                 A[i] = jacobian[i]
-                s = c[4+ind:].strip()
+                s = c[shift+ind:].strip()
                 if s in cal:
                     val = cal[s]
                 else:
@@ -533,11 +557,38 @@ def getConstraints(n,constraints,cal,eqLabels,jacobian):
                     except:
                         val = -np.inf
             lb[i] = float(val)
-        elif '.eq.' in c:
-            ind = c.index('.eq.')
-            label = c[:ind]
+        elif '.gt.' in c or '>' in c:
+            if '.gt.' in c:
+                ind = c.index('.gt.')
+                label = c[:ind]
+                shift = 4
+            else:
+                ind = c.index('>')
+                label = c[:ind]
+                shift = 1
             if label in eqs_labels:
-                s = c[4+ind:].strip()
+                i = eqs_labels.index(label)
+                A[i] = jacobian[i]
+                s = c[shift+ind:].strip()
+                if s in cal:
+                    val = cal[s]
+                else:
+                    try:
+                        val = float(s)
+                    except:
+                        val = -np.inf
+            lb[i] = float(val)+1.e-10
+        elif '.eq.' in c or '=' in c:
+            if '.eq.' in c:
+                ind = c.index('.eq.')
+                label = c[:ind]
+                shift = 4
+            else:
+                ind = c.index('=')
+                label = c[:ind]
+                shift = 1
+            if label in eqs_labels:
+                s = c[shift+ind:].strip()
                 if s in cal:
                     val = cal[s]
                 else:
@@ -548,6 +599,44 @@ def getConstraints(n,constraints,cal,eqLabels,jacobian):
                 ub[i] = lb[i] = val
                 
     return A,lb,ub
+
+def getNonlinearConstraints(constraints, labels, calib):
+    
+    Upper = np.empty(len(labels))
+    Lower = np.empty(len(labels))
+    for i,x in enumerate(labels):
+        b = False
+        for cnstr in constraints:
+            if '.' in cnstr:
+                ind = cnstr.index('.')
+                lhs = cnstr[:ind]
+                if lhs == x:
+                    rhs = cnstr[1+ind:]
+                    if '.' in rhs:
+                        ind2 = rhs.index('.')
+                        op = rhs[:ind2].strip()
+                        v = rhs[1+ind2:].strip()
+                        try:
+                            v = eval(v,calib,calib)
+                            b = True
+                        except:
+                            pass
+                        break
+        if b:
+            if op in ['le','lt']:
+                Upper[i] = v
+                Lower[i] = -np.inf
+            elif op in ['ge','et']:
+                Upper[i] = np.inf
+                Lower[i] = v
+            elif op == 'eq':
+                Upper[i] = v
+                Lower[i] = v
+        else:
+            Upper[i] = 0
+            Lower[i] = 0
+            
+    return Lower, Upper
 
 def print_path_solution_status(status):
     if status == 1:
