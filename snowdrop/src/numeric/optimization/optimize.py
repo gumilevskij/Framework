@@ -42,7 +42,7 @@ def solver(model):
     """
     filterwarnings("ignore")
 
-    MAXITER = 1000
+    MAXITER = 2000
     
     solver = model.symbolic.SOLVER
     method = model.symbolic.METHOD
@@ -58,6 +58,7 @@ def solver(model):
             cprint("\nPlease choose either Maximize or Minimize method.\n","red")
             raise ValueError(f"Method {method} is not implemented.")
 
+    f_steady    = model.functions['f_steady']
     constraints = model.symbolic.constraints
     obj_func    = model.symbolic.objective_function
     var_names   = model.symbols['variables']
@@ -122,11 +123,7 @@ def solver(model):
         else:
             y = -jac
         return f,y
-    
-    # Function
-    def func(x):
-        f = fun(model=model,y=np.vstack((x,x,x)),params=par_values,order=0)
-        return f
+ 
     
     # Mapping function
     def map_func(a,b):
@@ -189,10 +186,20 @@ def solver(model):
         for i in range(len(v)):
             y += v[i] * hessian[i][n:2*n,n:2*n]
         return y
-    
+       
+    # Function
+    def func(x):
+        bHasAttr  = hasattr(f_steady,"py_func")
+        if bHasAttr:
+            f = f_steady.py_func(x,par_values)
+        else:
+            f = f_steady(x,par_values)
+        #f = fun(model=model,y=np.vstack((x,x,x)),params=par_values,order=0)
+        #print(f)
+        return f
 
     # Get variables constraints
-    Il,Iu,lower,upper = getLimits(var_names,constraints,cal)
+    Il,Iu,nlim,lower,upper = getLimits(var_names,constraints,cal)
     
     for i in range(n):
         x0[i] = min(upper[i],max(lower[i],x0[i]))
@@ -208,28 +215,29 @@ def solver(model):
             A,lb,ub = getConstraints(n,constraints,cal,eqs_labels,jacobian)
             constraint = LinearConstraint(A,lb,ub)
         else:
-            if not eqs_labels is None:
+            if True: #nlim == 0: 
                 Lower, Upper = getNonlinearConstraints(constraints, eqs_labels, cal)
-   
-                if model.order == 2:
-                    constraint = NonlinearConstraint(func,Lower,Upper,jac=jacob,hess=hess)
-                elif model.order == 1:
-                    constraint = NonlinearConstraint(func,Lower,Upper,jac=jacob)
-                elif model.order == 0:
+                if not np.any(np.isnan(Lower)) and not np.any(np.isnan(Upper)):
                     constraint = NonlinearConstraint(func,Lower,Upper)
+                else:
+                    constraint = None
             else:
                 constraint = None
         
         if solver in ['trust-constr','SLSQP']:            
             results = minimize(fun=fobj,x0=x0,method=solver,bounds=bounds,constraints=constraint,tol=1.e-10,options={'disp':False,'maxiter':MAXITER})
+            #cprint(results,"blue")          
         else:
             cprint("\nOnly 'trust-constr' and 'SLSQP' methods are implemented...","red")
             cprint("'trust-constr' method.","red")
             results = minimize(fun=fobj,x0=x0,method="trust-constr",bounds=bounds,constraints=constraint,tol=1.e-10,options={'disp':False,'maxiter':MAXITER})
         
-        if not results.success:
+        if results.success:
+            cprint(f"{results.message}","green")
+        else:
             cprint("\nConstrained minimization failed.","red")
-            cprint("Running un-constrained minimization...","red")
+            print(f" {results.message}")
+            cprint("\nRunning un-constrained minimization...","red")
             results = minimize(fun=fobj,x0=x0,method='Powell',bounds=None,options={'disp':False,'maxiter':1000})
         
     else:

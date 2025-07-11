@@ -383,12 +383,12 @@ def importModel(fpath):
 def getLimits(var_names,constraints,cal):
     """Find variables upper and lower limits."""
     Il, Iu = None,None
-    lower = []; upper = []
+    N = 0
+    lw = {}; up = {}
+    
     for v in var_names:
-        arr = []
         for c in constraints:
-            lb = ub = None
-            if v in c:
+            if c.startswith(v):
                 if '.le.' in c or '<=' in c:
                     Iu = True
                     if '.le.' in c:
@@ -404,7 +404,8 @@ def getLimits(var_names,constraints,cal):
                             val = float(s)
                         except:
                             val = np.inf
-                    ub = float(val)
+                    up[v] = float(val)
+                    
                 elif '.lt.' in c or '<' in c:
                     Iu = True
                     if '.lt.' in c:
@@ -420,7 +421,8 @@ def getLimits(var_names,constraints,cal):
                             val = float(s)
                         except:
                             val = np.inf
-                    ub = float(val)-1.e-10
+                    up[v] = float(val)
+                    
                 elif '.ge.' in c or '>=' in c:
                     Il = True
                     if '.ge.' in c:
@@ -436,7 +438,8 @@ def getLimits(var_names,constraints,cal):
                             val = float(s)
                         except:
                             val = -np.inf
-                    lb = float(val)
+                    lw[v] = float(val)
+                    
                 elif '.gt.' in c or '>' in c:
                     Il = True
                     if '.gt.' in c:
@@ -452,7 +455,8 @@ def getLimits(var_names,constraints,cal):
                             val = float(s)
                         except:
                             val = -np.inf
-                    lb = float(val)+1.e-10
+                    lw[v] = float(val)
+                    
                 elif '.eq.' in c or '=' in c:
                     if '.eq.' in c:
                         ind = c.index('.eq.')
@@ -468,24 +472,29 @@ def getLimits(var_names,constraints,cal):
                             val = float(s)
                         except:
                             val = None
-                        lb = ub = val
-            arr.append([lb, ub])
+                        lw[v] = float(val)
+                        up[v] = float(val)
+
+    upper = []; lower = []
+    for v in var_names:
+        if v in lw and v in up:
+            N += 1
+            lower.append(lw[v])
+            upper.append(up[v])
+        elif v in lw:
+            N += 1
+            lower.append(lw[v])
+            upper.append(np.inf)    
+        elif v in up:
+            N += 1
+            lower.append(-np.inf)
+            upper.append(up[v])
+        else:
+            lower.append(-np.inf)
+            upper.append(np.inf)
             
-        lb = ub = None
-        for x in arr:
-            if not x[0] is None and lb is None:
-                lb = x[0]
-            if not x[1] is None and ub is None:
-                ub = x[1]
-        if lb is None:
-            lb = -np.inf
-        if ub is None:
-            ub = np.inf
-            
-        lower.append(lb)
-        upper.append(ub)
         
-    return Il,Iu,np.array(lower),np.array(upper)
+    return Il,Iu,N,np.array(lower),np.array(upper)
 
 
 def getConstraints(n,constraints,cal,eqLabels,jacobian):
@@ -601,40 +610,75 @@ def getConstraints(n,constraints,cal,eqLabels,jacobian):
     return A,lb,ub
 
 def getNonlinearConstraints(constraints, labels, calib):
-    
-    Upper = np.empty(len(labels))
-    Lower = np.empty(len(labels))
+    """Builds non-linear constrain."""
+    Upper = np.empty(len(labels)); Upper[:] = np.inf
+    Lower = np.empty(len(labels)); Lower[:] = -np.inf
     for i,x in enumerate(labels):
         b = False
         for cnstr in constraints:
-            if '.' in cnstr:
-                ind = cnstr.index('.')
+            if '.' in cnstr or '=' in cnstr or '<' in cnstr or '>' in cnstr:
+                if '.' in cnstr:
+                    ind = cnstr.index('.')
+                    shift = 1
+                elif '<=' in cnstr:
+                    ind = cnstr.index('<=')
+                    shift = 0
+                elif '<' in cnstr:
+                    ind = cnstr.index('<')
+                    shift = 0
+                elif '>=' in cnstr:
+                    ind = cnstr.index('>=')
+                    shift = 0
+                elif '>' in cnstr:
+                    ind = cnstr.index('>')
+                    shift = 0
+                elif '=' in cnstr:
+                    ind = cnstr.index('=')
+                    shift = 0
                 lhs = cnstr[:ind]
                 if lhs == x:
-                    rhs = cnstr[1+ind:]
+                    rhs = cnstr[shift+ind:]
+                    shift2 = 1
                     if '.' in rhs:
                         ind2 = rhs.index('.')
-                        op = rhs[:ind2].strip()
-                        v = rhs[1+ind2:].strip()
-                        try:
-                            v = eval(v,calib,calib)
-                            b = True
-                        except:
-                            pass
-                        break
+                        shift2 = 1
+                    elif '>=' in rhs:
+                        ind2 = rhs.index('>=')
+                        shift2 = 2
+                    elif '>' in rhs:
+                        ind2 = rhs.index('>')
+                        shift2 = 1 
+                    elif '<=' in rhs:
+                        ind2 = rhs.index('<=')
+                        shift2 = 2  
+                    elif '<' in rhs:
+                        ind2 = rhs.index('<')
+                        shift2 = 1
+                    elif '=' in rhs:
+                        ind2 = rhs.index('=')
+                        shift2 = 1
+                    op = rhs[:shift2+ind2].strip()
+                    v = rhs[shift2+ind2:].strip()
+                    #print(cnstr,op,v)
+                    try:
+                        v = eval(v,calib,calib)
+                        b = True
+                    except:
+                        pass
+                    break
         if b:
-            if op in ['le','lt']:
+            if op in ['le','lt','<]','<']:
                 Upper[i] = v
                 Lower[i] = -np.inf
-            elif op in ['ge','et']:
+            elif op in ['ge','et','>=','>']:
                 Upper[i] = np.inf
                 Lower[i] = v
-            elif op == 'eq':
+            elif op in ['eq','=']:
                 Upper[i] = v
                 Lower[i] = v
         else:
-            Upper[i] = 0
-            Lower[i] = 0
+            print(cnstr)
+            
             
     return Lower, Upper
 

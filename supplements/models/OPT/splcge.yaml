@@ -1,0 +1,101 @@
+name: A Simple CGE Model 
+# From Ch. 5 of Hosoe, N, Gasawa, K, and Hashimoto, "Handbook of Computable General Equilibrium Modeling".
+
+sets:
+   SAM_entry u: ['BRD', 'MLK', 'CAP', 'LAB', 'HOH']
+   goods  i: ['BRD', 'MLK']
+   factor h: ['CAP', 'LAB']
+   goods alias j: i
+   factor alias k: h
+   SAM_entry alias v: u 
+   
+symbols:
+   variables:  [X(i),F(h)(j),Z(j),px(i),pz(i),pf(h)]
+   parameters: [alpha(i),beta(h)(j),b(j),SAM(u)(v),FF(h)]
+       
+equations:
+    - eqX(i)    : X(i)    - alpha(i)*sum(h, pf(h)*FF(h))/px(i)
+    - eqpz(j)   : Z(j)    - b(j)*prod(h, F(h)(j)**beta(h)(j))
+    - eqF(h)(j) : F(h)(j) - beta(h)(j)*pz(j)*Z(j)/pf(h)
+    - eqpx(i)   : X(i)    - Z(i)
+    - eqpf(h)   : FF(h)   - sum(j,F(h)(j))
+    - eqZ(i)    : px(i)  - pz(i)
+
+calibration:
+    # parameters
+    alpha_BRD: 0.3
+    alpha_MLK: 0.7
+    beta_CAP_BRD: 1./3
+    beta_LAB_BRD: 2./3
+    beta_CAP_MLK: 1./3
+    beta_LAB_MLK: 2./3
+    b_BRD: 1.89
+    b_MLK: 1.98
+    # alpha(i)   : px(i)*X(i) / sum(i, px(i)*X(i))
+    # beta(h)(j) : pf(h)*F(h)(j) / sum(h, pf(h)*F(h)(j))
+    # b(j)       : Z(j) / prod(h, F(h)(j))
+    
+    
+    # Social Accounting Matrix
+    #          BRD   MLK   CAP   LAB   HOH
+    #    BRD    -     -      -     -    15
+    #    MLK    -     -      -     -    35
+    #    CAP    5     20     -     -    -
+    #    LAB    10    15     -     -    - 
+    #    HOH     -     -     25    25   - 
+    SAM(u)(v): [[0,  0,  0,  0,  15],
+                [0,  0,  0,  0,  35],
+                [5,  20, 0,  0,  0],
+                [10, 15, 0,  0,  0],
+                [0,  0,  25, 25, 0]]
+                
+   # Starting values
+    X(i)    : SAM(i)_HOH/px(i)
+    F(h)(j) : SAM(h)(j)
+    Z(j)    : X(j)
+    FF(h)   : SAM_HOH(h)
+    px(i)   : 1
+    pz(j)   : 1
+    pf(h)   : 1
+   
+objective_function: 
+    - prod(i, X(i)**alpha(i))
+   
+constraints:
+    - X(i)    > 0.0 
+    - Z(j)    > 0.0
+    - px(i)   > 0.0
+    - pz(j)   > 0.0
+    - pf_CAP  > 0.0
+    - pf_LAB  = 1.0 # fixed price (numerator)
+    - eqX(i)  = 0
+    - eqpz(j) = 0
+    - eqF(h)(j) = 0
+    - eqpx(i) = 0
+    - eqpf(h) = 0
+    - eqZ(i)  = 0
+   
+labels:
+   X :      'household consumption of the i-th good'
+   F :      'the h-th factor input by the j-th firm'
+   Z :      'output of the j-th good'
+   alpha :  'share parameter in utility function'
+   beta :   'share parameter in production function'
+   b :      'scale parameter in production function'
+   eqX :    'household demand function'
+   eqpz :   'production function'
+   eqF :    'factor demand function'
+   eqpx :   'good market clearing condition'
+   eqpf :   'factor market clearing condition'
+   eqZ :    'price equation'
+    
+Solver: 'trust-constr'   # 'SLSQP' #'trust-constr' 
+Method: 'Maximize'
+
+    
+
+
+   
+
+   
+   
