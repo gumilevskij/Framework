@@ -19,7 +19,7 @@ equations:
     - eqF(h)(j) : F(h)(j) - beta(h)(j)*pz(j)*Z(j)/pf(h)
     - eqpx(i)   : X(i)    - Z(i)
     - eqpf(h)   : FF(h)   - sum(j,F(h)(j))
-    - eqZ(i)    : px(i)  - pz(i)
+    - eqZ(i)    : px(i)   - pz(i)
 
 calibration:
     # parameters

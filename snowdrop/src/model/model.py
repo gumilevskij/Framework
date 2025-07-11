@@ -185,7 +185,7 @@ class Model:
             from snowdrop.src.preprocessor.eval_solver import evaluate
             from snowdrop.src.preprocessor.symbolic_eval import NumericEval
             
-            # x=dict(self.symbolic.calibration_dict)
+            x=dict(self.symbolic.calibration_dict)
             self.calibration_dict = evaluate(self.symbolic.calibration_dict)
     
             calib = calibration_to_vector(self.symbols,self.calibration_dict)

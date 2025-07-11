@@ -375,9 +375,7 @@ def getIndex(e,ind):
        
     return index
     
-
-
-
+    
 def expand_map(sets,indices,m):
     """
     Iterates thru a list of indices and categories, 
@@ -400,9 +398,9 @@ def expand_map(sets,indices,m):
     # Loop over indices
     for i,index in enumerate(indices):
         for k in m:
+            values = m[k]
             sub = "("+index+")"
-            if sub in k:
-                values = m[k]
+            if sub in k or sub in str(values):
                 for j,c in enumerate(sets[index]):
                     key = replace_all(sub,"_"+c,k)
                     if isinstance(values,list) and j < len(values):
@@ -433,11 +431,11 @@ def expand_map(sets,indices,m):
                             op = values[ind1+5:ind2-1] 
                             txt = expand_prod(sets,indices,op) 
                             values = values[:ind1] + txt + values[ind2:] 
-                        if not key in out: 
-                            out[key] = replace_all(sub,"_"+c,values)
+                        out[key] = replace_all(sub,"_"+c,values)
                     else:
                         if not key in out: 
                             out[key] = values 
+                        
             else:
                 if not k in out: 
                     out[k] = m[k]
@@ -521,204 +519,6 @@ def getLabels(keys,m):
             labels[k] = m[k]
             
     return labels    
-    
-        
-def importModel(fpath):
-    """
-    Parse a model file and create a model object.
-    
-    Parameters:
-        :param fpath: Path to model file.
-        :type fpath: str.
-        
-    """
-    global eqs_labels
-    import re
-    from model.symbolic import SymbolicModel
-    from model.model import Model
-    
-    name = "Model"
-    solver = None; method = None
-    symbols = {}; calibration = {}; constraints = {}; obj = {}; labels = {}; options = {}
-    variables = []; parameters = []; equations = []
-    
-    with open(fpath,  encoding='utf8') as f:
-        txt = f.read()
-        txt = txt.replace('^', '**')
-        data = yaml.load(txt, Loader=yaml.Loader)
-        # Model name
-        name = data.get('name','GAMS model')
-        # Model equations to solve
-        model_eqs = data.get('Model',[])
-        # Solver
-        solver = data.get('Solver',None)
-        # Method
-        method = data.get('Method',None)
-        # Sets section
-        _sets = data.get('sets',{})
-        indices = [x.split(" ")[-1].split("(")[0].strip() for x in _sets.keys()]
-        sets = {}
-        for k in _sets:
-            arr = list(filter(None,k.split(" ")))
-            k1 = k[:-len(arr[-1])].strip()
-            indx = arr[-1].strip()
-            if "(" in indx and ")" in indx:
-                ind1 = indx.index("(")
-                ind2 = indx.index(")")
-                k2 = indx[1+ind1:ind2].strip()
-                k3 = indx[:ind1].strip()
-            else:
-                k2 = None
-                k3 = indx
-            if isinstance(_sets[k],str) and _sets[k] in sets:
-                sets[k3] = sets[_sets[k]]
-            else:
-                sets[k3] = _sets[k]
-            # Check that all elements of map for key=k3 are subset of elements of this map for key=k2
-            if not k2 is None:
-                diff = set(sets[k3]) - set(sets[k2])
-                if len(diff) > 0:
-                    diff = ",".join(diff)
-                    cprint(f"\nMisspecified elements of set '{k1}': extra elements - {diff}.","red")
-                    sys.exit()
-                
-        # Symbols section
-        symbols = data.get('symbols',{})
-        variables = symbols.get('variables',[])
-        parameters = symbols.get('parameters',[])
-        
-        # Equations section
-        eqs = data.get('equations',[])
-        equations,complementarity = fix(eqs,model_eqs)
-        if not len(eqs) == len(equations):
-            cprint(f"\nNumber of model equations is {len(equations)} out of original {len(eqs)}.","red")
-            
-        # Calibration section
-        calibration = data.get('calibration',{})
-        # Constraints section
-        constr = data.get('constraints',{})
-        # Take subset of constraints that are defined in complementarity conditions
-        constraints = []; model_constraints = complementarity.values()
-        for c in constr:
-            if "(" in c:
-                ind = c.index("(")
-                k = c[:ind]
-                if bool(complementarity):
-                    if k in model_constraints:
-                        constraints.append(c)
-                else:
-                    constraints.append(c)
-            else:
-                constraints.append(c)
-                
-        # Print number of equations and variables
-        cprint(f"\nNumber of declared equations: {len(equations)}, variables: {len(variables)}, constraints: {len(constraints)}","blue")
-        
-        # Objective function section
-        obj = data.get('objective_function',{})
-        # Labels section
-        _labels = data.get('labels',{})
-        # Optional section
-        options = data.get('options',{})
-
-
-        # Expand expressions
-        if bool(obj):
-            obj     = expand(sets,indices,obj,objFunc=True)[0]
-        variables   = expand(sets,indices,variables)
-        parameters  = expand(sets,indices,parameters)
-        equations   = expand(sets,indices,equations,loop=True)        
-        
-        # Check number of equations and variables
-        if not len(equations) == len(variables) and not method in ["Minimize","minimize","Maximize","maximize"]:
-            cprint(f"\nNumber of equations {len(equations)} and variables {len(variables)} must be the same!  \nPlease correct the model file. Exitting...","red")
-            sys.exit()
-        else:
-            cprint(f"Number of expanded equations: {len(equations)}, parameters: {len(parameters)}","blue")
-               
-        calibration = expand(sets,indices,calibration)
-        constraints = expand(sets,indices,constraints)
-        # Labels
-        labels_keys = expand(sets,indices,list(_labels.keys()))
-        labels      = getLabels(labels_keys,_labels)
-        eqs_labels  = expand(sets,indices,eqs_labels)
-        equations_labels = []
-        for x in eqs_labels:
-            if x in labels:
-                equations_labels.append(x + "   -  " + labels[x])
-            else:
-                equations_labels.append(x)
-                
-        
-        # Read calibration values from excel file
-        options = data.get('options',{})
-        if "file" in options:
-            fname = options["file"]
-            del options["file"]
-            file_path = os.path.abspath(os.path.join(working_dir, "../..", fname))
-            if not os.path.exists(file_path):
-                cprint(f"\nFile {file_path} does not exist!\n","red")
-            xl = pd.ExcelFile(file_path)
-            sheet_names = xl.sheet_names
-            if "sheets" in options:
-                sheets = [ x for x in options["sheets"] if x in sheet_names]
-                del options["sheets"]
-            else:
-                sheets = sheet_names
-            for sh in sheets:
-                df = xl.parse(sh)
-                symbols = df.values[:,1:-1]
-                values = df.values[:,-1]
-                for x,y in zip(symbols,values):
-                    symb = sh+"_"+"_".join(x)
-                    calibration[symb] = y
-        
-    delimiters = " ",",","^","*","/","+","-","(",")","<",">","=","max","min"
-    regexPattern = '|'.join(map(re.escape, delimiters))
-    regexFloat = r'[+-]?[0-9]+\.[0-9]+'
-    # Resolve calibration references
-    nprev_str = 1; n_str = i = 0; m = {}
-    cal = calibration.copy()
-    while i < 2 or not nprev_str == n_str:
-        i += 1
-        nprev_str = n_str 
-        n_str = 0
-        for k in calibration:
-            val = cal[k]
-            if isinstance(val,str):
-                arr = re.split(regexPattern,val)
-                arr = list(filter(None,arr))
-                for x in arr:
-                    if not x in m and not x.isdigit() and not re.search(regexFloat,x):
-                        if x in variables and not x in cal:
-                            cal[x] = 0                       
-                        elif x in parameters and not x in cal:
-                            cal[x] = 1.e-10
-                        elif not x in parameters:
-                            m[x] = 0
-                try:
-                    val = eval(val,m,cal)
-                    cal[k] = float(np.real(val))
-                except:
-                    n_str += 1
-                
-    calibration = cal
-    if len(variables) < 10:
-        order = 2
-    else:
-        order = 1
-        
-    symbols = {'variables': variables, 'parameters': parameters, 'shocks': [], 'variables_labels': labels, 'equations_labels' : equations_labels}
-    smodel = SymbolicModel(model_name=name,symbols=symbols,equations=equations,calibration=calibration,constraints=constraints,objective_function=obj,definitions=[],order=order,options=options)
-    smodel.SOLVER = solver
-    smodel.METHOD = method
-    smodel.COMPLEMENTARITY_CONDITIONS = complementarity
-
-    infos = {'name': name,'filename': fpath}
-    model = Model(smodel, infos=infos)
-    model.eqLabels = eqs_labels
-    
-    return model
         
 
 def getLimits(var_names,constraints,cal):

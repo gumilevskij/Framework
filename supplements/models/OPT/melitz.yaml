@@ -47,13 +47,14 @@ calibration:
     mu            : 0.5
     a             : 4.6
     b             : 0.5
+    Nhrr          : 9
     c0(h)(r)      : 1
-    vx0(h)(r)(s)  : 1
     vx0(h)(r)(r)  : 3
+    vx0(h)(r)(s)  : 1
     Y0(h)(r)      : sum(s, vx0(h)(r)(s)) / c0(h)(r)
     M0(h)(r)      : 10
-    N0(h)(r)(s)   : (vx0(h)(r)(s) / vx0(h)(r)(r))**2 * N0(h)(r)(r)
-    N0(h)(r)(r)   : 9
+    N0(h)(r)(r)   : Nhrr
+    N0(h)(r)(s)   : (vx0(h)(r)(s) / vx0(h)(r)(r))**2 * Nhrr
     # Calibrate the sunk cost based on free entry
     delt_fs(h)(r) : Y0(h)(r) / M0(h)(r) * (sig-1)/(a*sig)
     # Calibrate the fixed cost based on zero cutoff profit
@@ -139,6 +140,6 @@ labels:
     SUP:  Input supply (output)
     
 Model: [DEM.P,DS.Q,FE.M,ZCP.N,DEMF.PF,MKUP.QF,PAR.PHI,MKT.c,SUP.Y]
-Solver: 'MCP'   # 'MCP', 'CONSTRAINED_OPTIMIZATION', 'ROOT'
+Solver: 'MCP'   # 'MCP','PATH', 'CONSTRAINED_OPTIMIZATION', 'ROOT'
 
     

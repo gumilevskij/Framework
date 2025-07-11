@@ -86,18 +86,6 @@ def solver(model):
         f = func(x)
         return sign*np.sum(f**2)
     
-    ### Objective function
-    def fobj(x):
-        global it
-        it += 1
-        loc = cal.copy()
-        for i,v in enumerate(var_names):
-            loc[v] = x[i]
-        f = sign*eval(obj_func,{},loc)
-        if np.isnan(f):
-            f = it + 1.e20
-        return f
-    
     # Function and Jacobian
     def func_jac(x):
         global it
@@ -197,7 +185,20 @@ def solver(model):
         #f = fun(model=model,y=np.vstack((x,x,x)),params=par_values,order=0)
         #print(f)
         return f
-
+    
+    ### Objective function
+    def fobj(x):
+        global it
+        it += 1
+        loc = cal.copy()
+        for i,v in enumerate(var_names):
+            loc[v] = x[i]
+        f = sign*eval(obj_func,{},loc)
+        #print(f"\n\n{f}: \n{dict(zip(var_names,x))}")
+        if np.isnan(f):
+            f = it + 1.e20
+        return f
+    
     # Get variables constraints
     Il,Iu,nlim,lower,upper = getLimits(var_names,constraints,cal)
     
@@ -215,7 +216,7 @@ def solver(model):
             A,lb,ub = getConstraints(n,constraints,cal,eqs_labels,jacobian)
             constraint = LinearConstraint(A,lb,ub)
         else:
-            if True: #nlim == 0: 
+            if True:
                 Lower, Upper = getNonlinearConstraints(constraints, eqs_labels, cal)
                 if not np.any(np.isnan(Lower)) and not np.any(np.isnan(Upper)):
                     constraint = NonlinearConstraint(func,Lower,Upper)

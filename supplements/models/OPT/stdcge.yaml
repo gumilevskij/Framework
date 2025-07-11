@@ -1,0 +1,275 @@
+name: A Standard CGE Model 
+# From Ch. 6 of Hosoe, N, Gasawa, K, and Hashimoto, "Handbook of Computable General Equilibrium Modeling".
+# In development...
+
+sets:
+   SAM_entry u: ['BRD', 'MLK', 'CAP', 'LAB', 'IDT', 'TRF', 'HOH', 'GOV', 'INV', 'EXT']
+   goods  i: ['BRD', 'MLK']
+   factor h: ['CAP', 'LAB']
+   goods alias j: i
+   factor alias k: h
+   SAM_entry alias v: u 
+   
+   
+symbols:
+   variables:  [Y(j),F(h)(j),X(i)(j),Z(j),Xp(i),Xg(i),Xv(i),E(i),M(i),Q(i),D(i),
+               pf(h),py(j),pz(j),pq(i),pe(i),pm(i),pd(i),epsilon,Sp,Sg,Td,Tz(j),Tm(i)]
+   parameters: [alpha(i),beta(h)(j),b(j),ax(i)(j),ay(j),mu(i),lambda(i),deltam(i),
+                deltad(i),gamma(i),xid(i),xie(i),theta(i),ssp,ssg,taud,FF(h),
+                sigma(i),psi(i),eta(i),phi(i),taum(i),tauz(j),Sp,Sg,Sf,pWe(i),pWm(i)]
+
+       
+equations:
+    # domestic production
+    - eqpy(j) :   Y(j)   - b(j)*prod(h, F(h)(j)**beta(h)(j))
+    - eqF(h)(j) : F(h)(j) - beta(h)(j)*py(j)*Y(j)/pf(h)
+    - eqX(i)(j) : X(i)(j) - ax(i)(j)*Z(j)
+    - eqY(j) :    Y(j)   - ay(j)*Z(j)
+    - eqpzs(j) :  pz(j)  - ay(j)*py(j) + sum(i, ax(i)(j)*pq(i))
+
+    # government behavior
+    - eqTd :      Td     - taud*sum(h, pf(h)*FF(h))
+    - eqTz(j) :   Tz(j)  - tauz(j)*pz(j)*Z(j)
+    - eqTm(i) :   Tm(i)  - taum(i)*pm(i)*M(i)
+    - eqXg(i) :   Xg(i)  - mu(i)*(Td + sum(j, Tz(j)) + sum(j, Tm(j)) - Sg)/pq(i)
+
+    # investment behavior
+    - eqXv(i) :   Xv(i)  - lambda(i)*(Sp + Sg + epsilon*Sf)/pq(i)
+
+    # savings
+    - eqSp :      Sp     - ssp*sum(h, pf(h)*FF(h))
+    - eqSg :      Sg     - ssg*(Td + sum(j, Tz(j)) + sum(j, Tm(j)))
+
+    # household consumption
+    - eqXp(i) :   Xp(i)  - alpha(i)*(sum(h, pf(h)*FF(h)) - Sp - Td)/pq(i)
+
+    # international trade
+    - eqpe(i) :   pe(i)  - epsilon*pWe(i)
+    - eqpm(i) :   pm(i)  - epsilon*pWm(i)
+    - eqepsilon : sum(i, pWe(i)*E(i)) + Sf - sum(i, pWm(i)*M(i))
+
+    # Armington function
+    - eqpqs(i) :  Q(i)   -  gamma(i)*(deltam(i)*M(i)**eta(i) + deltad(i)*D(i)**eta(i))**(1/eta(i))
+    - eqM(i) :    M(i)   - (gamma(i)**eta(i)*deltam(i)*pq(i)/((1+taum(i))*pm(i)))**(1/(1-eta(i)))*Q(i)
+    - eqD(i) :    D(i)   - (gamma(i)**eta(i)*deltad(i)*pq(i)/pd(i))**(1/(1-eta(i)))*Q(i)
+
+    # transformation function
+    - eqpzd(i) :  Z(i)   -  theta(i)*(xie(i)*E(i)**phi(i)+xid(i)*D(i)**phi(i))**(1/phi(i))
+    - eqE(i) :    E(i)   - (theta(i)**phi(i)*xie(i)*(1+tauz(i))*pz(i)/pe(i))**(1/(1-phi(i)))*Z(i)
+    - eqDs(i) :   D(i)   - (theta(i)**phi(i)*xid(i)*(1+tauz(i))*pz(i)/pd(i))**(1/(1-phi(i)))*Z(i)
+
+    # market clearing condition
+    - eqpqd(i) :  Q(i)   - Xp(i) + Xg(i) + Xv(i) + sum(j, X(i)(j))
+    - eqpf(h) :   sum(j, F(h)(j)) - FF(h)
+
+calibration:
+    # parameters
+    alpha(i)  :  Xp(i)/sum(j, Xp(j))
+    beta(h)(j) : F(h)(j)/sum(k, F(k)(j))
+    b(j)      :  Y(j)/prod(h, F(h)(j)**beta(h)(j))
+    ax(i)(j)  :  X(i)(j)/Z(j)
+    ay(j)     :  Y(j)/Z(j)
+    mu(i)     :  Xg(i)/sum(j, Xg(j))
+    lambda(i) :  Xv(i)/(Sp+Sg+Sf)
+    deltam(i) :  (1+taum(i))*M(i)**(1-eta(i))/((1+taum(i))*M(i)**(1-eta(i)) + D(i)**(1-eta(i)))
+    deltad(i) :  D(i)**(1-eta(i))/((1+taum(i))*M(i)**(1-eta(i)) + D(i)**(1-eta(i)))
+    gamma(i)  :  Q(i)/(deltam(i)*M(i)**eta(i)+deltad(i)*D(i)**eta(i))**(1/eta(i))
+    xie(i)    :  E(i)**(1-phi(i))/(E(i)**(1-phi(i))+D(i)**(1-phi(i)))
+    xid(i)    :  D(i)**(1-phi(i))/(E(i)**(1-phi(i))+D(i)**(1-phi(i)))
+    theta(i)  :  Z(i)/(xie(i)*E(i)**phi(i)+xid(i)*D(i)**phi(i))**(1/phi(i))
+    ssp       :  Sp / sum(h, FF(h))
+    ssg       :  Sg / (Td+sum(j, Tz(j))+sum(j, Tm(j)))
+    taud      :  Td / sum(h, FF(h))
+    sigma(i)  :  2
+    psi(i)    :  2
+    eta(i)    :  (sigma(i) - 1)/sigma(i)
+    phi(i)    :  (psi(i) + 1)/psi(i)
+    # Simulation Runs: Abolition of Import Tariffs
+    taum(i)   :  0
+    #taum(j)   : Tm(j)/M(j)
+        
+    # Social Accounting Matrix
+    #            BRD   MLK   CAP   LAB   IDT   TRF   HOH   GOV   INV   EXT
+    #     BRD    21     8                            20    19    16     8
+    #     MLK    17     9                            30    14    15     4
+    #     CAP    20    30
+    #     LAB    15    25
+    #     IDT     5     4
+    #     TRF     1     2
+    #     HOH                50    40
+    #     GOV                             9     3    23
+    #     INV                                        17     2          12
+    #     EXT    13    11                                                
+    SAM(u)(v): [[21,   8,     0,   0,     0,    0,   20,    19,   16,   8],
+                [17,   9,     0,   0,     0,    0,   30,    14,   15,   4],
+                [20,   30,    0,   0,     0,    0,    0,    0,    0,    0],
+                [15,   25,    0,   0,     0,    0,    0,    0,    0,    0],
+                [5,     4,    0,   0,     0,    0,    0,    0,    0,    0],
+                [1,     2,    0,   0,     0,    0,    0,    0,    0,    0],
+                [0,     0,    50,  40,    0,    0,    0,    0,    0,    0],
+                [0,     0,    0,   0,     9,    3,    23,   0,    0,    0],
+                [0,     0,    0,   0,     0,    0,    17,   2,    0,    12],
+                [13,    11,   0,   0,     0,    0,    0,    0,    0,    0 ]
+               ]
+                
+   # Variables starting values
+    Td      : SAM_GOV_HOH
+    Tz(j)   : SAM_IDT(j)
+    Tm(j)   : SAM_TRF(j)
+    F(h)(j) : SAM(h)(j)
+    Y(j)    : sum(h, F(h)(j))
+    X(i)(j) : SAM(i)(j)
+    Z(j)    : Y(j) +sum(i, X(i)(j))
+    M(i)    : SAM_EXT(i)
+    tauz(j) : Tz(j)/Z(j)
+    Xp(i)   : SAM(i)_HOH
+    FF(h)   : SAM_HOH(h)
+    Xg(i)   : SAM(i)_GOV
+    Xv(i)   : SAM(i)_INV
+    E(i)    : SAM(i)_EXT
+    Q(i)    : Xp(i)+Xg(i)+Xv(i)+sum(j, X(i)(j))
+    D(i)    : (1+tauz(i))*Z(i)-E(i)
+    Sp      : SAM_INV_HOH
+    Sg      : SAM_INV_GOV
+    Sf      : SAM_INV_EXT
+    pq(i)   : 1
+    pe(i)   : 1
+    pd(i)   : 1    
+    pm(i)   : 1
+    pf(h)   : 1
+    py(j)   : 1
+    pz(j)   : 1
+    pWe(i)  : 1
+    pWm(i)  : 1
+    epsilon : 1
+   
+objective_function: 
+    - prod(i, Xp(i)**alpha(i))
+   
+constraints:
+    # Variables
+    - X(i)(j)  > 1.e-3 
+    - Y(j)     > 1.e-3
+    - Z(j)     > 1.e-3
+    - Xp(i)    > 1.e-3
+    - Xv(i)    > 1.e-3
+    - Tm(i)    > 1.e-3
+    - Tz(j)    > 1.e-3
+    - E(i)     > 1.e-3
+    - pf_CAP   > 1.e-3
+    - pf_LAB   = 1.0 # fixed price (numerator)
+
+    # Equations
+    - eqpy(j)  = 0
+    - eqF(h)(j) = 0
+    - eqX(i)(j) = 0
+    - eqY(j) = 0
+    - eqpzs(j) = 0
+    - eqTd = 0
+    - eqTz(j) = 0
+    - eqTm(i) = 0
+    - eqXg(i) = 0
+    - eqXv(i) = 0
+    - eqSp = 0
+    - eqSg = 0
+    - eqXp(i) = 0
+    - eqpe(i) = 0
+    - eqpm(i) = 0
+    - eqepsilon = 0
+    - eqpqs(i) = 0
+    - eqM(i) = 0
+    - eqpzd(i) = 0
+    - eqE(i) = 0
+    - eqDs(i) = 0
+    - eqpqd(i) = 0
+    - eqpf(h) = 0
+   
+labels:
+   # Variables
+   Y :      'composite factor'
+   F :      'the h-th factor input by the j-th firm'
+   X :      'intermediate input'
+   Z :      'output of the j-th good'
+   Xp :     'household consumption of the i-th good'
+   Xg :     'government consumption'
+   Xv :     'investment demand'
+   E :      'exports'
+   M :      'imports'
+   Q :      'Armington composite good'
+   D :      'domestic good'
+   pf :     'the h-th factor price'
+   py :     'composite factor price'
+   pz :     'supply price of the i-th good'
+   pq :     'Armington composite good price'
+   pe :     'export price in local currency'
+   pm :     'import price in local currency'
+   pd :     'the i-th domestic good price'
+   epsilon : 'exchange rate'
+   Sp :     'private saving'
+   Sg :     'government saving'
+   Td :     'direct tax'
+   Tz :     'production tax'
+   Tm :     'import tariff'
+
+   # Equations
+   eqpy :   'composite factor aggregate function'
+   eqF :    'factor demand function'
+   eqX :    'intermediate demand function'
+   eqY :    'composite factor demand function'
+   eqpzs :  'unit cost function'
+   eqTd :   'direct tax revenue function'
+   eqTz :   'production tax revenue function'
+   eqTm :   'import tariff revenue function'
+   eqXg :   'government demand function'
+   eqXv :   'investment demand function'
+   eqSp :   'private saving function'
+   eqSg :   'government saving function'
+   eqXp :   'household demand function'
+   eqpe :   'world export price equation'
+   eqpm :   'world import price equation'
+   eqepsilon : 'balance of payments'
+   eqpqs :  'Armington function'
+   eqM :    'import demand function'
+   eqD :    'domestic good demand function'
+   eqpzd :  'transformation function'
+   eqDs :   'domestic good supply function'
+   eqE :    'export supply function'
+   eqpqd :  'market clearing cond. for comp. good'
+   eqpf :   'factor market clearing condition'
+
+   # Parameter
+   alpha :  'share parameter in utility function'
+   beta :   'share parameter in production function'
+   b :      'scale parameter in production function'
+   ax :     'intermediate input requirement coefficient'
+   ay :     'composite factor input coefficient'
+   mu :     'government consumption share'
+   lambda : 'investment demand share'
+   deltam : 'share parameter in Armington function'
+   deltad : 'share parameter in Armington function'
+   gamma :  'scale parameter in Armington function'
+   xid :    'share parameter in transformation function'
+   xie :    'share parameter in transformation function'
+   theta :  'scale parameter in transformation function'
+   ssp :    'average propensity for private saving'
+   ssg :    'average propensity for gov. saving'
+   taud :   'direct tax rate'
+   sigma :  'elasticity of substitution'
+   psi  :   'elasticity of transformation'
+   eta  :   'substitution elasticity parameter'
+   phi :    'transformation elasticity parameter'
+   taum :   'import tariff rate'
+   tauz :   'production tax rate'
+   pWe :    'export price in US dollars'
+   pWm :    'import price in US dollars'
+    
+Solver: 'SLSQP'   # 'SLSQP' #'trust-constr' 
+Method: 'Maximize'
+
+    
+
+
+   
+
+   
+   

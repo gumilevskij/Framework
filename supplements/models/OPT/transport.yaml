@@ -25,10 +25,10 @@ objective_function:
    - sum(i;j, cost(i)(j)*x(i)(j)) # Total shipment cost
 
 constraints:
-    - Supply(i) < a(i)
-    - Supply(i) >= 0
-    - Demand(j) > b(j)
-    - x(i)(j)   >= 0
+   - Supply(i) < a(i)
+   - Supply(i) >= 0
+   - Demand(j) > b(j)
+   - x(i)(j)   >= 0
 
 labels:
     x: Shipment quantities in cases
