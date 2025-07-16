@@ -1390,16 +1390,16 @@ def run(fname=None,model=None,y0=None,order=1,T=-1,Tmax=1.e6,irf=False,prefix=No
         if len(ev) > 0 and max(abs(ev)) < 10: 
             plotEigenValues(path_to_dir=figures_dir,ev=ev)
             
-        if decomp_variables is None:
-            print("Plotting Endogenous Variables")
-            var_labels = model.symbols.get("variables_labels",{})
-            plot(path_to_dir=figures_dir,data=y,variable_names=variables,
-                 meas_values=meas_df,meas_variables=measurement_variables,
-                 lrx_filter=lrx_filter,hp_filter=hp_filter,Tmax=Tmax,
-                 output_variables=output_variables,var_labels=var_labels,
-                 prefix=prefix,rng=rng,rng_meas=rng_meas,irf=irf,header=header,
-                 Npaths=Npaths,save=Output) # ,steady_state=ss
-        else:
+        print("Plotting Endogenous Variables")
+        var_labels = model.symbols.get("variables_labels",{})
+        plot(path_to_dir=figures_dir,data=y,variable_names=variables,
+             meas_values=meas_df,meas_variables=measurement_variables,
+             lrx_filter=lrx_filter,hp_filter=hp_filter,Tmax=Tmax,
+             output_variables=output_variables,var_labels=var_labels,
+             prefix=prefix,rng=rng,rng_meas=rng_meas,irf=irf,header=header,
+             Npaths=Npaths,save=Output) # ,steady_state=ss
+       
+        if bool(decomp_variables):
             print("Plotting Decomposition of Endogenous Variables")
             plotDecomposition(path_to_dir=figures_dir,model=model,y=np.squeeze(y),
                               variables_names=variables,decomp_variables=decomp_variables,periods=periods,

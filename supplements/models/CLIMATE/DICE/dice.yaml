@@ -1,0 +1,329 @@
+name:  Dynamic Integrated Climate-Economy model
+
+symbols:
+   variables: [E,EIND,CCA,CCATOT,FORC,DAMFRAC,DAMAGES,ABATECOST,MCABATE,MAT,
+               ML,MU,TATM,TOCEAN,YGROSS,YNET,Y,CPC,K,C,I,RI,CEMUTOTPER,COSTS]  
+    
+   parameters: [t,tstep,elasmu,prstp,gama,popadj,popasym,dk,dsig,a1,a2,a3,
+                b11,b12,b21,b22,b23,b32,b33,t2xco2,c1,c3,c4,fco22x,eland0,
+                expcost2,pback,gback,MIU,SR,limmiu,miu0,dela,pbacktime,
+                deland,rr,fex0,fex1,forcoth,ga0,L,Al,gsig,sigma,
+                cost1,etree,cumetree,scale1,scale2,optlrsav]
+
+equations:
+    ### Equations related to emissions of carbon and weather damages
+    
+    #Capital dynamics Eq. 13
+  - K = (1-dk)**tstep * K(-1) + tstep * I(-1)
+  
+    # Retuns the total carbon emissions; Eq. 18
+  - E = EIND + etree
+    
+    #Eq.14: Determines the emission of carbon by industry EIND
+  - EIND = sigma * YGROSS * (1 - MIU)
+    
+    #Cumulative industrial emission of carbon
+  - CCA = CCA(-1) + EIND * 5 / 3.666
+    
+    #Cumulative total carbon emission
+  - CCATOT = CCA + cumetree
+    
+    #Eq. 22: the dynamics of the radiative forcing
+  - FORC = fco22x * log(MAT/588.0)/log(2) + forcoth
+    
+    # Dynamics of Omega; Eq.9
+  - DAMFRAC = a1*TATM + a2*TATM**a3
+    
+    #Calculate damages as a function of Gross industrial production; Eq.8 
+  - DAMAGES = YGROSS * DAMFRAC
+    
+    #Dynamics of Lambda; Eq. 10 - cost of the reduction of carbon emission (Abatement cost)
+  - ABATECOST = YGROSS * cost1 * MIU**expcost2
+    
+    #Marginal Abatement cost (price of carbon reduction)
+  - MCABATE = pbacktime * MIU**(expcost2-1)
+    
+    #Eq. 19: Dynamics of the carbon concentration in the atmosphere
+  - MAT = MAT(-1)*b11 + MU(-1)*b21 + E(-1) * 5/3.666
+    
+    #Eq. 21: Dynamics of the carbon concentration in the ocean LOW level
+  - ML = ML(-1) * b33  + MU(-1) * b23
+    
+    #Eq. 20: Dynamics of the carbon concentration in the ocean UP level
+  - MU = MAT(-1)*b12 + MU(-1)*b22 + ML(-1)*b32
+    
+    #Eq. 23: Dynamics of the atmospheric temperature
+  - TATM = TATM(-1) + c1 * (FORC - (fco22x/t2xco2) * TATM(-1) - c3 * (TATM(-1) - TOCEAN(-1)))
+    
+    #Eq. 24: Dynamics of the ocean temperature
+  - TOCEAN = TOCEAN(-1) + c4 * (TATM(-1) - TOCEAN(-1))
+    
+    ### Equations related to economic variables
+    #The total production without climate losses denoted previously by YGROSS
+  - YGROSS = Al * ((L/1000)**(1-gama)) * K(1)**gama
+    
+    #Abatement and damages costs
+  - COSTS = YGROSS - Y
+    
+    #The production under the climate damages cost
+  - YNET = YGROSS * (1-DAMFRAC)
+    
+    #Production after abatement cost
+  - Y = YNET - ABATECOST
+    
+    #Consumption Eq. 11
+  - C = Y - I
+    
+    #Per capita consumption, Eq. 12
+  - CPC = 1000 * C / L
+    
+    #Saving policy: investment
+  - I = SR * Y 
+    
+    #Interest rate equation; Eq. 26 
+  - RI = (1 + prstp) * (CPC(1)/CPC)**(elasmu/tstep) - 1
+    
+    ### Equations realted to utility function
+    #Periodic utlity: A form of Eq. 2
+  - CEMUTOTPER = (((C(1)*1000/L)**(1-elasmu)-1)/(1-elasmu)-1) * L * rr
+
+    
+calibration:
+    ### Initial values of endogenous variable
+    L : pop0
+    Al : a0
+    gsig : gsigma1
+    sigma : sig0
+    cost1 : 0
+    cumetree : 100
+    E : EIND + etree
+    EIND : sigma * YGROSS * (1 - MIU)
+    CCA : 0
+    CCATOT : CCA + cumetree
+    FORC : fco22x * log(MAT/588.0)/log(2) + forcoth
+    DAMFRAC : 0
+    DAMAGES : 0
+    ABATECOST : YGROSS * cost1 * MIU**expcost2
+    MCABATE : pbacktime * MIU**(expcost2-1)
+    MAT : mat0
+    ML : ml0
+    MU : mu0
+    TATM : tatm0
+    TOCEAN : 0
+    YGROSS : Al * ((L/1000)**(1-gama)) * K**gama
+    YNET : YGROSS * (1 - DAMFRAC)
+    COSTS : YGROSS - Y
+    Y : YNET - ABATECOST
+    CPC : 1000 * C / L
+    K : k0
+    C : Y - I
+    I : SR * Y 
+    RI : prstp
+    CEMUTOTPER : (((C*1000/L)**(1-elasmu) - 1) / (1 - elasmu) - 1) * L * rr
+    etree : eland0
+    
+    ### Parameters
+    fosslim : 6000  # Maximum cumulative extraction fossil fuels (GtC); denoted by CCum
+    tstep  : 5      # Years per Period
+    ifopt  : 0      # Indicator where optimized is 1 and base is 0
+    rr : 1          # Discount factor
+    t : 0           # Time
+    
+    ### Preferences
+    elasmu : 1.45     # Elasticity of marginal utility of consumption
+    prstp :  0.015    # Initial rate of social time preference per year 
+    SR :     0.2      # Saving rate
+    pbacktime : pback # Backstop price
+    
+    ### Population and technology
+    gama  :   0.300  # Capital elasticity in production function
+    pop0  :   7403   # Initial world population 2015 (millions)
+    popadj :  0.134  # Growth rate to calibrate to 2050 pop projection
+    popasym : 11500  # Asymptotic population (millions)
+    dk  :     0.100  # Depreciation rate on capital (per year)
+    q0  :     105.5  # Initial world gross output 2015 (trill 2010 USD)
+    k0  :     223    # Initial capital value 2015 (trill 2010 USD)
+    a0  :     5.115  # Initial level of total factor productivity
+    ga0  :    0.0 #0.076  # Initial growth rate for TFP per 5 years
+    dela :    0.005  # Decline rate of TFP per 5 years
+    
+    ### Emissions parameters
+    gsigma1 : -0.0152 # Initial growth of sigma (per year) 
+    dsig  :   -0.001  # Decline rate of decarbonization (per period)
+    eland0 :  2.6     # Carbon emissions from land 2015 (GtCO2 per year)
+    deland :  0.115   # Decline rate of land emissions (per period)
+    e0 :      35.85   # Industrial emissions 2015 (GtCO2 per year)
+    miu0 :    0.3 #ag 0.03    # Initial emissions control rate for base case 2015
+    MIU :     miu0    # Emissions control rate
+    forcoth : 0       # The radiative forcing parameter
+    
+    ### Carbon cycle
+    # Initial Conditions
+    mat0 :  800 #851     # Initial Concentration in atmosphere 2015 (GtC)
+    mu0  :  460     # Initial Concentration in upper strata 2015 (GtC)
+    ml0  :  1740    # Initial Concentration in lower strata 2015 (GtC)
+    mateq : 588     # Equilibrium concentration atmosphere  (GtC)
+    mueq :  360     # Equilibrium concentration in upper strata (GtC)
+    mleq :  1720    # Equilibrium concentration in lower strata (GtC)
+    
+    ### Flow paramaters
+    b12 :  0.12     # Carbon cycle transition matrix
+    b23 :  0.007    # Carbon cycle transition matrix
+    
+    ### Climate model parameters
+    t2xco2 : 3.1     # Equilibrium temp impact (oC per doubling CO2)
+    fex0 :   0.5     # 2015 forcings of non-CO2 GHG (Wm-2)
+    fex1 :   1.0     # 2100 forcings of non-CO2 GHG (Wm-2)
+    tocean0: 0.0068  # Initial lower stratum temp change (C from 1900)
+    tatm0 :  0.85    # Initial atmospheric temp change (C from 1900)
+    c1 :     0.1005  # Climate equation coefficient for upper level
+    c3 :     0.088   # Transfer coefficient upper to lower stratum
+    c4 :     0.025   # Transfer coefficient for lower level
+    fco22x : 3.6813  # eta in the model; Eq.22 : Forcings of equilibrium CO2 doubling (Wm-2)
+    
+    ### Climate damage parameters
+    a10 : 0         # Initial damage intercept
+    a20 : a2        # Initial damage quadratic term
+    a1 :  0         # Damage intercept
+    a2 :  0.00236   # Damage quadratic term
+    a3 :  2.00      # Damage exponent
+    
+    ### Abatement cost
+    expcost2: 2.6   # Theta2 in the model, Eq. 10 Exponent of control cost function
+    pback  :  550   # Cost of backstop 2010$ per tCO2 2015
+    gback  :  0.025 # Initial cost decline backstop cost per period
+    limmiu  : 1.2   # Upper limit on control rate after 2150
+    tnopol  : 45    # Period before which no emissions controls base
+    
+    # Scaling and inessential parameters
+    # Note that these are unnecessary for the calculations
+    # They ensure that MU of first period's consumption :1 and PV cons = PV utilty
+    scale1  :  0.0302455265681763  # Multiplicative scaling coefficient
+    scale2  : -10993.704           # Additive scaling coefficient
+    
+    ### Parameters for long-run consistency of carbon cycle 
+    b11 : 1 - b12
+    b21 : b12*mateq/mueq
+    b22 : 1 - b21 - b23
+    b32 : b23*mueq/mleq
+    b33 : 1 - b32
+    
+    ### Miscellaneous parameters
+    sig0 :     e0/(q0*(1-miu0)) # From Eq. 14
+    lam :      fco22x/ t2xco2 # From Eq. 25
+    optlrsav : (dk + .004)/(dk + .004*elasmu + prstp)*gama 
+    
+labels:
+    fosslim :   Maximum cumulative extraction fossil fuels (GtC)
+    tstep  :    Years per Period
+    ifopt  :    Indicator where optimized is 1 and base is 0
+    rr :        Discount factor
+    CEMUTOTPER: Periodic utility
+    L :         Labor force
+    K :         Capital
+    Al :        Level of total factor productivity
+
+    ### Plots
+    TATM :      Increase of the atmosphere temperature
+    TOCEAN :    Increase of the ocean temperature
+    MU :        Carbon concentration increase in the upper ocean layer (GtC)
+    ML :        Carbon concentration increase in the lower deep ocean layer (GtC)
+    DAMAGES:    Damages (trillions 2010 USD per year)
+    DAMFRAC :   Damages as fraction of gross output
+    ABATECOST : Cost of emissions reductions (trillions 2010 USD per year)
+    MCABATE :   Marginal abatement cost (2010 USD per ton CO2)
+    MIU :       Carbon emission control rate
+    E :         Total CO2 emission (GtCO2 per year)
+    MAT :       Carbon concentration increase in the atmosphere (GtC)
+    FORC :      Increase in radiative forcing (watts per m2)
+    RI :        Real interest rate
+    C :         Consumption (trillions 2010 USD per year)
+    Y :         Gross product net of abatement and damages (trillions 2010 USD per year)
+    YGROSS :    World gross product (trillions 2010 USD per year)
+    YNET :      The production under the climate damages cost
+    COSTS :     Abatement and damages costs (trillions 2010 USD per year)
+    S :         The saving rate (the investment as a fraction of net product)
+    I :         Investment (trillions 2010 USD per year)
+    CPC :       Per capita consumption
+    EIND :      Emission of carbon by industry
+    
+    ### Preferences
+    elasmu :   Elasticity of saving rate (the investment as a fraction of net product)f marginal utility of consumption
+    prstp :    Initial rate of social time preference per year 
+
+    ### Population and technology
+    gama  :    Capital elasticity in production function
+    pop0  :    Initial world population 2015 (millions)
+    popadj :   Growth rate to calibrate to 2050 pop projection
+    popasym :  Asymptotic population (millions)
+    dk  :      Depreciation rate on capital (per year)
+    q0  :      Initial world gross output 2015 (trill 2010 USD)
+    k0  :      Initial capital value 2015 (trill 2010 USD)
+    a0  :      Initial level of total factor productivity
+    ga0  :     Initial growth rate for TFP per 5 years
+    dela  :    Decline rate of TFP per 5 years
+    
+    ### Emissions parameters
+    gsigma1  : Initial growth of sigma (per year)
+    dsig  :    Decline rate of decarbonization (per period)
+    eland0 :   Carbon emissions from land 2015 (GtCO2 per year)
+    deland :   Decline rate of land emissions (per period)
+    cumetree : Cummulative carbon emissions from land
+    e0 :       Industrial emissions 2015 (GtCO2 per year)
+    miu0 :     Initial emissions control rate for base case 2015
+    
+    ### Carbon cycle
+    # Initial Conditions
+    mat0 :     Initial Concentration in atmosphere 2015 (GtC)
+    mu0  :     Initial Concentration in upper strata 2015 (GtC)
+    ml0  :     Initial Concentration in lower strata 2015 (GtC)
+    mateq :    Equilibrium concentration atmosphere  (GtC)
+    mueq  :    Equilibrium concentration in upper strata (GtC)
+    mleq :     Equilibrium concentration in lower strata (GtC)
+    
+    ### Flow paramaters, denoted by Phi_ij in the model
+    b12  :     Carbon cycle transition matrix
+    b23  :     Carbon cycle transition matrix
+    # These are for declaration and are defined later
+    b11  :     Carbon cycle transition matrix
+    b21  :     Carbon cycle transition matrix
+    b22  :     Carbon cycle transition matrix
+    b32  :     Carbon cycle transition matrix
+    b33  :     Carbon cycle transition matrix
+    sig0  :    Carbon intensity 2010 (kgCO2 per output 2005 USD 2010)
+    
+    ### Climate model parameters
+    t2xco2 :   Equilibrium temp impact (oC per doubling CO2)
+    fex0  :    2015 forcings of non-CO2 GHG (Wm-2)
+    fex1  :    2100 forcings of non-CO2 GHG (Wm-2)
+    tocean0 :  Initial lower stratum temp change (C from 1900)
+    tatm0  :   Initial atmospheric temp change (C from 1900)
+    c1  :      Climate equation coefficient for upper level
+    c3  :      Transfer coefficient upper to lower stratum
+    c4  :      Transfer coefficient for lower level
+    fco22x  :  eta in the model; Eq.22 Forcings of equilibrium CO2 doubling (Wm-2)
+    
+    ### Climate damage parameters
+    a10  :     Initial damage intercept
+    a20  :     Initial damage quadratic term
+    a1  :      Damage intercept
+    a2  :      Damage quadratic term
+    a3  :      Damage exponent
+    
+    ### Abatement cost
+    expcost2 : Theta2 in the model, Eq. 10 Exponent of control cost function
+    pback  :   Cost of backstop 2010$ per tCO2 2015
+    gback  :   Initial cost decline backstop cost per period
+    limmiu  :  Upper limit on control rate after 2150
+    tnopol  :  Period before which no emissions controls base
+    CCA :      Cumulative industrial emission of carbon
+    
+    ### Scaling and inessential parameters
+    # Note that these are unnecessary for the calculations
+    # They ensure that MU of first period's consumption :1 and PV cons = PV utilty
+    scale1  :  Multiplicative scaling coefficient
+    scale2  :  Additive scaling coefficient
+    optlrsav : Optimal long-run savings rate used for transversality
+
+options:
+    T : 202    

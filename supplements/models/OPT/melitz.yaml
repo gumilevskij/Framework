@@ -1,5 +1,7 @@
 name: Melitz Trade Equilibrium model with Iceberg Costs
-      # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.701.8908&rep=rep1&type=pdf
+# Ch.23. Computing General Equilibrium Theories of Monopolistic Competition and Heterogeneous Firms
+# by Edward J. Balistreri, Thomas F. Rutherford
+# https://www.sciencedirect.com/science/article/pii/B9780444595683000237
 
 sets:
    regions r:   [R1, R2, R3]
@@ -53,8 +55,8 @@ calibration:
     vx0(h)(r)(s)  : 1
     Y0(h)(r)      : sum(s, vx0(h)(r)(s)) / c0(h)(r)
     M0(h)(r)      : 10
-    N0(h)(r)(r)   : Nhrr
     N0(h)(r)(s)   : (vx0(h)(r)(s) / vx0(h)(r)(r))**2 * Nhrr
+    N0(h)(r)(r)   : Nhrr
     # Calibrate the sunk cost based on free entry
     delt_fs(h)(r) : Y0(h)(r) / M0(h)(r) * (sig-1)/(a*sig)
     # Calibrate the fixed cost based on zero cutoff profit

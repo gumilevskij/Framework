@@ -20,7 +20,7 @@ def createGraph(model,img_file_name="Equations_Graph.png"):
     """
     import pydot
     from snowdrop.src.utils.util import findVariableLead,findVariableLag
-    from snowdrop.src.grahs.graph import Graph
+    from snowdrop.src.info.graph import Graph
         
     delimiters = " ", ",", ";", "*", "/", ":", "+", "-", "^", "{", "}", "(", ")"
     regexPattern = '|'.join(map(re.escape, delimiters))

@@ -1,0 +1,513 @@
+GAMS 49.6.1  55d34574 May 28, 2025          WEX-WEI x86 64bit/MS Windows - 07/07/25 16:54:02 Page 1
+A Simple CGE Model in Ch. 5 (SPLCGE,SEQ=275)
+C o m p i l a t i o n
+
+
+   2   
+      No description.
+       
+       
+      Hosoe, N, Gasawa, K, and Hashimoto, H
+      Handbook of Computible General Equilibrium Modeling
+      University of Tokyo Press, Tokyo, Japan, 2004
+       
+      Keywords: nonlinear programming, general equilibrium model, social accounting
+                matrix, utility maximization problem
+  14   
+  15  Set
+  16     u    'SAM entry' / BRD, MLK, CAP, LAB, HOH /
+  17     i(u) 'goods'     / BRD, MLK                /
+  18     h(u) 'factor'    /           CAP, LAB      /;
+  19   
+  20  Alias (u,v), (i,j), (h,k);
+  21   
+  22  Table SAM(u,v) 'social accounting matrix'
+  23           BRD   MLK   CAP   LAB   HOH
+  24     BRD                            15
+  25     MLK                            35
+  26     CAP     5    20
+  27     LAB    10    15
+  28     HOH                25    25      ;
+  29   
+  30  * Loading the initial values
+  31  Parameter
+  32     X0(i)   'household consumption of the i-th good'
+  33     F0(h,j) 'the h-th factor input by the j-th firm'
+  34     Z0(j)   'output of the j-th good'
+  35     FF(h)   'factor endowment of the h-th factor';
+  36   
+  37  X0(i)   = SAM(i,"HOH");
+  38  F0(h,j) = SAM(h,j);
+  39  Z0(j)   = sum(h, F0(h,j));
+  40  FF(h)   = SAM("HOH",h);
+  41   
+  42  display X0, F0, Z0, FF;
+  43   
+  44  * Calibration
+  45  Parameter
+  46     alpha(i)  'share parameter in utility function'
+  47     beta(h,j) 'share parameter in production function'
+  48     b(j)      'scale parameter in production function';
+  49   
+  50  alpha(i)  = X0(i)/sum(j, X0(j));
+  51  beta(h,j) = F0(h,j)/sum(k, F0(k,j));
+  52  b(j)      = Z0(j)/prod(h, F0(h,j)**beta(h,j));
+  53   
+  54  display alpha, beta, b;
+  55   
+  56  Variable
+  57     X(i)   'household consumption of the i-th good'
+  58     F(h,j) 'the h-th factor input by the j-th firm'
+  59     Z(j)   'output of the j-th good'
+  60     px(i)  'demand price of the i-th good'
+  61     pz(j)  'supply price of the i-th good'
+  62     pf(h)  'the h-th factor price'
+  63     UU     'utility [fictitious]';
+  64   
+  65  Equation
+  66      eqX(i)   'household demand function'
+  67      eqpz(i)  'production function'
+  68      eqF(h,j) 'factor demand function'
+  69      eqpx(i)  'good market clearing condition'
+  70      eqpf(h)  'factor market clearing condition'
+  71      eqZ(i)   'price equation'
+  72      obj      'utility function [fictitious]';
+  73   
+  74  eqX(i)..   X(i)   =e= alpha(i)*sum(h, pf(h)*FF(h))/px(i);
+  75   
+  76  eqpz(j)..  Z(j)   =e= b(j)*prod(h, F(h,j)**beta(h,j));
+  77   
+  78  eqF(h,j).. F(h,j) =e= beta(h,j)*pz(j)*Z(j)/pf(h);
+  79   
+  80  eqpx(i)..  X(i)   =e= Z(i);
+  81   
+  82  eqpf(h)..  sum(j, F(h,j)) =e= FF(h);
+  83   
+  84  eqZ(i)..   px(i)  =e= pz(i);
+  85   
+  86  obj..      UU     =e= prod(i, X(i)**alpha(i));
+  87   
+  88  * Initializing variables
+  89  X.l(i)   = X0(i);
+  90  F.l(h,j) = F0(h,j);
+  91  Z.l(j)   = Z0(j);
+  92  px.l(i)  = 1;
+  93  pz.l(j)  = 1;
+  94  pf.l(h)  = 1;
+  95   
+  96  * Setting lower bounds to avoid division by zero
+  97  X.lo(i)   = 0.001;
+  98  F.lo(h,j) = 0.001;
+  99  Z.lo(j)   = 0.001;
+ 100  px.lo(i)  = 0.001;
+ 101  pz.lo(j)  = 0.001;
+ 102  pf.lo(h)  = 0.001;
+ 103   
+ 104  pf.fx("LAB") = 1;
+ 105   
+ 106  Model splcge / all /;
+ 107   
+ 108  solve splcge maximizing UU using nlp;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  49.6.1 55d34574 WEX-WEI
+GAMS 49.6.1  55d34574 May 28, 2025          WEX-WEI x86 64bit/MS Windows - 07/07/25 16:54:02 Page 2
+A Simple CGE Model in Ch. 5 (SPLCGE,SEQ=275)
+E x e c u t i o n
+
+
+----     42 PARAMETER X0  household consumption of the i-th good
+
+BRD 15.000,    MLK 35.000
+
+
+----     42 PARAMETER F0  the h-th factor input by the j-th firm
+
+            BRD         MLK
+
+CAP       5.000      20.000
+LAB      10.000      15.000
+
+
+----     42 PARAMETER Z0  output of the j-th good
+
+BRD 15.000,    MLK 35.000
+
+
+----     42 PARAMETER FF  factor endowment of the h-th factor
+
+CAP 25.000,    LAB 25.000
+
+
+----     54 PARAMETER alpha  share parameter in utility function
+
+BRD 0.300,    MLK 0.700
+
+
+----     54 PARAMETER beta  share parameter in production function
+
+            BRD         MLK
+
+CAP       0.333       0.571
+LAB       0.667       0.429
+
+
+----     54 PARAMETER b  scale parameter in production function
+
+BRD 1.890,    MLK 1.980
+
+GAMS 49.6.1  55d34574 May 28, 2025          WEX-WEI x86 64bit/MS Windows - 07/07/25 16:54:02 Page 3
+A Simple CGE Model in Ch. 5 (SPLCGE,SEQ=275)
+Equation Listing    SOLVE splcge Using NLP From line 108
+
+
+---- eqX  =E=  household demand function
+
+eqX(BRD)..  X(BRD) + (15)*px(BRD) - (7.5)*pf(CAP) - (7.5)*pf(LAB) =E= 0 ; (LHS = 0)
+     
+eqX(MLK)..  X(MLK) + (35)*px(MLK) - (17.5)*pf(CAP) - (17.5)*pf(LAB) =E= 0 ; (LHS = 0)
+     
+
+---- eqpz  =E=  production function
+
+eqpz(BRD)..  - (1)*F(CAP,BRD) - (1)*F(LAB,BRD) + Z(BRD) =E= 0 ; (LHS = 0)
+     
+eqpz(MLK)..  - (1)*F(CAP,MLK) - (1)*F(LAB,MLK) + Z(MLK) =E= 0 ; (LHS = 0)
+     
+
+---- eqF  =E=  factor demand function
+
+eqF(CAP,BRD)..  F(CAP,BRD) - (0.333333333333333)*Z(BRD) - (5)*pz(BRD) + (5)*pf(CAP) =E= 0 ; (LHS = 0)
+     
+eqF(CAP,MLK)..  F(CAP,MLK) - (0.571428571428571)*Z(MLK) - (20)*pz(MLK) + (20)*pf(CAP) =E= 0 ; (LHS = 0)
+     
+eqF(LAB,BRD)..  F(LAB,BRD) - (0.666666666666667)*Z(BRD) - (10)*pz(BRD) + (10)*pf(LAB) =E= 0 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- eqpx  =E=  good market clearing condition
+
+eqpx(BRD)..  X(BRD) - Z(BRD) =E= 0 ; (LHS = 0)
+     
+eqpx(MLK)..  X(MLK) - Z(MLK) =E= 0 ; (LHS = 0)
+     
+
+---- eqpf  =E=  factor market clearing condition
+
+eqpf(CAP)..  F(CAP,BRD) + F(CAP,MLK) =E= 25 ; (LHS = 25)
+     
+eqpf(LAB)..  F(LAB,BRD) + F(LAB,MLK) =E= 25 ; (LHS = 25)
+     
+
+---- eqZ  =E=  price equation
+
+eqZ(BRD)..  px(BRD) - pz(BRD) =E= 0 ; (LHS = 0)
+     
+eqZ(MLK)..  px(MLK) - pz(MLK) =E= 0 ; (LHS = 0)
+     
+
+---- obj  =E=  utility function [fictitious]
+
+obj..  - (0.542881452689825)*X(BRD) - (0.542881452689825)*X(MLK) + UU =E= 0 ; (LHS = -27.1440726344913, INFES = 27.1440726344913 ****)
+     
+GAMS 49.6.1  55d34574 May 28, 2025          WEX-WEI x86 64bit/MS Windows - 07/07/25 16:54:02 Page 4
+A Simple CGE Model in Ch. 5 (SPLCGE,SEQ=275)
+Column Listing      SOLVE splcge Using NLP From line 108
+
+
+---- X  household consumption of the i-th good
+
+X(BRD)
+                (.LO, .L, .UP, .M = 0.001, 15, +INF, 0)
+        1       eqX(BRD)
+        1       eqpx(BRD)
+      (-0.5429) obj
+
+X(MLK)
+                (.LO, .L, .UP, .M = 0.001, 35, +INF, 0)
+        1       eqX(MLK)
+        1       eqpx(MLK)
+      (-0.5429) obj
+
+
+---- F  the h-th factor input by the j-th firm
+
+F(CAP,BRD)
+                (.LO, .L, .UP, .M = 0.001, 5, +INF, 0)
+      (-1)      eqpz(BRD)
+        1       eqF(CAP,BRD)
+        1       eqpf(CAP)
+
+F(CAP,MLK)
+                (.LO, .L, .UP, .M = 0.001, 20, +INF, 0)
+      (-1)      eqpz(MLK)
+        1       eqF(CAP,MLK)
+        1       eqpf(CAP)
+
+F(LAB,BRD)
+                (.LO, .L, .UP, .M = 0.001, 10, +INF, 0)
+      (-1)      eqpz(BRD)
+        1       eqF(LAB,BRD)
+        1       eqpf(LAB)
+
+REMAINING ENTRY SKIPPED
+
+---- Z  output of the j-th good
+
+Z(BRD)
+                (.LO, .L, .UP, .M = 0.001, 15, +INF, 0)
+        1       eqpz(BRD)
+      (-0.3333) eqF(CAP,BRD)
+      (-0.6667) eqF(LAB,BRD)
+       -1       eqpx(BRD)
+
+Z(MLK)
+                (.LO, .L, .UP, .M = 0.001, 35, +INF, 0)
+        1       eqpz(MLK)
+      (-0.5714) eqF(CAP,MLK)
+      (-0.4286) eqF(LAB,MLK)
+       -1       eqpx(MLK)
+
+
+---- px  demand price of the i-th good
+
+px(BRD)
+                (.LO, .L, .UP, .M = 0.001, 1, +INF, 0)
+      (15)      eqX(BRD)
+        1       eqZ(BRD)
+
+px(MLK)
+                (.LO, .L, .UP, .M = 0.001, 1, +INF, 0)
+      (35)      eqX(MLK)
+        1       eqZ(MLK)
+
+
+---- pz  supply price of the i-th good
+
+pz(BRD)
+                (.LO, .L, .UP, .M = 0.001, 1, +INF, 0)
+      (-5)      eqF(CAP,BRD)
+     (-10)      eqF(LAB,BRD)
+       -1       eqZ(BRD)
+
+pz(MLK)
+                (.LO, .L, .UP, .M = 0.001, 1, +INF, 0)
+     (-20)      eqF(CAP,MLK)
+     (-15)      eqF(LAB,MLK)
+       -1       eqZ(MLK)
+
+
+---- pf  the h-th factor price
+
+pf(CAP)
+                (.LO, .L, .UP, .M = 0.001, 1, +INF, 0)
+      (-7.5)    eqX(BRD)
+     (-17.5)    eqX(MLK)
+       (5)      eqF(CAP,BRD)
+      (20)      eqF(CAP,MLK)
+
+pf(LAB)
+                (.LO, .L, .UP, .M = 1, 1, 1, 0)
+      (-7.5)    eqX(BRD)
+     (-17.5)    eqX(MLK)
+      (10)      eqF(LAB,BRD)
+      (15)      eqF(LAB,MLK)
+
+
+---- UU  utility [fictitious]
+
+UU
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 49.6.1  55d34574 May 28, 2025          WEX-WEI x86 64bit/MS Windows - 07/07/25 16:54:02 Page 5
+A Simple CGE Model in Ch. 5 (SPLCGE,SEQ=275)
+Range Statistics    SOLVE splcge Using NLP From line 108
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.500E+01, 2.500E+01] - Zero values observed as well
+Bound     [min, max] : [ 1.000E-03, 1.000E+00]
+Matrix    [min, max] : [ 3.333E-01, 3.500E+01]
+
+GAMS 49.6.1  55d34574 May 28, 2025          WEX-WEI x86 64bit/MS Windows - 07/07/25 16:54:02 Page 6
+A Simple CGE Model in Ch. 5 (SPLCGE,SEQ=275)
+Model Statistics    SOLVE splcge Using NLP From line 108
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS           15
+BLOCKS OF VARIABLES           7     SINGLE VARIABLES           15
+NON ZERO ELEMENTS            45     NON LINEAR N-Z             24
+CODE LENGTH                  83     CONSTANT POOL              26
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  49.6.1 55d34574 WEX-WEI
+GAMS 49.6.1  55d34574 May 28, 2025          WEX-WEI x86 64bit/MS Windows - 07/07/25 16:54:02 Page 7
+A Simple CGE Model in Ch. 5 (SPLCGE,SEQ=275)
+Solution Report     SOLVE splcge Using NLP From line 108
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   splcge              OBJECTIVE  UU
+     TYPE    NLP                 DIRECTION  MAXIMIZE
+     SOLVER  CONOPT              FROM LINE  108
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE               27.1441
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         1    2147483647
+ EVALUATION ERRORS              0             0
+--- *** This solver runs with a demo license. No commercial use.
+ 
+ 
+    C O N O P T   version 4.36
+    Copyright (C) GAMS Software GmbH
+                  GAMS Development Corporation
+ 
+    Will use up to 4 threads.
+ 
+ 
+    The user model has 15 constraints and 15 variables
+    with 45 Jacobian elements, 24 of which are nonlinear.
+ 
+    The pre-triangular part of the model has 0 constraints and 1 variables.
+    The post-triangular part of the model has 1 constraints and variables.
+    There are 5 definitional constraints and defined variables.
+ 
+    Preprocessed model has 9 constraints and 8 variables
+    with 28 Jacobian elements, 20 of which are nonlinear.
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+ 
+ CONOPT time Total                            0.000 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+             Interval derivative evals        0.000 =  0.0%
+ 
+
+---- EQU eqX  household demand function
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+BRD          .              .              .             EPS         
+MLK          .              .              .             EPS         
+
+---- EQU eqpz  production function
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+BRD          .              .              .             0.5429      
+MLK          .              .              .             0.5429      
+
+---- EQU eqF  factor demand function
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+CAP.BRD          .              .              .             EPS         
+CAP.MLK          .              .              .             EPS         
+LAB.BRD          .              .              .             EPS         
+LAB.MLK          .              .              .             EPS         
+
+---- EQU eqpx  good market clearing condition
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+BRD          .              .              .             0.5429      
+MLK          .              .              .             0.5429      
+
+---- EQU eqpf  factor market clearing condition
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+CAP        25.0000        25.0000        25.0000         0.5429      
+LAB        25.0000        25.0000        25.0000         0.5429      
+
+---- EQU eqZ  price equation
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+BRD          .              .              .             EPS         
+MLK          .              .              .              .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  utility function [fictitious]
+
+---- VAR X  household consumption of the i-th good
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+BRD         0.0010        15.0000        +INF             .          
+MLK         0.0010        35.0000        +INF             .          
+
+---- VAR F  the h-th factor input by the j-th firm
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+CAP.BRD         0.0010         5.0000        +INF             .          
+CAP.MLK         0.0010        20.0000        +INF             .          
+LAB.BRD         0.0010        10.0000        +INF             .          
+LAB.MLK         0.0010        15.0000        +INF             .          
+
+---- VAR Z  output of the j-th good
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+BRD         0.0010        15.0000        +INF             .          
+MLK         0.0010        35.0000        +INF             .          
+
+---- VAR px  demand price of the i-th good
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+BRD         0.0010         1.0000        +INF             .          
+MLK         0.0010         1.0000        +INF             .          
+
+---- VAR pz  supply price of the i-th good
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+BRD         0.0010         1.0000        +INF             .          
+MLK         0.0010         1.0000        +INF             .          
+
+---- VAR pf  the h-th factor price
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+CAP         0.0010         1.0000        +INF             .          
+LAB         1.0000         1.0000         1.0000         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR UU                -INF           27.1441        +INF             .          
+
+  UU  utility [fictitious]
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+
+
+EXECUTION TIME       =        0.047 SECONDS      4 MB  49.6.1 55d34574 WEX-WEI
+
+
+USER: GAMS Demo, for EULA and demo limitations see   G250131/0001CB-GEN
+      https://www.gams.com/latest/docs/UG%5FLicense.html         DC0000
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\Marina\Documents\GAMS\Studio\workspace\splcge.gms
+Output     C:\Users\Marina\Documents\GAMS\Studio\workspace\splcge.lst

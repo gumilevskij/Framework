@@ -1,7 +1,8 @@
 name: Krugman Trade Equilibrium with Iceberg Costs
-# Edward J. Balistreri, Colorado School of Mines (ebalistr@mines.edu)
-# Thomas F. Rutherford, ETH Zurich (tom@mpsge.org).
-# March 2011
+# Ch.23. Computing General Equilibrium Theories of Monopolistic Competition and Heterogeneous Firms
+# by Edward J. Balistreri, Thomas F. Rutherford
+# https://www.sciencedirect.com/science/article/pii/B9780444595683000237
+
 
 sets:
    regions r:   [R1, R2, R3]
