@@ -17,7 +17,7 @@ Users are advised to create a virtual environment in Python to isolate this inst
    source env/bin/activate <br />
    pip install -r Framework/requirements.txt
 2. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
-3. Run the command: pip install snowdrop-1.0.6-py3-none-any.whl --user
+3. Run the command: pip install snowdrop-1.0.7-py3-none-any.whl --user
  
 The first method enables access to the source code and easy update via the `git pull` command. 
 The second method provides an easy installation of this package and simple update. 
