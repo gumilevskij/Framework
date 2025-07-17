@@ -54,19 +54,21 @@ For example, the following specifies a simple monetary policy model with lagged 
     name:  Monetary policy model example
     symbols:
       variables: [PDOT,RR,RS,Y]
-      exogenous: [ers]
+      exogenous: [exo]
       shocks: [ey]
       parameters: [g,p1,p2,p3,p4,p5,p6,p7]
       equations:
        - PDOT=p1*PDOT(+1)+(1-p1)*PDOT(-1)+p2*(g^2/(g-Y)-g)+p3*(g^2/(g-Y(-1))-g)
        - RR=RS-p1*PDOT(+1)-(1-p1)*PDOT(-1)
-       - RS=p4*PDOT+Y+ers
+       - RS=p4*PDOT+Y+exo
        - Y=p5*Y(-1)-p6*RR-p7*RR(-1)+ey
       calibration:
        #Parameters
        g: 0.049
-       #Set time varying parameters; the last value will be used for the rest of this array
+       #Set time varying parameters; the last value will be used 
+       #for the rest of this array
        p1: 0.414 #[0.4,0.5,0.6]
+       exo: [0,0,0,0.03,0]
        std: 0.02
     options:
        T: 14
