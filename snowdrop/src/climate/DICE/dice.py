@@ -28,10 +28,10 @@ os.chdir(working_dir)
 from snowdrop.src.graphs.util import plot
 from snowdrop.src.driver import run,importModel
 
-it = 0; model = None
+it = 0; model = None; y = None
 
 def runDICEmodel(file_path,data_path):
-    
+    global model
     output_variables = ["E","FORC","C","DAMAGES","DAMFRAC","ABATECOST","Y","TATM","TOCEAN"]       # List of variables for which decomposition plots are produced
     decomp_variables = ["Y","DAMFRAC","ABATECOST","E"]
 
@@ -211,21 +211,21 @@ def runDICEmodel(file_path,data_path):
         return y,util
         
     def fobj(obj_parameters): 
-        global it, model
+        global it, model, y
         MIU = obj_parameters[:TT]
         S = obj_parameters[TT:2*TT]
         it += 1 
         try:
-            p = {"MIU": MIU, "S": S}
-            model.setParameters(p)
-            y,rng_date = run(model=model)
-            util = np.sum(y[ind_CEMUTOTPER])
-            #y,util = func(MIU,S)
+            # p = {"MIU": MIU, "S": S}
+            # model.setParameters(p)
+            # y,rng_date = run(model=model,y0=y)
+            # util = np.sum(y[ind_CEMUTOTPER])
+            y,util = func(MIU,S)
             # Utility function
             util = -tstep * scale1 * util - scale2
         except:
             util = 1.e6 + it
-        if it%5000 == 0:
+        if it%1000 == 0:
             print(f"iter={it}, utility={util:.2f}")
         return util
     
@@ -265,7 +265,7 @@ def runDICEmodel(file_path,data_path):
     # METHODS :'SLSQP','Powell','CG','BFGS','Newton-CG' ,'L-BFGS-B','TNC','COBYLA','trust-constr','dogleg','trust-ncg','trust-exact','trust-krylov' 
     # Bounds on variables are available for: Nelder-Mead, L-BFGS-B, TNC, SLSQP, Powell, and trust-constr methods   
     print("Calibrating model parameters...")
-    calibration = minimize(fun=fobj,x0=x_start,method='SLSQP',bounds=tuple(bnds),tol=1.e-5,options={'disp':True,'maxiter':300}) 
+    calibration = minimize(fun=fobj,x0=x_start,method='SLSQP',bounds=tuple(bnds),tol=1.e-5,options={'disp':True,'maxiter':100}) 
     MIU = calibration.x[:T]
     S = calibration.x[TT:TT+T]
     p = {"MIU": MIU, "S": S}

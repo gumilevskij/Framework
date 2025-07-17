@@ -16,8 +16,12 @@ Users are advised to create a virtual environment in Python to isolate this inst
    python -m venv env <br />
    source env/bin/activate <br />
    pip install -r Framework/requirements.txt
+2. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
 3. Run the command: pip install snowdrop-1.0.6-py3-none-any.whl --user
-4. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
+ 
+The first method enables access to the source code and easy update via the `git pull` command. 
+The second method provides an easy installation of this package and simple update. 
+Lastly, the third method requires downloading a wheel file from this repository and its installation.
  
  ## How to run:
  - Create or modify existing YAML model file in the supplements/models folder.
@@ -27,6 +31,8 @@ Users are advised to create a virtual environment in Python to isolate this inst
 ## Content:
  - Sample model file (see `<supplements/models/Toy/JLMP98.yaml>`)
  - Documentation (see `<supplements/docs/UserGuide.pdf>`)
+ - For API documentation, please open the file `/supplements/api_docs/_build/html/index.html` in your browser
+ - Automated testing can be performed by running the command `pytest tests` in a command prompt under the Framework folder
 
 ## Highlights:
 - The Framework is written in Python and utilizes only Python libraries available through the Anaconda distribution.
