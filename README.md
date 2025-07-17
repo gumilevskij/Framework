@@ -27,12 +27,12 @@ Lastly, the third method requires downloading a wheel file from this repository 
  - Create or modify existing YAML model file in the supplements/models folder.
  - Open tests/test_toy_models.py file and set *fname* to the name of the model file.
  - Run simulations in the Spyder IDE by double-clicking the run button or execute the Python script in a command prompt.
+ - Automated testing can be performed by running the command `pytest tests` in a command prompt under the Framework folder
 
 ## Content:
  - Sample model file (see `<supplements/models/Toy/JLMP98.yaml>`)
  - Documentation (see `<supplements/docs/UserGuide.pdf>`)
  - For API documentation, please open the file `/supplements/api_docs/_build/html/index.html` in your browser
- - Automated testing can be performed by running the command `pytest tests` in a command prompt under the Framework folder
 
 ## Highlights:
 - The Framework is written in Python and utilizes only Python libraries available through the Anaconda distribution.
