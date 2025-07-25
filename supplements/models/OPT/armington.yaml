@@ -83,7 +83,7 @@ labels:
     SUP:  Input supply (output)
     
 Model: [DEM.Q,ARM.P,MKT.c,SUP.Y]
-Solver: 'ROOT'   # 'MCP','PATH', 'CONSTRAINED_OPTIMIZATION', 'ROOT'
+Solver: 'ROOT'   # 'MCP','CONSTRAINED_OPTIMIZATION', 'ROOT'
 
 
     

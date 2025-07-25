@@ -23,17 +23,10 @@ equations:
 
 calibration:
     # parameters
-    alpha_BRD: 0.3
-    alpha_MLK: 0.7
-    beta_CAP_BRD: 1./3
-    beta_LAB_BRD: 2./3
-    beta_CAP_MLK: 1./3
-    beta_LAB_MLK: 2./3
     b_BRD: 1.89
     b_MLK: 1.98
-    # alpha(i)   : px(i)*X(i) / sum(i, px(i)*X(i))
-    # beta(h)(j) : pf(h)*F(h)(j) / sum(h, pf(h)*F(h)(j))
-    # b(j)       : Z(j) / prod(h, F(h)(j))
+    alpha(i)   : px(i)*X(i) / sum(i, px(i)*X(i))
+    beta(h)(j) : pf(h)*F(h)(j) / sum(h, pf(h)*F(h)(j))
     
     
     # Social Accounting Matrix

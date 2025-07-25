@@ -142,6 +142,6 @@ labels:
     SUP:  Input supply (output)
     
 Model: [DEM.P,DS.Q,FE.M,ZCP.N,DEMF.PF,MKUP.QF,PAR.PHI,MKT.c,SUP.Y]
-Solver: 'MCP'   # 'MCP','PATH', 'CONSTRAINED_OPTIMIZATION', 'ROOT'
+Solver: 'MCP'   # 'MCP','CONSTRAINED_OPTIMIZATION', 'ROOT'
 
     
