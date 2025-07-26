@@ -29,6 +29,8 @@ Each of these applications has its own advantage. The ease of use through a user
 
 `Snowdrop` is designed to assist economists and others in developing and analyzing complex economic problems.   Benchmarking this software against the *DYNARE* and *IRIS* toolboxes for small to medium-sized models with several hundred equations demonstrates comparable CPU execution times but a smaller memory footprint, due to the significant memory requirements of *MATLAB*. `Snowdrop` implements several methods to solve model equations that have been tested against solutions of *DYNARE* and *IRIS*.
 
+This toolkit is compatible with both CPU and GPU across Windows, macOS, and Linux operating systems. For tasks requiring high computational power, we recommend using GPU machines with the CuPy library installed. This library will be utilized by the platform’s non-linear solver.
+
 
 ## Highlights
 

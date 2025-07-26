@@ -22,6 +22,7 @@ Users are advised to create a virtual environment in Python to isolate this inst
 The first method enables access to the source code and easy update via the `git pull` command. 
 The second method provides an easy installation of this package and simple update. 
 Lastly, the third method requires downloading a wheel file from this repository and its installation.
+We suggest using the first method, as it provides examples of automated tests.
  
  ## How to run:
  - Create or modify existing YAML model file in the supplements/models folder.
