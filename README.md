@@ -56,9 +56,16 @@ pip install pysnowdrop --upgrade
 
 ## Documentation
 
+Below are useful resources to help you understand the structure and usage of the *Snowdrop* framework:
+
 * Sample model file: [`supplements/models/Toy/JLMP98.yaml`](./supplements/models/Toy/JLMP98.yaml)
+  This file provides a working example of a YAML-based model specification. You can use it as a template to create your own models. <- Check that is accurate.
+
 * User guide (PDF): [`supplements/docs/UserGuide.pdf`](./supplements/docs/UserGuide.pdf)
+  The user guide contains detailed instructions on how to configure models, run simulations, and interpret outputs. It also describes supported YAML fields and Python options. <- Check that is accurate.
+
 * API documentation: Open [`supplements/api_docs/_build/html/index.html`](./supplements/api_docs/_build/html/index.html) in your web browser
+  This HTML-based API reference provides an overview of the module structure, key functions, and their expected inputs/outputs. <- Check that is accurate.
 
 
 ## Highlights:
