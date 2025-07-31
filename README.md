@@ -26,7 +26,7 @@ pip install -r Framework/requirements.txt
 The repository includes a pre-built `.whl` (wheel) file in the folder list. After cloning the repository (as in Method 1), you can install the package directly:
 
 ```bash
-pip install Framework/snowdrop-1.0.7-py3-none-any.whl --user
+pip install Framework/dist/snowdrop-1.0.7-py3-none-any.whl --user
 ```
 
 This method is useful if you want a simple install from a local file without pulling from PyPI.
@@ -56,9 +56,9 @@ pip install pysnowdrop --upgrade
 
 ## Documentation
 
-* **Sample model file:** [`supplements/models/Toy/JLMP98.yaml`](./supplements/models/Toy/JLMP98.yaml)
-* **User guide (PDF):** [`supplements/docs/UserGuide.pdf`](./supplements/docs/UserGuide.pdf)
-* **API documentation:** Open [`supplements/api_docs/_build/html/index.html`](./supplements/api_docs/_build/html/index.html) in your web browser
+* Sample model file: [`supplements/models/Toy/JLMP98.yaml`](./supplements/models/Toy/JLMP98.yaml)
+* User guide (PDF): [`supplements/docs/UserGuide.pdf`](./supplements/docs/UserGuide.pdf)
+* API documentation: Open [`supplements/api_docs/_build/html/index.html`](./supplements/api_docs/_build/html/index.html) in your web browser
 
 
 ## Highlights:
