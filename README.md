@@ -23,7 +23,7 @@ pip install -r Framework/requirements.txt
 
 ### 2. Install from the Wheel File
 
-The repository includes a pre-built `.whl` (wheel) file in the folder list. After cloning the repository (as in Method 1), you can install the package directly:
+The repository includes a pre-built `.whl` (wheel) file in the folder dist. After cloning the repository (as in Method 1), you can install the package directly:
 
 ```bash
 pip install Framework/dist/snowdrop-1.0.7-py3-none-any.whl --user
