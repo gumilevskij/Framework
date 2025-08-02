@@ -5,35 +5,68 @@
 ## What it is:
 This Framework is designed to assist economists in the development and execution of Dynamic Stochastic General Equilibrium (DSGE) models within a Python environment.
 
-## Installation:
+## Installation
 
-Users are advised to create a virtual environment in Python to isolate this installation and its packages from the system-wide Python installation and other virtual environments. There are three options to install the “Snowdrop” package:
+Users are advised to create a **virtual environment** in Python to isolate this installation and its packages from the system-wide Python environment and other virtual environments. There are three ways to install the *Snowdrop* package:
 
-1. Clone this GitHub repository to your local drive. Then install the necessary packages and libraries for this project.
-   The following commands illustrate an example: <br />
-   cd to_your_working_directory <br />
-   git clone https:/github.com/gumilevskij/Framework.git <br />
-   python -m venv env <br />
-   source env/bin/activate <br />
-   pip install -r Framework/requirements.txt
-2. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
-3. Run the command: pip install snowdrop-1.0.7-py3-none-any.whl --user
- 
-The first method enables access to the source code and easy update via the `git pull` command. 
-The second method provides an easy installation of this package and simple update. 
-Lastly, the third method requires downloading a wheel file from this repository and its installation.
-We suggest using the first method, as it provides examples of automated tests.
- 
- ## How to run:
- - Create or modify existing YAML model file in the supplements/models folder.
- - Open tests/test_toy_models.py file and set *fname* to the name of the model file.
- - Run simulations in the Spyder IDE by double-clicking the run button or execute the Python script in a command prompt.
- - Automated testing can be performed by running the command `pytest tests` in a command prompt
+### 1. Clone the GitHub Repository (Recommended)
 
-## Content:
- - Sample model file (see `<supplements/models/Toy/JLMP98.yaml>`)
- - Documentation (see `<supplements/docs/UserGuide.pdf>`)
- - For API documentation, please open the file `/supplements/api_docs/_build/html/index.html` in your browser
+This method gives you full access to the source code and examples, including automated tests. It also allows for easy updates via `git pull`.
+
+```bash
+cd your_working_directory  
+git clone https://github.com/gumilevskij/Framework.git  
+python -m venv env  
+source env/bin/activate  
+pip install -r Framework/requirements.txt
+```
+
+### 2. Install from the Wheel File
+
+The repository includes a pre-built `.whl` (wheel) file in the folder dist. After cloning the repository (as in Method 1), you can install the package directly:
+
+```bash
+pip install Framework/dist/snowdrop-1.0.7-py3-none-any.whl --user
+```
+
+This method is useful if you want a simple install from a local file without pulling from PyPI.
+
+### 3. Install via PyPI
+
+You can install the latest version of *Snowdrop* directly from PyPI using pip:
+
+```bash
+pip install pysnowdrop --upgrade
+```
+
+## Quick Usage
+
+* Create or modify a YAML model file in the [`supplements/models`](./supplements/models) folder.
+* Open [`tests/test_toy_models.py`](./tests/test_toy_models.py) and set the variable `fname` to the name of your model file.
+* Run simulations using the **Spyder IDE** by clicking the Run button, or execute the script from the command line:
+
+  ```bash
+  python tests/test_toy_models.py
+  ```
+* To run automated tests, use the command:
+
+  ```bash
+  pytest tests
+  ```
+
+## Documentation
+
+Below are useful resources to help you understand the structure and usage of the *Snowdrop* framework:
+
+* Sample model file: [`supplements/models/Toy/JLMP98.yaml`](./supplements/models/Toy/JLMP98.yaml)
+  This file provides a working example of a YAML-based model specification. You can use it as a template to create your own models. <- Check that is accurate.
+
+* User guide (PDF): [`supplements/docs/UserGuide.pdf`](./supplements/docs/UserGuide.pdf)
+  The user guide contains detailed instructions on how to configure models, run simulations, and interpret outputs. It also describes supported YAML fields and Python options. <- Check that is accurate.
+
+* API documentation: Open [`supplements/api_docs/_build/html/index.html`](./supplements/api_docs/_build/html/index.html) in your web browser
+  This HTML-based API reference provides an overview of the module structure, key functions, and their expected inputs/outputs. <- Check that is accurate.
+
 
 ## Highlights:
 - The Framework is written in Python and utilizes only Python libraries available through the Anaconda distribution.
