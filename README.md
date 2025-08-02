@@ -23,10 +23,10 @@ pip install -r Framework/requirements.txt
 
 ### 2. Install from the Wheel File
 
-The repository includes a pre-built `.whl` (wheel) file in the folder dist. After cloning the repository (as in Method 1), you can install the package directly:
+The repository includes a pre-built `.whl` (wheel) file in the folder Framework/dist. By copying this file to your local disk, you can install this package directly:
 
 ```bash
-pip install Framework/dist/snowdrop-1.0.7-py3-none-any.whl --user
+pip install snowdrop-1.0.7-py3-none-any.whl --user
 ```
 
 This method is useful if you want a simple install from a local file without pulling from PyPI.
@@ -39,7 +39,7 @@ You can install the latest version of *Snowdrop* directly from PyPI using pip:
 pip install pysnowdrop --upgrade
 ```
 
-## Quick Usage
+## Quick Start
 
 * Create or modify a YAML model file in the [`supplements/models`](./supplements/models) folder.
 * Open [`tests/test_toy_models.py`](./tests/test_toy_models.py) and set the variable `fname` to the name of your model file.
@@ -59,13 +59,13 @@ pip install pysnowdrop --upgrade
 Below are useful resources to help you understand the structure and usage of the *Snowdrop* framework:
 
 * Sample model file: [`supplements/models/Toy/JLMP98.yaml`](./supplements/models/Toy/JLMP98.yaml)
-  This file provides a working example of a YAML-based model specification. You can use it as a template to create your own models. <- Check that is accurate.
+  This file provides a working example of a YAML-based model specification. You can use it as a template to create your own models.
 
 * User guide (PDF): [`supplements/docs/UserGuide.pdf`](./supplements/docs/UserGuide.pdf)
-  The user guide contains detailed instructions on how to configure models, run simulations, and interpret outputs. It also describes supported YAML fields and Python options. <- Check that is accurate.
+  The user guide contains detailed instructions on how to configure models, run simulations, and interpret outputs. It also describes supported YAML fields and Python options.
 
 * API documentation: Open [`supplements/api_docs/_build/html/index.html`](./supplements/api_docs/_build/html/index.html) in your web browser
-  This HTML-based API reference provides an overview of the module structure, key functions, and their expected inputs/outputs. <- Check that is accurate.
+  This HTML-based API reference provides an overview of the module structure, key functions, and their expected inputs/outputs.
 
 
 ## Highlights:

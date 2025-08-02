@@ -39,7 +39,7 @@ This toolkit is compatible with both CPU and GPU across Windows, macOS, and Linu
 - Linear models are solved with *Binder Pesaran's* method, *Anderson and More's* method and two generalized *Schur's* method that reproduce calculations employed in *Dynare* and *Iris*.
 - Non-linear models can be run with time dependent parameters.
 - Goodness of fit of model data can be checked via the *Bayesian* approach to the maximization of likelihood functions.
-- Model parameters can be sampled via the *Markov Chain Monte Carlo* affine invariant ensemble sampler algorithm of Jonathan Goodman and an adaptive Metropolis-Hasting’s algorithms of Paul Miles. The former algorithm is useful for sampling badly scaled distributions of parameters. The later algorithm employs adaptive Metropolis methods that incorporate delayed rejection to stimulate samples’ states mixing.
+- Model parameters can be sampled via the *Markov Chain Monte Carlo* affine invariant ensemble sampler algorithm of Jonathan Goodman and an adaptive Metropolis-Hasting’s algorithms of Paul Miles. The former algorithm is useful for sampling badly scaled distributions of parameters. The latter algorithm employs adaptive Metropolis methods that incorporate delayed rejection to stimulate samples’ states mixing.
 - Finally, `Snowdrop` streamlines the model production process by aiding users with the plotting and model reporting and storage process.
 
 `Snowdrop` model file is essential for conducting simulations and analyses. It is written in *YAML* format in a manner that is familiar to *DYNARE* and *IRIS* users. Running a model involves the following steps:
