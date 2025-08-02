@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.gui package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.info package" href="snowdrop.src.info.html" />
+    <link rel="prev" title="snowdrop.src.graphs package" href="snowdrop.src.graphs.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-gui-package">
+<h1>snowdrop.src.gui package<a class="headerlink" href="#snowdrop-src-gui-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.gui.clientGui">
+<span id="snowdrop-src-gui-clientgui-module"></span><h2>snowdrop.src.gui.clientGui module<a class="headerlink" href="#module-snowdrop.src.gui.clientGui" title="Link to this heading">¶</a></h2>
+<p>Created on Fri Apr 20 13:49:49 2018</p>
+<p>&#64;author: A.Goumilevski</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">Application</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.Clean">
+<span class="sig-name descname"><span class="pre">Clean</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.Clean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.Clean" title="Link to this definition">¶</a></dt>
+<dd><p>Cleans session and command text boxes</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.CleanResults">
+<span class="sig-name descname"><span class="pre">CleanResults</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.CleanResults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.CleanResults" title="Link to this definition">¶</a></dt>
+<dd><p>Clean content of tab #3.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.Close">
+<span class="sig-name descname"><span class="pre">Close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.Close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.Close" title="Link to this definition">¶</a></dt>
+<dd><p>Close the GUI.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.CloseFrame">
+<span class="sig-name descname"><span class="pre">CloseFrame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.CloseFrame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.CloseFrame" title="Link to this definition">¶</a></dt>
+<dd><p>Close the frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.FindSteadyState">
+<span class="sig-name descname"><span class="pre">FindSteadyState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.FindSteadyState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.FindSteadyState" title="Link to this definition">¶</a></dt>
+<dd><p>Finds the steady state solution</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.GetImpulseResponseFunctions">
+<span class="sig-name descname"><span class="pre">GetImpulseResponseFunctions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.GetImpulseResponseFunctions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.GetImpulseResponseFunctions" title="Link to this definition">¶</a></dt>
+<dd><p>Find and plot impulse response functions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.OpenFile">
+<span class="sig-name descname"><span class="pre">OpenFile</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.OpenFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.OpenFile" title="Link to this definition">¶</a></dt>
+<dd><p>Open file dialog.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.OpenHistoryFile">
+<span class="sig-name descname"><span class="pre">OpenHistoryFile</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.OpenHistoryFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.OpenHistoryFile" title="Link to this definition">¶</a></dt>
+<dd><p>Open history file dialog.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.ProcessCommands">
+<span class="sig-name descname"><span class="pre">ProcessCommands</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.ProcessCommands"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.ProcessCommands" title="Link to this definition">¶</a></dt>
+<dd><p>Run commands that user enetered in the Input text box.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.Reset">
+<span class="sig-name descname"><span class="pre">Reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.Reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.Reset" title="Link to this definition">¶</a></dt>
+<dd><p>Reset the GUI.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.RestoreSession">
+<span class="sig-name descname"><span class="pre">RestoreSession</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.RestoreSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.RestoreSession" title="Link to this definition">¶</a></dt>
+<dd><p>Read session file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.Run">
+<span class="sig-name descname"><span class="pre">Run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.Run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.Run" title="Link to this definition">¶</a></dt>
+<dd><p>Run simulations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.Save">
+<span class="sig-name descname"><span class="pre">Save</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.Save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.Save" title="Link to this definition">¶</a></dt>
+<dd><p>Save GUI data into temp.yaml file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.SaveSession">
+<span class="sig-name descname"><span class="pre">SaveSession</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.SaveSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.SaveSession" title="Link to this definition">¶</a></dt>
+<dd><p>Save user input to a text file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.SaveTemplate">
+<span class="sig-name descname"><span class="pre">SaveTemplate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.SaveTemplate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.SaveTemplate" title="Link to this definition">¶</a></dt>
+<dd><p>Save GUI data into template.yaml file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.createWidgets">
+<span class="sig-name descname"><span class="pre">createWidgets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txtDescr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txtEqs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txtParams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txtParamsRange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txtEndogVars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txtExogVars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txtShocks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txtRange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txtFreq</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.createWidgets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.createWidgets" title="Link to this definition">¶</a></dt>
+<dd><p>Creates GUI widgets</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.getEquation">
+<span class="sig-name descname"><span class="pre">getEquation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.getEquation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.getEquation" title="Link to this definition">¶</a></dt>
+<dd><p>Returns equation definition by label for Troll models</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.getEquationLabels">
+<span class="sig-name descname"><span class="pre">getEquationLabels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.getEquationLabels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.getEquationLabels" title="Link to this definition">¶</a></dt>
+<dd><p>Return equation labels and definition for Troll models.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.Application.removeFigures">
+<span class="sig-name descname"><span class="pre">removeFigures</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#Application.removeFigures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.Application.removeFigures" title="Link to this definition">¶</a></dt>
+<dd><p>Removes figures tab</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.SaveTemplateOutput">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">SaveTemplateOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#SaveTemplateOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.SaveTemplateOutput" title="Link to this definition">¶</a></dt>
+<dd><p>Write GUI data to template yaml file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.SaveYamlOutput">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">SaveYamlOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#SaveYamlOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.SaveYamlOutput" title="Link to this definition">¶</a></dt>
+<dd><p>Writes GUI data to YAML template text file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.checkNumberOfEquationsAndVariables">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">checkNumberOfEquationsAndVariables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#checkNumberOfEquationsAndVariables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.checkNumberOfEquationsAndVariables" title="Link to this definition">¶</a></dt>
+<dd><p>Performs check of equality of the number of equations 
+and of the number of variables</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.createCheckBoxWidget">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">createCheckBoxWidget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'top'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#createCheckBoxWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.createCheckBoxWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Creates check box widget</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.createLabel">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">createLabel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'top'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#createLabel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.createLabel" title="Link to this definition">¶</a></dt>
+<dd><p>Creates label widget</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.createListBoxWidget">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">createListBoxWidget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scrollBar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'top'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#createListBoxWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.createListBoxWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Creates list box widget</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.createRadioButtonWidget">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">createRadioButtonWidget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'top'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#createRadioButtonWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.createRadioButtonWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Creates radio button widget</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.createTableWidget">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">createTableWidget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minheight</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bottom'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjust_heading_to_content</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stretch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#createTableWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.createTableWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Creates table widget</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.createTextBoxWidget">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">createTextBoxWidget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scrollBar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scroll</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'top'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'white'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selectbackground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inactiveselectbackground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'white'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#createTextBoxWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.createTextBoxWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Creates text box widget</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getDescription">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getDescription</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getDescription"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getDescription" title="Link to this definition">¶</a></dt>
+<dd><p>Return Description.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getEquations">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getEquations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getEquations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getEquations" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getExogVariables">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getExogVariables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getExogVariables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getExogVariables" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getFormattedTimeRange">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getFormattedTimeRange</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getFormattedTimeRange"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getFormattedTimeRange" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getFrequency">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getFrequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getFrequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getFrequency" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getParamRange">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getParamRange</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getParamRange"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getParamRange" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getParameterNamesAndValues">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getParameterNamesAndValues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getParameterNamesAndValues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getParameterNamesAndValues" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getParameters">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getParameters" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getPeriods">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getPeriods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getPeriods"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getPeriods" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getShockNamesAndValues">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getShockNamesAndValues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getShockNamesAndValues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getShockNamesAndValues" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getShocks">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getShocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getShocks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getShocks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getTimeRange">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getTimeRange</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getTimeRange"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getTimeRange" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getVariableNamesAndInitialValues">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getVariableNamesAndInitialValues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getVariableNamesAndInitialValues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getVariableNamesAndInitialValues" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.getVariables">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">getVariables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#getVariables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.getVariables" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.output">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.output" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.clientGui.readFile">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.clientGui.</span></span><span class="sig-name descname"><span class="pre">readFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/clientGui.html#readFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.clientGui.readFile" title="Link to this definition">¶</a></dt>
+<dd><p>Reads data file</p>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.gui.dialog">
+<span id="snowdrop-src-gui-dialog-module"></span><h2>snowdrop.src.gui.dialog module<a class="headerlink" href="#module-snowdrop.src.gui.dialog" title="Link to this heading">¶</a></h2>
+<p>Created on Tue May 21 19:29:30 2019</p>
+<p>&#64;author: A.Goumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.dialog.showDialog">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.dialog.</span></span><span class="sig-name descname"><span class="pre">showDialog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DIGNAR-19</span> <span class="pre">Toolkit'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/dialog.html#showDialog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.dialog.showDialog" title="Link to this definition">¶</a></dt>
+<dd><p>Simple implementation of dialog window.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>msg<span class="classifier">str</span></dt><dd><p>Message to be shown.</p>
+</dd>
+<dt>timeout<span class="classifier">int</span></dt><dd><p>Timeout in milliseconds.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>bool</dt><dd><p>True if left button is clicked.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.gui.multiColumnListBox">
+<span id="snowdrop-src-gui-multicolumnlistbox-module"></span><h2>snowdrop.src.gui.multiColumnListBox module<a class="headerlink" href="#module-snowdrop.src.gui.multiColumnListBox" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Column">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.multiColumnListBox.</span></span><span class="sig-name descname"><span class="pre">Column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Column" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Column.data">
+<span class="sig-name descname"><span class="pre">data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Column.data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Column.data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Column.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Column.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Column.delete" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Column.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Column.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Column.update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.multiColumnListBox.</span></span><span class="sig-name descname"><span class="pre">Multicolumn_Listbox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heading_anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'center'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjust_heading_to_content</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stripped_rows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection_background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection_foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heading_font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heading_background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heading_foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_pady</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">List_Of_Columns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multicolumn_listbox</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Columns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.data">
+<span class="sig-name descname"><span class="pre">data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Columns.data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Columns.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.delete" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Columns.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.get" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Columns.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">List_Of_Rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multicolumn_listbox</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.data">
+<span class="sig-name descname"><span class="pre">data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Rows.data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Rows.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.delete" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.deselect">
+<span class="sig-name descname"><span class="pre">deselect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Rows.deselect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.deselect" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Rows.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.get" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.insert">
+<span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Rows.insert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.insert" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Rows.select"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.select" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.set_selection">
+<span class="sig-name descname"><span class="pre">set_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Rows.set_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.set_selection" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.List_Of_Rows.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.bind">
+<span class="sig-name descname"><span class="pre">bind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.bind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.bind" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.cell_data">
+<span class="sig-name descname"><span class="pre">cell_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.cell_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.cell_data" title="Link to this definition">¶</a></dt>
+<dd><p>Get the value of a table cell</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.clear" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.column_data">
+<span class="sig-name descname"><span class="pre">column_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.column_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.column_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.configure_column">
+<span class="sig-name descname"><span class="pre">configure_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stretch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.configure_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.configure_column" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.delete_all_selected_rows">
+<span class="sig-name descname"><span class="pre">delete_all_selected_rows</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.delete_all_selected_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.delete_all_selected_rows" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.delete_row">
+<span class="sig-name descname"><span class="pre">delete_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.delete_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.delete_row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.deselect_all">
+<span class="sig-name descname"><span class="pre">deselect_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.deselect_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.deselect_all" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.deselect_row">
+<span class="sig-name descname"><span class="pre">deselect_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.deselect_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.deselect_row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.destroy">
+<span class="sig-name descname"><span class="pre">destroy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.destroy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.destroy" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.focus">
+<span class="sig-name descname"><span class="pre">focus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.focus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.focus" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.font">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">font</span></span><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.font" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.indices_of_selected_rows">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">indices_of_selected_rows</span></span><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.indices_of_selected_rows" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.insert_row">
+<span class="sig-name descname"><span class="pre">insert_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.insert_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.insert_row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.item_ID">
+<span class="sig-name descname"><span class="pre">item_ID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.item_ID"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.item_ID" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.item_ID_to_row_data">
+<span class="sig-name descname"><span class="pre">item_ID_to_row_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_ID</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.item_ID_to_row_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.item_ID_to_row_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.number_of_columns">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_columns</span></span><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.number_of_columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.number_of_rows">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_rows</span></span><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.number_of_rows" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.row_data">
+<span class="sig-name descname"><span class="pre">row_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.row_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.row_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.row_height">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">row_height</span></span><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.row_height" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.select_row">
+<span class="sig-name descname"><span class="pre">select_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.select_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.select_row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.selected_rows">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">selected_rows</span></span><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.selected_rows" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.set_selection">
+<span class="sig-name descname"><span class="pre">set_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.set_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.set_selection" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.sort_by">
+<span class="sig-name descname"><span class="pre">sort_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.sort_by"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.sort_by" title="Link to this definition">¶</a></dt>
+<dd><p>sort tree contents when a column header is clicked</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.state">
+<span class="sig-name descname"><span class="pre">state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.state" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.table_data">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">table_data</span></span><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.table_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.toogle_selection">
+<span class="sig-name descname"><span class="pre">toogle_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.toogle_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.toogle_selection" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update_cell">
+<span class="sig-name descname"><span class="pre">update_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.update_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update_cell" title="Link to this definition">¶</a></dt>
+<dd><p>Set the value of a table cell</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update_column">
+<span class="sig-name descname"><span class="pre">update_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.update_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update_column" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update_row">
+<span class="sig-name descname"><span class="pre">update_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Multicolumn_Listbox.update_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update_row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Row">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.multiColumnListBox.</span></span><span class="sig-name descname"><span class="pre">Row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Row" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Row.data">
+<span class="sig-name descname"><span class="pre">data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Row.data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Row.data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Row.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Row.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Row.delete" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Row.deselect">
+<span class="sig-name descname"><span class="pre">deselect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Row.deselect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Row.deselect" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Row.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Row.select"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Row.select" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.multiColumnListBox.Row.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/multiColumnListBox.html#Row.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.multiColumnListBox.Row.update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.gui.mytable">
+<span id="snowdrop-src-gui-mytable-module"></span><h2>snowdrop.src.gui.mytable module<a class="headerlink" href="#module-snowdrop.src.gui.mytable" title="Link to this heading">¶</a></h2>
+<p>Created on Fri Jan 11 18:13:56 2019</p>
+<p>&#64;author: agoumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.mytable.getValues">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.mytable.</span></span><span class="sig-name descname"><span class="pre">getValues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/mytable.html#getValues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.mytable.getValues" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.gui.mytable.showTable">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.mytable.</span></span><span class="sig-name descname"><span class="pre">showTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Table</span> <span class="pre">Editor'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/mytable.html#showTable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.mytable.showTable" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.gui.scrollableTable">
+<span id="snowdrop-src-gui-scrollabletable-module"></span><h2>snowdrop.src.gui.scrollableTable module<a class="headerlink" href="#module-snowdrop.src.gui.scrollableTable" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Cell">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.scrollableTable.</span></span><span class="sig-name descname"><span class="pre">Cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cnf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Cell" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code></p>
+<p>Base class for cells</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Data_Cell">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.scrollableTable.</span></span><span class="sig-name descname"><span class="pre">Data_Cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bordercolor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">borderwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pady</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Data_Cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Data_Cell" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.gui.scrollableTable.Cell" title="snowdrop.src.gui.scrollableTable.Cell"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cell</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Header_Cell">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.scrollableTable.</span></span><span class="sig-name descname"><span class="pre">Header_Cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bordercolor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">borderwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pady</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'center'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Header_Cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Header_Cell" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.gui.scrollableTable.Cell" title="snowdrop.src.gui.scrollableTable.Cell"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cell</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Mousewheel_Support">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.scrollableTable.</span></span><span class="sig-name descname"><span class="pre">Mousewheel_Support</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Mousewheel_Support"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Mousewheel_Support" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Mousewheel_Support.add_support_to">
+<span class="sig-name descname"><span class="pre">add_support_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">widget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xscrollbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yscrollbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">what</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'units'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizontal_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertical_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Mousewheel_Support.add_support_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Mousewheel_Support.add_support_to" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Scrolling_Area">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.scrollableTable.</span></span><span class="sig-name descname"><span class="pre">Scrolling_Area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor='n'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mousewheel_speed=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scroll_horizontally=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xscrollbar=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scroll_vertically=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yscrollbar=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_background=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_frame=&lt;class</span> <span class="pre">'tkinter.Frame'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Scrolling_Area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Scrolling_Area" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Scrolling_Area.height">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">height</span></span><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Scrolling_Area.height" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Scrolling_Area.set_size">
+<span class="sig-name descname"><span class="pre">set_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Scrolling_Area.set_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Scrolling_Area.set_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Scrolling_Area.update_viewport">
+<span class="sig-name descname"><span class="pre">update_viewport</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Scrolling_Area.update_viewport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Scrolling_Area.update_viewport" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Scrolling_Area.width">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">width</span></span><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Scrolling_Area.width" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.scrollableTable.</span></span><span class="sig-name descname"><span class="pre">Table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_minwidths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minheight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pady</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'white'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'white'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'center'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bordercolor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'#999999'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">innerborder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outerborder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stripped_rows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('#EEEEEE',</span> <span class="pre">'white')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_change_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mousewheel_speed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scroll_horizontally</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scroll_vertically</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.cell">
+<span class="sig-name descname"><span class="pre">cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Table.cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.cell" title="Link to this definition">¶</a></dt>
+<dd><p>Get the value of a table cell</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Table.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.clear" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.column">
+<span class="sig-name descname"><span class="pre">column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Table.column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.column" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.delete_row">
+<span class="sig-name descname"><span class="pre">delete_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Table.delete_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.delete_row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Table.get_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.get_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.insert_row">
+<span class="sig-name descname"><span class="pre">insert_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'end'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Table.insert_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.insert_row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.number_of_columns">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_columns</span></span><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.number_of_columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.number_of_rows">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_rows</span></span><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.number_of_rows" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.on_change_data">
+<span class="sig-name descname"><span class="pre">on_change_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Table.on_change_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.on_change_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.row">
+<span class="sig-name descname"><span class="pre">row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Table.row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.scrollableTable.Table.set_data">
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/scrollableTable.html#Table.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.scrollableTable.Table.set_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.gui.table">
+<span id="snowdrop-src-gui-table-module"></span><h2>snowdrop.src.gui.table module<a class="headerlink" href="#module-snowdrop.src.gui.table" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Cell">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.table.</span></span><span class="sig-name descname"><span class="pre">Cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cnf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Cell" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code></p>
+<p>Base class for cells</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Data_Cell">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.table.</span></span><span class="sig-name descname"><span class="pre">Data_Cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bordercolor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">borderwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pady</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Data_Cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Data_Cell" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.gui.table.Cell" title="snowdrop.src.gui.table.Cell"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cell</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Header_Cell">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.table.</span></span><span class="sig-name descname"><span class="pre">Header_Cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bordercolor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">borderwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pady</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'center'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Header_Cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Header_Cell" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.gui.table.Cell" title="snowdrop.src.gui.table.Cell"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cell</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.table.</span></span><span class="sig-name descname"><span class="pre">Table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_minwidths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minheight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pady</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'white'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'white'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_foreground</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'center'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bordercolor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'#999999'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">innerborder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outerborder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stripped_rows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('#EEEEEE',</span> <span class="pre">'white')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_change_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Table" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.cell">
+<span class="sig-name descname"><span class="pre">cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Table.cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Table.cell" title="Link to this definition">¶</a></dt>
+<dd><p>Get the value of a table cell</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Table.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Table.clear" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.column">
+<span class="sig-name descname"><span class="pre">column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Table.column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Table.column" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.delete_row">
+<span class="sig-name descname"><span class="pre">delete_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Table.delete_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Table.delete_row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Table.get_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Table.get_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.insert_row">
+<span class="sig-name descname"><span class="pre">insert_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'end'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Table.insert_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Table.insert_row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.number_of_columns">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_columns</span></span><a class="headerlink" href="#snowdrop.src.gui.table.Table.number_of_columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.number_of_rows">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_rows</span></span><a class="headerlink" href="#snowdrop.src.gui.table.Table.number_of_rows" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.on_change_data">
+<span class="sig-name descname"><span class="pre">on_change_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Table.on_change_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Table.on_change_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.row">
+<span class="sig-name descname"><span class="pre">row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Table.row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Table.row" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.table.Table.set_data">
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/table.html#Table.set_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.table.Table.set_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.gui.temp">
+<span id="snowdrop-src-gui-temp-module"></span><h2>snowdrop.src.gui.temp module<a class="headerlink" href="#module-snowdrop.src.gui.temp" title="Link to this heading">¶</a></h2>
+<p>Created on Wed Jun  6 16:15:09 2018</p>
+<p>&#64;author: agoumilevski</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.temp.mclass">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.gui.temp.</span></span><span class="sig-name descname"><span class="pre">mclass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/temp.html#mclass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.temp.mclass" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.gui.temp.mclass.FigureCanvasTkAgg">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FigureCanvasTkAgg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">master</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#snowdrop.src.gui.temp.mclass.FigureCanvasTkAgg" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FigureCanvasAgg</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FigureCanvasTk</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.temp.mclass.FigureCanvasTkAgg.blit">
+<span class="sig-name descname"><span class="pre">blit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#snowdrop.src.gui.temp.mclass.FigureCanvasTkAgg.blit" title="Link to this definition">¶</a></dt>
+<dd><p>Blit the canvas in bbox (default entire canvas).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.temp.mclass.FigureCanvasTkAgg.draw">
+<span class="sig-name descname"><span class="pre">draw</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#snowdrop.src.gui.temp.mclass.FigureCanvasTkAgg.draw" title="Link to this definition">¶</a></dt>
+<dd><p>Render the <cite>.Figure</cite>.</p>
+<p>This method must walk the artist tree, even if no output is produced,
+because it triggers deferred work that users may want to access
+before saving output to disk. For example computing limits,
+auto-limits, and tick values.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.gui.temp.mclass.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/gui/temp.html#mclass.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.gui.temp.mclass.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.gui">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.gui" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+      <li>Previous: <a href="snowdrop.src.graphs.html" title="previous chapter">snowdrop.src.graphs package</a></li>
+      <li>Next: <a href="snowdrop.src.info.html" title="next chapter">snowdrop.src.info package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.gui.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

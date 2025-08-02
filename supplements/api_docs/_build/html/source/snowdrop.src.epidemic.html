@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.epidemic package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.graphs package" href="snowdrop.src.graphs.html" />
+    <link rel="prev" title="snowdrop.src package" href="snowdrop.src.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-epidemic-package">
+<h1>snowdrop.src.epidemic package<a class="headerlink" href="#snowdrop-src-epidemic-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.epidemic.covid19">
+<span id="snowdrop-src-epidemic-covid19-module"></span><h2>snowdrop.src.epidemic.covid19 module<a class="headerlink" href="#module-snowdrop.src.epidemic.covid19" title="Link to this heading">¶</a></h2>
+<p>Created on Tue Jun 12 18:50:05 2018
+Compares results of a baseline and an alternative scenarios runs.
+&#64;author: agoumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.covid19.div">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.covid19.</span></span><span class="sig-name descname"><span class="pre">div</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/covid19.html#div"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.covid19.div" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.covid19.hp">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.covid19.</span></span><span class="sig-name descname"><span class="pre">hp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/covid19.html#hp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.covid19.hp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.covid19.plot">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.covid19.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">countries</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">titles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/covid19.html#plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.covid19.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot 1D graphs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.covid19.readData">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.covid19.</span></span><span class="sig-name descname"><span class="pre">readData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/covid19.html#readData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.covid19.readData" title="Link to this definition">¶</a></dt>
+<dd><p>Read csv file and returns pandas dataframe.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param file_path<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path to excel file.</p>
+</dd>
+<dt class="field-even">type file_path<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas dataframe.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.covid19.run">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.covid19.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">countries</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">population</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/covid19.html#run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.covid19.run" title="Link to this definition">¶</a></dt>
+<dd><p>Compare results.</p>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.epidemic.data">
+<span id="snowdrop-src-epidemic-data-module"></span><h2>snowdrop.src.epidemic.data module<a class="headerlink" href="#module-snowdrop.src.epidemic.data" title="Link to this heading">¶</a></h2>
+<p>Created on Wed Jan 20 23:39:29 2021</p>
+<p>&#64;author: alexei</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.data.annualize">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.data.</span></span><span class="sig-name descname"><span class="pre">annualize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/data.html#annualize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.data.annualize" title="Link to this definition">¶</a></dt>
+<dd><p>Annualizes growth rate.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.data.filter_solution">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.data.</span></span><span class="sig-name descname"><span class="pre">filter_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lmbd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1600</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/data.html#filter_solution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.data.filter_solution" title="Link to this definition">¶</a></dt>
+<dd><p>Filter data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.data.getData">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.data.</span></span><span class="sig-name descname"><span class="pre">getData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">country</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/data.html#getData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.data.getData" title="Link to this definition">¶</a></dt>
+<dd><p>Read excel file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.data.getData2">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.data.</span></span><span class="sig-name descname"><span class="pre">getData2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sht</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/data.html#getData2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.data.getData2" title="Link to this definition">¶</a></dt>
+<dd><p>Read excel file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.data.make_space_above">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.data.</span></span><span class="sig-name descname"><span class="pre">make_space_above</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topmargin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/data.html#make_space_above"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.data.make_space_above" title="Link to this definition">¶</a></dt>
+<dd><p>increase figure size to make topmargin (in inches) space for 
+titles, without changing the axes sizes</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.data.plot_data">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.data.</span></span><span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[3,</span> <span class="pre">3]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/data.html#plot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.data.plot_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.epidemic.ert">
+<span id="snowdrop-src-epidemic-ert-module"></span><h2>snowdrop.src.epidemic.ert module<a class="headerlink" href="#module-snowdrop.src.epidemic.ert" title="Link to this heading">¶</a></h2>
+<p>Created on Monday December 28, 2020
+&#64;author: A.Goumilevski</p>
+<p>This code solves and simulates the model developed by 
+Eichenbaum M.S., Rebelo S., Trabandt M. (2020) in
+“Epidemics in the Neoclassical and New Keynesian Models”.
+NBER Working Paper 27430, <a class="reference external" href="http://www.nber.org/papers/w27430">http://www.nber.org/papers/w27430</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.ert.SIR">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.ert.</span></span><span class="sig-name descname"><span class="pre">SIR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pii</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dd0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lockdown_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vaccination_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/ert.html#SIR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.ert.SIR" title="Link to this definition">¶</a></dt>
+<dd><p>SIR model forecast.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.ert.calibrate">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.ert.</span></span><span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pi1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi1_shr_target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi2_shr_target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/ert.html#calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.ert.calibrate" title="Link to this definition">¶</a></dt>
+<dd><p>Calibrate pi1, pi2 and pi3 using SIR model.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.ert.func">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.ert.</span></span><span class="sig-name descname"><span class="pre">func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/ert.html#func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.ert.func" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate infection spread.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.ert.func1">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.ert.</span></span><span class="sig-name descname"><span class="pre">func1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/ert.html#func1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.ert.func1" title="Link to this definition">¶</a></dt>
+<dd><p>Calibration function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.ert.func2_squared">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.ert.</span></span><span class="sig-name descname"><span class="pre">func2_squared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/ert.html#func2_squared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.ert.func2_squared" title="Link to this definition">¶</a></dt>
+<dd><p>Error function for constrained calibration.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.ert.func_squared">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.ert.</span></span><span class="sig-name descname"><span class="pre">func_squared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/ert.html#func_squared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.ert.func_squared" title="Link to this definition">¶</a></dt>
+<dd><p>Error function for constrained calibration.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.ert.getYearlySeries">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.ert.</span></span><span class="sig-name descname"><span class="pre">getYearlySeries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheet_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startrow</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/ert.html#getYearlySeries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.ert.getYearlySeries" title="Link to this definition">¶</a></dt>
+<dd><p>Convert weekly frequency to yearly frequency.</p>
+<p>This approximates shortage of labor supply due to COVID-19 effects.
+It is used in DIGNAR-19 toolkitf to calibrate model.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.ert.integral">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.ert.</span></span><span class="sig-name descname"><span class="pre">integral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">betta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">income</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/ert.html#integral"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.ert.integral" title="Link to this definition">¶</a></dt>
+<dd><p>Compute household lifetime utility.</p>
+<p>Cost of loss of lives is a discounted value of ‘Ti’ years of individual income.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.ert.main">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.ert.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/ert.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.ert.main" title="Link to this definition">¶</a></dt>
+<dd><p>Forecast based on ERT model.</p>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.epidemic.gsw">
+<span id="snowdrop-src-epidemic-gsw-module"></span><h2>snowdrop.src.epidemic.gsw module<a class="headerlink" href="#module-snowdrop.src.epidemic.gsw" title="Link to this heading">¶</a></h2>
+<p>Created on Thu Jan 28 00:25:58 2021</p>
+<p>&#64;author: A.Goumilevski</p>
+</section>
+<section id="module-snowdrop.src.epidemic.gsw_tunes">
+<span id="snowdrop-src-epidemic-gsw-tunes-module"></span><h2>snowdrop.src.epidemic.gsw_tunes module<a class="headerlink" href="#module-snowdrop.src.epidemic.gsw_tunes" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.epidemic.gsw_v2">
+<span id="snowdrop-src-epidemic-gsw-v2-module"></span><h2>snowdrop.src.epidemic.gsw_v2 module<a class="headerlink" href="#module-snowdrop.src.epidemic.gsw_v2" title="Link to this heading">¶</a></h2>
+<p>Created on Thu Jan 28 00:25:58 2021</p>
+<p>&#64;author: Alexei</p>
+</section>
+<section id="module-snowdrop.src.epidemic.sir_params">
+<span id="snowdrop-src-epidemic-sir-params-module"></span><h2>snowdrop.src.epidemic.sir_params module<a class="headerlink" href="#module-snowdrop.src.epidemic.sir_params" title="Link to this heading">¶</a></h2>
+<p>Created on Wed Mar 24 17:01:29 2021</p>
+<p>&#64;author: alexei</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.SIR">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">SIR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#SIR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.SIR" title="Link to this definition">¶</a></dt>
+<dd><p>SIR model.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.SIRS">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">SIRS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#SIRS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.SIRS" title="Link to this definition">¶</a></dt>
+<dd><p>SIR model with wildtype and resistant virus strain.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.SIRV">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">SIRV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#SIRV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.SIRV" title="Link to this definition">¶</a></dt>
+<dd><p>SIR model with two virus strains and vaccination.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.SIRVS">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">SIRVS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#SIRVS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.SIRVS" title="Link to this definition">¶</a></dt>
+<dd><p>SIR model with wildtype and resistant virus strain.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.Virus">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">Virus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#Virus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.Virus" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.calibrate">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.calibrate" title="Link to this definition">¶</a></dt>
+<dd><p>Calibrate pi1, pi2 and pi3 using SIR model.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.filter_solution">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">filter_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lmbd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1600</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#filter_solution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.filter_solution" title="Link to this definition">¶</a></dt>
+<dd><p>Filter data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.func">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.func" title="Link to this definition">¶</a></dt>
+<dd><p>Calibration function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.func_squared">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">func_squared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#func_squared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.func_squared" title="Link to this definition">¶</a></dt>
+<dd><p>Error function for constrained calibration.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.getData">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">getData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">country</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#getData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.getData" title="Link to this definition">¶</a></dt>
+<dd><p>Read data files.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.epidemic.sir_params.plot_data">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.epidemic.sir_params.</span></span><span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">country</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/epidemic/sir_params.html#plot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.epidemic.sir_params.plot_data" title="Link to this definition">¶</a></dt>
+<dd><p>Plots data.</p>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.epidemic">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.epidemic" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+      <li>Previous: <a href="snowdrop.src.html" title="previous chapter">snowdrop.src package</a></li>
+      <li>Next: <a href="snowdrop.src.graphs.html" title="next chapter">snowdrop.src.graphs package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.epidemic.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

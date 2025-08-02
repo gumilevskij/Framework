@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.solver.AIM.AIMsolver &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.solver.AIM.AIMsolver</h1><div class="highlight"><pre>
+<div class="viewcode-block" id="AIMsolver">
+<a class="viewcode-back" href="../../../../../../source/snowdrop.src.numeric.solver.AIM.html#snowdrop.src.numeric.solver.AIM.AIMsolver.AIMsolver">[docs]</a>
+<span></span><span class="k">def</span> <span class="nf">AIMsolver</span><span class="p">(</span><span class="n">jacobian</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">model</span><span class="p">,</span><span class="n">suppress_warnings</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      Maps jacobian to AIM 1st order model solver designed and developed by Gary Anderson</span>
+<span class="sd">      and derives the solution for ghx and ghu from the AIM outputs.</span>
+
+<span class="sd">      AIM System is given as a sum:</span>
+<span class="sd">      i.e. for i=-$...+&amp;   SUM(Hi*xt+i)= £*zt, t = 0, . . . ,?</span>
+<span class="sd">      and its input as single array of matrices: [H-$...  Hi ... H+&amp;]</span>
+<span class="sd">      and its solution as xt=SUM( Bi*xt+i) + @*£*zt for i=-$...-1</span>
+<span class="sd">      with the output in form bb=[B-$...  Bi ... B-1] and @=inv(Ho+H1*B-1)</span>
+<span class="sd">      jacobian = [fy&#39;-$...  fy&#39;i ... fy&#39;+&amp;  fu&#39;]</span>
+<span class="sd">      where [fy&#39;-$...  fy&#39;i ... fy&#39;+&amp;]=[H-$...  Hi ... H+&amp;] and fu&#39;= £</span>
+<span class="sd">     </span>
+<span class="sd">      INPUTS</span>
+<span class="sd">        jacobian   [matrix] 1st order derivatives of the model&#39;s equations</span>
+<span class="sd">        model      [object] Definition of the model.</span>
+<span class="sd">     </span>
+<span class="sd">      OUTPUTS</span>
+<span class="sd">        aimcode    [integer]          1: the model defines variables uniquely</span>
+<span class="sd">        aimcode is resolved in AIMerr as</span>
+<span class="sd">    		   1:  unique solution.</span>
+<span class="sd">    		   2:  roots not correctly computed by real_schur.</span>
+<span class="sd">    		   3:  too many big roots. </span>
+<span class="sd">    		   35: too many big roots, and q(:,right) is singular.</span>
+<span class="sd">    		   4:  too few big roots. </span>
+<span class="sd">    		   45: too few big roots, and q(:,right) is singular.</span>
+<span class="sd">    		   5:  q(:,right) is singular.</span>
+<span class="sd">    		   61: too many exact shiftrights.</span>
+<span class="sd">    		   62: too many numeric shiftrights.</span>
+<span class="sd">    		   63: A is NAN or INF. </span>
+<span class="sd">    		   64: problem in SPEIG.</span>
+<span class="sd">               else:  return code not properly specified.</span>
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">from</span> <span class="nn">.Amalg</span> <span class="kn">import</span> <span class="n">Amalg</span>
+    <span class="kn">from</span> <span class="nn">.Aimerr</span> <span class="kn">import</span> <span class="n">Aimerr</span>
+
+    <span class="n">aimcode</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> 
+    <span class="n">neq</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">jacobian</span><span class="p">)</span>  <span class="c1"># no of equations</span>
+    <span class="n">lags</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># no of lags</span>
+    <span class="n">leads</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># no of leads</span>
+    <span class="n">klen</span> <span class="o">=</span> <span class="n">leads</span><span class="o">+</span><span class="n">lags</span><span class="o">+</span><span class="mi">1</span>   <span class="c1"># total lenght</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">neq</span><span class="p">,</span> <span class="n">neq</span><span class="o">*</span><span class="n">klen</span><span class="p">))</span>  <span class="c1"># allocate space</span>
+    <span class="c1"># &quot;sparse&quot; the compact jacobia into AIM H aray of matrices</span>
+    <span class="c1"># without exogenous shocks</span>
+    <span class="c1">#H[:,np.argwhere(lli[:])] = jacobian[:,np.nonzero(lli[:])]</span>
+    <span class="c1"># Rearrange matrices so that lag derivatives come first</span>
+    <span class="n">H</span><span class="p">[:,:</span><span class="n">neq</span><span class="p">]</span> <span class="o">=</span> <span class="n">jacobian</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">neq</span><span class="p">:</span><span class="mi">3</span><span class="o">*</span><span class="n">neq</span><span class="p">]</span>
+    <span class="n">H</span><span class="p">[:,</span><span class="n">neq</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">neq</span><span class="p">]</span> <span class="o">=</span> <span class="n">jacobian</span><span class="p">[:,</span><span class="n">neq</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">neq</span><span class="p">]</span>
+    <span class="n">H</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">neq</span><span class="p">:</span><span class="mi">3</span><span class="o">*</span><span class="n">neq</span><span class="p">]</span> <span class="o">=</span> <span class="n">jacobian</span><span class="p">[:,:</span><span class="n">neq</span><span class="p">]</span>
+    <span class="n">condn</span>  <span class="o">=</span> <span class="mf">1.e-10</span> <span class="c1">#Amalg uses this in zero tests</span>
+    <span class="n">uprbnd</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mf">1.e-6</span> <span class="c1">#allow unit roots</span>
+    				   <span class="c1"># forward only models - AIM must have at least 1 lead and 1 lag.</span>
+    <span class="k">if</span> <span class="n">lags</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">neq</span><span class="p">),</span><span class="n">H</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> 
+        <span class="n">lags</span> <span class="o">=</span> <span class="mi">1</span> 
+
+    <span class="c1"># backward looking only models</span>
+    <span class="k">if</span> <span class="n">leads</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">H</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">neq</span><span class="p">)),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> 
+        <span class="n">leads</span> <span class="o">=</span> <span class="mi">1</span> 
+
+    <span class="k">try</span><span class="p">:</span> <span class="c1"># try to run AIM</span>
+        <span class="p">(</span><span class="n">bb</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="n">F</span><span class="p">,</span><span class="n">rts</span><span class="p">,</span><span class="n">ia</span><span class="p">,</span><span class="n">nexact</span><span class="p">,</span><span class="n">nnumeric</span><span class="p">,</span><span class="n">lgroots</span><span class="p">,</span><span class="n">aimcode</span><span class="p">)</span> <span class="o">=</span> <span class="n">Amalg</span><span class="p">(</span><span class="n">H</span><span class="p">,</span><span class="n">neq</span><span class="p">,</span><span class="n">lags</span><span class="p">,</span><span class="n">leads</span><span class="p">,</span><span class="n">condn</span><span class="p">,</span><span class="n">uprbnd</span><span class="p">)</span> 
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">suppress_warnings</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AIM Solver error: &#39;</span><span class="o">+</span><span class="n">err</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+    <span class="k">if</span> <span class="n">aimcode</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1">#if OK</span>
+        <span class="c1"># Matrix A</span>
+        <span class="n">A</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">bb</span><span class="p">)</span>	
+        <span class="n">F</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">F</span><span class="p">)</span>	
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>		
+		<span class="c1"># Build matrix of shocks			 </span>
+        <span class="n">Psi</span> <span class="o">=</span> <span class="o">-</span> <span class="n">jacobian</span><span class="p">[:,</span><span class="mi">3</span><span class="o">*</span><span class="n">neq</span><span class="p">:]</span> 
+        <span class="n">R</span>   <span class="o">=</span> <span class="n">phi</span> <span class="o">@</span> <span class="n">Psi</span>
+        <span class="c1"># Find constants</span>
+        <span class="n">C</span>   <span class="o">=</span> <span class="o">-</span><span class="n">phi</span> <span class="o">@</span> <span class="n">c</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">Aimerr</span><span class="p">(</span><span class="n">aimcode</span><span class="p">)</span> 
+        <span class="c1">#warning(&#39;Error in AIM: aimcode=#d, erro=#s&#39;, aimcode, err)  </span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">suppress_warnings</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error in AIM: aimcode= </span><span class="si">{</span><span class="n">aimcode</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="n">aimcode</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">aimcode</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># too big exception, use mjdgges</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Error in AIM: aimcode=</span><span class="si">{</span><span class="n">aimcode</span><span class="si">}</span><span class="s1">  # </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">suppress_warnings</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> 
+        <span class="c1">#    if aimcode &gt; 5</span>
+        <span class="c1">#        print(f&#39;Error in AIM: aimcode= {aimcode} : {aimcode}&#39;) </span>
+        <span class="c1">#        aimcode=5 </span>
+
+    <span class="k">return</span> <span class="n">A</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="n">F</span><span class="p">,</span><span class="n">aimcode</span><span class="p">,</span><span class="n">rts</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

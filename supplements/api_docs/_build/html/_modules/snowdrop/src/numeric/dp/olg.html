@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.dp.olg &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.dp.olg</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Sun Mar 21 08:40:21 2021</span>
+
+<span class="sd">@author: A.Goumilevski</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">sparse</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">fmin</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">pinv</span><span class="p">,</span><span class="n">norm</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.utils.prettyTable</span> <span class="kn">import</span> <span class="n">PrettyTable</span>
+
+<span class="n">NITERATIONS</span> <span class="o">=</span> <span class="mi">100</span> <span class="c1"># Maximum nymber of iterations</span>
+<span class="n">EPSILON</span> <span class="o">=</span> <span class="mf">1.e-5</span>   <span class="c1"># Convergence tolerance</span>
+<span class="n">Nt</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">Ngrid</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">ngrid</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># Parameters</span>
+<span class="n">period_duration</span> <span class="o">=</span> <span class="mi">60</span><span class="o">/</span><span class="mi">2</span>       <span class="c1"># We are assuming that average life expectancy is 60 years</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span>                  <span class="c1"># Cobb-Douglas productivity function parameter, exponent</span>
+<span class="n">beta</span>  <span class="o">=</span> <span class="mf">0.5</span>                  <span class="c1"># Impatience parameter</span>
+<span class="n">pi</span> <span class="o">=</span> <span class="mi">10</span>                      <span class="c1"># Cobb-Douglas productivity function parameter, normalization</span>
+<span class="n">phi</span> <span class="o">=</span> <span class="mf">0.9</span>                    <span class="c1"># Selfishness parameter</span>
+<span class="n">labor</span> <span class="o">=</span> <span class="mi">1</span>                    <span class="c1"># Unskilled labor multiplier</span>
+<span class="n">U</span> <span class="o">=</span> <span class="mf">1.03</span><span class="o">**</span><span class="n">period_duration</span>    <span class="c1"># Final machine productivity</span>
+<span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">u</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span> <span class="o">=</span> <span class="n">U</span>   <span class="c1"># Machine productivity</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">alpha</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span><span class="o">/</span><span class="n">alpha</span><span class="o">/</span><span class="n">U</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">alpha</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Initialize variables</span>
+<span class="n">L</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">N</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">Q</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">QL</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">QM</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">QS</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">WL</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">)</span>
+<span class="n">I1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">I2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">C1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">C2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">Sv</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">)</span>
+<span class="n">B</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">U1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">U2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span>  <span class="n">M</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">Nt</span><span class="p">);</span> <span class="n">S</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">Nt</span><span class="p">)</span>
+
+    
+<div class="viewcode-block" id="value_iteration">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.value_iteration">[docs]</a>
+<span class="k">def</span> <span class="nf">value_iteration</span><span class="p">(</span><span class="n">Output</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve Overlapping Generations Model by value function iteration.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        Output: If True save results in excel file.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        iterations : int</span>
+<span class="sd">            Number of iterations.</span>
+<span class="sd">        crit : float</span>
+<span class="sd">            Convergence value.</span>
+<span class="sd">        y : numpy array</span>
+<span class="sd">            Solution of Bellman equation</span>
+<span class="sd">            </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">u</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">S</span>
+    
+    <span class="n">crit</span> <span class="o">=</span> <span class="mf">1.e6</span>                              <span class="c1"># convergence value</span>
+    <span class="n">iterations</span> <span class="o">=</span> <span class="mi">0</span>                           <span class="c1"># number of iterations</span>
+    <span class="n">dr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Ngrid</span><span class="p">,</span><span class="n">Ngrid</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>   <span class="c1"># decision rule</span>
+    
+    <span class="c1"># Initial guess for value function</span>
+    <span class="n">Tv</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Ngrid</span><span class="p">,</span><span class="n">Ngrid</span><span class="p">))</span>
+    <span class="n">utility</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Ngrid</span><span class="p">,</span><span class="n">Ngrid</span><span class="p">))</span>
+    <span class="n">x</span>       <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Ngrid</span><span class="p">,</span><span class="n">Ngrid</span><span class="p">))</span>
+    <span class="n">v</span>       <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">sv</span>      <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="c1"># Need to seed M, typically with &#39;equilibrium&#39; values.</span>
+    <span class="n">Mt</span><span class="p">,</span><span class="n">St</span> <span class="o">=</span> <span class="n">MSequilibrium</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> 
+    <span class="n">M</span> <span class="o">*=</span> <span class="n">Mt</span><span class="p">;</span> <span class="n">S</span> <span class="o">*=</span> <span class="n">St</span>
+    
+    <span class="c1"># Define grid</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.e-6</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="n">Ngrid</span><span class="p">)</span>
+    <span class="n">co</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.e-6</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="n">Ngrid</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">Nt</span><span class="p">):</span>
+        
+        <span class="c1"># The marginal products of current M,S determine the income/consumption</span>
+        <span class="c1"># of the current old generation.  </span>
+        <span class="n">n</span>  <span class="o">=</span> <span class="n">L</span> <span class="o">+</span> <span class="n">u</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">Mt</span>
+        <span class="n">s</span>  <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">sv</span><span class="o">+</span><span class="n">L</span><span class="o">/</span><span class="n">u</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="n">QM</span> <span class="o">=</span> <span class="n">dQdM</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">u</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="n">QS</span> <span class="o">=</span> <span class="n">dQdS</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+        
+        <span class="c1">### Solve Bellamn equation</span>
+        <span class="k">while</span> <span class="n">crit</span> <span class="o">&gt;</span> <span class="n">EPSILON</span><span class="p">:</span>
+            
+            <span class="n">m</span> <span class="o">=</span> <span class="n">Mt</span><span class="p">;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">St</span><span class="p">;</span> <span class="n">sv</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># Utility</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ngrid</span><span class="p">):</span>
+                <span class="n">cy_g</span> <span class="o">=</span> <span class="n">cy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ngrid</span><span class="p">):</span>
+                    <span class="n">co_g</span> <span class="o">=</span> <span class="n">co</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                    <span class="n">utility</span>  <span class="o">=</span> <span class="n">phi</span><span class="o">*</span><span class="n">beta</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">cy_g</span><span class="p">)</span> <span class="o">+</span> <span class="n">phi</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">beta</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">co_g</span><span class="p">)</span>
+                    <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>   <span class="o">=</span> <span class="n">utility</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">v</span> 
+                    <span class="c1"># find new policy rule</span>
+                    <span class="n">Tv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="n">dr</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+          
+            <span class="c1"># Decision rules</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ngrid</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ngrid</span><span class="p">):</span>
+                    <span class="n">cy</span>  <span class="o">=</span> <span class="n">cy</span><span class="p">[</span><span class="n">dr</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]]</span>
+                    <span class="n">co</span>  <span class="o">=</span> <span class="n">co</span><span class="p">[</span><span class="n">dr</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]]</span>
+            
+            <span class="c1"># Update variables</span>
+            <span class="n">n</span>  <span class="o">=</span> <span class="n">L</span> <span class="o">+</span> <span class="n">u</span><span class="o">*</span><span class="n">m</span>
+            <span class="c1"># Skills</span>
+            <span class="n">s</span>  <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">sv</span><span class="o">+</span><span class="n">L</span><span class="o">/</span><span class="n">u</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+            <span class="c1"># Wage rate</span>
+            <span class="n">w</span>  <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="n">s</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">alpha</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Income of old</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">QM</span><span class="o">*</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="n">s</span><span class="p">)</span>
+            <span class="c1"># Bequest from old to young</span>
+            <span class="n">b</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">io</span> <span class="o">-</span> <span class="n">co</span><span class="p">)</span>
+            <span class="c1"># Income of young</span>
+            <span class="n">iy</span> <span class="o">=</span> <span class="n">w</span><span class="o">*</span><span class="n">L</span> <span class="o">+</span> <span class="n">b</span>
+            <span class="c1"># Savings of youn</span>
+            <span class="n">sv</span> <span class="o">=</span> <span class="n">iy</span> <span class="o">-</span>  <span class="n">cy</span>
+            <span class="c1"># sv = m + s</span>
+            <span class="c1"># Perfect foresigh assumption</span>
+            <span class="n">m</span>  <span class="o">=</span> <span class="n">alpha</span><span class="o">*</span><span class="n">sv</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="n">L</span><span class="o">/</span><span class="n">u</span>
+            <span class="n">s</span>  <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span><span class="o">/</span><span class="n">alpha</span><span class="o">*</span><span class="n">n</span>
+  
+            <span class="n">crit</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">Tv</span><span class="o">-</span><span class="n">v</span><span class="p">))</span><span class="o">/</span><span class="n">norm</span><span class="p">(</span><span class="n">Tv</span><span class="p">)</span>
+            <span class="n">v</span>   <span class="o">=</span> <span class="n">Tv</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">iterations</span> <span class="o">+=</span> <span class="mi">1</span>
+            
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Iteration # </span><span class="si">{}</span><span class="s1"> </span><span class="se">\t</span><span class="s1">Criterion: </span><span class="si">{:.2e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span><span class="n">crit</span><span class="p">))</span>
+            
+         <span class="c1"># Compute intermediate product N:</span>
+        <span class="n">N</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">L</span> <span class="o">+</span> <span class="n">u</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">M</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        <span class="c1"># Compute productivity and marginal products:</span>
+        <span class="n">Q</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>  <span class="o">=</span> <span class="n">Qtot</span><span class="p">(</span><span class="n">N</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="n">S</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="n">QL</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">dQdL</span><span class="p">(</span><span class="n">N</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="n">S</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="n">WL</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">QL</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">L</span>
+        
+        <span class="c1"># Compute interest factor. Use market clearing condition:</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">QM</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        <span class="c1"># Compute constant m:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">WL</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">R</span><span class="o">/</span><span class="p">(</span><span class="n">R</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="c1"># Old generation income is a return on machines and skilled labor </span>
+        <span class="n">I2</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">QM</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">M</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">QS</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">S</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        <span class="c1"># Compute bequest of old generation. </span>
+        <span class="n">bequest</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">phi</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">phi</span><span class="o">*</span><span class="n">beta</span><span class="p">)</span><span class="o">*</span><span class="n">I2</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">m</span><span class="o">*</span><span class="n">phi</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">beta</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">phi</span><span class="o">*</span><span class="n">beta</span><span class="p">)</span>
+        <span class="c1"># It can not become negative.</span>
+        <span class="n">b</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">I2</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">bequest</span><span class="p">))</span>  
+        <span class="c1"># Compute consumption of old generation</span>
+        <span class="n">C2</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">I2</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">b</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        
+        <span class="c1"># Consumption of young generation:</span>
+        <span class="c1"># Income of young generation is labor plus bequest</span>
+        <span class="n">I1</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">WL</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        <span class="n">C1</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">beta</span><span class="o">*</span><span class="n">phi</span><span class="o">*</span><span class="p">(</span><span class="n">I1</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">m</span><span class="o">/</span><span class="n">R</span><span class="p">)</span>
+        <span class="c1"># Consumption can not be greater than income</span>
+        <span class="n">C1</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">I1</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="n">C1</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="c1"># Savings of young generation:</span>
+        <span class="n">Sv</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">I1</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">C1</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+    
+        <span class="c1"># Perfect foresight assumption means the Young now guess the next M and</span>
+        <span class="c1"># S values, using their unanticipated guess for u.  These become the</span>
+        <span class="c1"># values of M,S for next period.  </span>
+        <span class="n">Mt</span><span class="p">,</span><span class="n">St</span> <span class="o">=</span> <span class="n">MSnext</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="n">Sv</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="n">u</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="n">M</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Mt</span><span class="p">)</span>
+        <span class="n">S</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">St</span><span class="p">)</span>
+    
+        <span class="c1"># Utility definition</span>
+        <span class="n">U1</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">beta</span><span class="o">*</span><span class="n">phi</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">C1</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>  <span class="c1"># This is the current young utility</span>
+        <span class="n">U2</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">beta</span><span class="p">)</span><span class="o">*</span><span class="n">phi</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">C2</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>   <span class="c1"># This is the current old utility</span>
+    
+       
+    <span class="c1"># Compute Lifetime Utility as a sum of utilities for each generation:</span>
+    <span class="n">LU</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">U1</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">U2</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">LU</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">LU</span><span class="p">)</span>
+    
+    <span class="n">share_of_labor</span> <span class="o">=</span> <span class="p">(</span><span class="n">QL</span><span class="o">*</span><span class="n">L</span><span class="o">+</span><span class="n">QS</span><span class="o">*</span><span class="n">S</span><span class="p">)</span><span class="o">/</span><span class="n">Q</span>
+    
+    <span class="c1"># Display results:</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">QL</span><span class="p">,</span> <span class="n">QS</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">Sv</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">I1</span><span class="p">,</span> <span class="n">I2</span><span class="p">,</span> <span class="n">share_of_labor</span><span class="p">,</span> <span class="n">LU</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">row_stack</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">table</span><span class="p">))</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">row_stack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">Nt</span><span class="p">),</span> <span class="n">table</span><span class="p">))</span> 
+    
+    <span class="n">header</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">,</span><span class="s1">&#39;u&#39;</span><span class="p">,</span><span class="s1">&#39;m&#39;</span><span class="p">,</span><span class="s1">&#39;Mg&#39;</span><span class="p">,</span><span class="s1">&#39;Mp&#39;</span><span class="p">,</span><span class="s1">&#39;TP&#39;</span><span class="p">,</span><span class="s1">&#39;S&#39;</span><span class="p">,</span><span class="s1">&#39;Wl&#39;</span><span class="p">,</span><span class="s1">&#39;Ws&#39;</span><span class="p">,</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="s1">&#39;D&#39;</span><span class="p">,</span><span class="s1">&#39;Sv&#39;</span><span class="p">,</span><span class="s1">&#39;Q&#39;</span><span class="p">,</span><span class="s1">&#39;Iy&#39;</span><span class="p">,</span><span class="s1">&#39;Io&#39;</span><span class="p">,</span><span class="s1">&#39;Share of Labor&#39;</span><span class="p">,</span><span class="s1">&#39;LU&#39;</span><span class="p">,</span><span class="s1">&#39;U&#39;</span><span class="p">,</span><span class="s1">&#39;Bequest&#39;</span><span class="p">]</span>
+    <span class="n">pTable</span> <span class="o">=</span> <span class="n">PrettyTable</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+    <span class="n">pTable</span><span class="o">.</span><span class="n">float_format</span> <span class="o">=</span> <span class="s1">&#39;6.2&#39;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">Nt</span><span class="o">-</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">pTable</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="n">table</span><span class="p">[:,</span><span class="n">i</span><span class="p">])</span>
+ 
+    <span class="k">if</span> <span class="n">Output</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Bequest model:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">pTable</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+        
+        <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">..</span><span class="se">\\</span><span class="s1">data</span><span class="se">\\</span><span class="s1">bequest.csv&#39;</span>
+        <span class="n">rows</span><span class="p">,</span><span class="n">columns</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">header</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">rows</span><span class="o">-</span><span class="mi">2</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="n">columns</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">r</span><span class="p">,</span><span class="n">c</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">r</span><span class="p">,</span><span class="n">c</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="n">var_names</span>
+    <span class="n">var_labels</span>
+    
+    <span class="k">return</span> <span class="n">iterations</span><span class="p">,</span><span class="n">crit</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">var_names</span><span class="p">,</span><span class="n">var_labels</span> </div>
+
+    
+<div class="viewcode-block" id="MSequilibrium">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.MSequilibrium">[docs]</a>
+<span class="k">def</span> <span class="nf">MSequilibrium</span><span class="p">(</span><span class="n">Labor</span><span class="p">,</span><span class="n">u</span><span class="p">):</span>
+    <span class="c1"># Find equilibrium M,S values.</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)]])</span>
+    <span class="n">WL</span> <span class="o">=</span> <span class="n">pi</span><span class="o">*</span><span class="n">alpha</span><span class="o">*</span><span class="p">(</span><span class="n">alpha</span><span class="o">*</span><span class="n">u</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="n">alpha</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mi">1</span><span class="o">-</span><span class="n">beta</span><span class="p">)</span><span class="o">*</span><span class="n">WL</span><span class="p">,</span> <span class="n">Labor</span><span class="o">/</span><span class="n">u</span><span class="p">])</span>
+    <span class="n">M</span><span class="p">,</span><span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">M</span><span class="p">,</span><span class="n">S</span></div>
+
+
+<div class="viewcode-block" id="MSnext">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.MSnext">[docs]</a>
+<span class="k">def</span> <span class="nf">MSnext</span><span class="p">(</span><span class="n">Labor</span><span class="p">,</span><span class="n">Saving</span><span class="p">,</span><span class="n">u</span><span class="p">):</span>
+    <span class="c1"># Find non-equilibrium M,S values.</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)]])</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">Saving</span><span class="p">,</span> <span class="n">Labor</span><span class="o">/</span><span class="n">u</span> <span class="p">])</span>
+    <span class="n">M</span><span class="p">,</span><span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">M</span><span class="p">,</span><span class="n">S</span></div>
+
+
+<div class="viewcode-block" id="Qtot">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.Qtot">[docs]</a>
+<span class="k">def</span> <span class="nf">Qtot</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">S</span><span class="p">):</span>
+    <span class="c1"># Compute total productivity Q.</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">pi</span> <span class="o">*</span> <span class="n">N</span><span class="o">**</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">S</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Q</span></div>
+
+
+<div class="viewcode-block" id="dQdL">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.dQdL">[docs]</a>
+<span class="k">def</span> <span class="nf">dQdL</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">S</span><span class="p">):</span>
+    <span class="c1"># Compute marginal product w.r.t. L.</span>
+    <span class="n">QL</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">N</span><span class="o">/</span><span class="n">S</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">alpha</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">QL</span></div>
+
+
+<div class="viewcode-block" id="dQdM">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.dQdM">[docs]</a>
+<span class="k">def</span> <span class="nf">dQdM</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">S</span><span class="p">,</span><span class="n">u</span><span class="p">):</span>
+    <span class="c1"># Compute marginal product w.r.t. M.</span>
+    <span class="n">QM</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">*</span> <span class="n">u</span> <span class="o">*</span> <span class="p">(</span><span class="n">N</span><span class="o">/</span><span class="n">S</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">alpha</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">QM</span></div>
+
+
+<div class="viewcode-block" id="dQdS">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.dQdS">[docs]</a>
+<span class="k">def</span> <span class="nf">dQdS</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">S</span><span class="p">):</span>
+    <span class="c1"># Compute marginal product w.r.t. S. </span>
+    <span class="n">QS</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">N</span><span class="o">/</span><span class="n">S</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">alpha</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">QS</span></div>
+
+
+<div class="viewcode-block" id="Plot">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.dp.html#snowdrop.src.numeric.dp.olg.Plot">[docs]</a>
+<span class="k">def</span> <span class="nf">Plot</span><span class="p">(</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">variable_names</span><span class="p">,</span><span class="n">var_labels</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.graphs.util</span> <span class="kn">import</span> <span class="n">plotTimeSeries</span>
+    
+    <span class="n">header</span> <span class="o">=</span> <span class="s1">&#39;Solution of Bellman Equation&#39;</span>
+    <span class="n">series</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">labels</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">titles</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">ns</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">nvar</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvar</span><span class="p">):</span>
+            <span class="n">ser</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">lbls</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ns</span><span class="p">):</span>
+                <span class="n">ser</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">,:,</span><span class="n">i</span><span class="p">]))</span>
+                <span class="n">lbls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Markov State &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">))</span>
+            <span class="n">series</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ser</span><span class="p">)</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lbls</span><span class="p">)</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">variable_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">var_labels</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">var_labels</span> <span class="k">else</span> <span class="n">var</span>
+            <span class="n">titles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">n</span><span class="p">,</span><span class="n">nvar</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvar</span><span class="p">):</span>
+            <span class="n">ser</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">series</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">ser</span><span class="p">])</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">variable_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">var_labels</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">var_labels</span> <span class="k">else</span> <span class="n">var</span>
+            <span class="n">titles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nvar</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvar</span><span class="p">):</span>
+            <span class="n">ser</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">lbls</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">ns</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ns</span><span class="p">):</span>
+                <span class="n">ser</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">ns</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">lbls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Markov State &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lbls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="n">series</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ser</span><span class="p">)</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lbls</span><span class="p">)</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">variable_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">var_labels</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">var_labels</span> <span class="k">else</span> <span class="n">var</span>
+            <span class="n">titles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nvar</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">nvar</span><span class="o">/</span><span class="mi">3</span><span class="p">)),</span><span class="mi">3</span><span class="p">]</span>
+        
+    <span class="n">plotTimeSeries</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span><span class="n">titles</span><span class="o">=</span><span class="n">titles</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">,</span><span class="n">sizes</span><span class="o">=</span><span class="n">sizes</span><span class="p">)</span></div>
+
+    
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The main entry point.&quot;&quot;&quot;</span>
+    <span class="c1"># Solve Bellman equation</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+    <span class="n">iterations</span><span class="p">,</span><span class="n">crit</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">var_names</span><span class="p">,</span><span class="n">var_labels</span> <span class="o">=</span> <span class="n">value_iteration</span><span class="p">()</span>
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Elapsed time: </span><span class="si">%.2f</span><span class="s2"> (seconds)&quot;</span> <span class="o">%</span> <span class="n">elapsed</span><span class="p">)</span>
+    
+    <span class="n">Plot</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">variable_names</span><span class="o">=</span><span class="n">variable_names</span><span class="p">,</span><span class="n">var_labels</span><span class="o">=</span><span class="n">var_labels</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

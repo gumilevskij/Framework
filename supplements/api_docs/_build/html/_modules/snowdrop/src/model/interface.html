@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.model.interface &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.model.interface</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">colored</span>
+
+<div class="viewcode-block" id="Interface">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.interface.Interface">[docs]</a>
+<span class="k">class</span> <span class="nc">Interface</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">model_name</span><span class="p">,</span><span class="n">symbols</span><span class="p">,</span><span class="n">equations</span><span class="p">,</span><span class="n">ss_equations</span><span class="p">,</span><span class="n">calibration</span><span class="p">,</span><span class="n">exog_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">ss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">constraints</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">objective_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">eq_vars</span><span class="o">=</span><span class="p">[],</span><span class="n">steady_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">measurement_equations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">bellman</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">terminal_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">exogenous</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">data_sources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">measurement_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">definitions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">priors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">bSparse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor that initializes Iterface object.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            :param self: Parameter.</span>
+<span class="sd">            :type self: Model.</span>
+<span class="sd">            :param model_name: Name of model.</span>
+<span class="sd">            :type model_name: str.</span>
+<span class="sd">            :param symbols: List of symbols.</span>
+<span class="sd">            :type symbols: list.</span>
+<span class="sd">            :param equations: List of equations.</span>
+<span class="sd">            :type equations: list.</span>
+<span class="sd">            :param ss_equations: List of steady state equations. Those are obtained by dropping time index from original equations.</span>
+<span class="sd">            :type ss_equations: list.</span>
+<span class="sd">            :param calibration: Calibration dict.</span>
+<span class="sd">            :type calibration: dict.</span>
+<span class="sd">            :param exog_data: Exogenous time series.</span>
+<span class="sd">            :type exog_data: dict.            </span>
+<span class="sd">            :param ss: Map with variables names as a key and steady states as values.</span>
+<span class="sd">            :type ss: dict.</span>
+<span class="sd">            :param order: Approximation order of solution of the non-linear system of equations.</span>
+<span class="sd">            :type order: int.</span>
+<span class="sd">            :param constraints: Constraints of variables.</span>
+<span class="sd">            :type constraints: list.</span>
+<span class="sd">            :param objective_function: Objective function.</span>
+<span class="sd">            :type objective_function: str.</span>
+<span class="sd">            :param eq_vars: List of variables in each equation.</span>
+<span class="sd">            :type eq_vars: list.</span>
+<span class="sd">            :param measurement_equations:List of measurement equations.</span>
+<span class="sd">            :type measurement_equations: list.</span>
+<span class="sd">            :param bellman: Bellman equation.</span>
+<span class="sd">            :type bellman: list.</span>
+<span class="sd">            :param terminal_values: List of terminal values.</span>
+<span class="sd">            :type terminal_values: list.</span>
+<span class="sd">            :param domain: The domain of endogenous variables.</span>
+<span class="sd">            :type domain: dict.</span>
+<span class="sd">            :param exogenous: List of exogenous variables.</span>
+<span class="sd">            :type exogenous: list.</span>
+<span class="sd">            :param options: Model options.</span>
+<span class="sd">            :type options: dict.</span>
+<span class="sd">            :param measurement_file_path: Path to a file with measurement data.</span>
+<span class="sd">            :type measurement_file_path: str.</span>
+<span class="sd">            :param definitions: Model definitions.</span>
+<span class="sd">            :type definitions: dict.</span>
+<span class="sd">            :param priors: Prior distribution and parameters values.</span>
+<span class="sd">            :type priors: dict.</span>
+<span class="sd">            :param bSparse: Use sparse matrix algebra.</span>
+<span class="sd">            :type bSparse: bool.</span>
+<span class="sd">            :returns:  Instance of SymbolicModel class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">model_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steady_state</span> <span class="o">=</span> <span class="n">steady_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ss</span> <span class="o">=</span> <span class="n">ss</span>
+
+        <span class="c1"># reorder symbols</span>
+        <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+        <span class="n">canonical_order</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">,</span> <span class="s1">&#39;original_variables&#39;</span><span class="p">,</span> <span class="s1">&#39;new_variables&#39;</span><span class="p">,</span> <span class="s1">&#39;measurement_variables&#39;</span><span class="p">,</span> <span class="s1">&#39;exogenous&#39;</span><span class="p">,</span> <span class="s1">&#39;states&#39;</span><span class="p">,</span> <span class="s1">&#39;controls&#39;</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">,</span> <span class="s1">&#39;steady-state&#39;</span><span class="p">,</span> <span class="s1">&#39;shocks&#39;</span><span class="p">,</span> <span class="s1">&#39;measurement_shocks&#39;</span><span class="p">,</span> <span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+        <span class="n">osyms</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">vg</span> <span class="ow">in</span> <span class="n">canonical_order</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">vg</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+                 <span class="n">osyms</span><span class="p">[</span><span class="n">vg</span><span class="p">]</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="n">vg</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">vg</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">vg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">canonical_order</span><span class="p">:</span>
+                 <span class="n">osyms</span><span class="p">[</span><span class="n">vg</span><span class="p">]</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="n">vg</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span>                  <span class="o">=</span> <span class="n">order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span>                <span class="o">=</span> <span class="n">osyms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eq_vars</span>                <span class="o">=</span> <span class="n">eq_vars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">equations</span>              <span class="o">=</span> <span class="n">equations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ss_equations</span>           <span class="o">=</span> <span class="n">ss_equations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measurement_equations</span>  <span class="o">=</span> <span class="n">measurement_equations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bellman</span>                <span class="o">=</span> <span class="n">bellman</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span>       <span class="o">=</span> <span class="n">calibration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bSparse</span>                <span class="o">=</span> <span class="n">bSparse</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain</span>                 <span class="o">=</span> <span class="n">domain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exogenous</span>              <span class="o">=</span> <span class="n">exogenous</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span>                <span class="o">=</span> <span class="n">options</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_sources</span>           <span class="o">=</span> <span class="n">data_sources</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">definitions</span>            <span class="o">=</span> <span class="n">definitions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terminal_values</span>        <span class="o">=</span> <span class="n">terminal_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">priors</span>                 <span class="o">=</span> <span class="n">priors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measurement_file_path</span>  <span class="o">=</span> <span class="n">measurement_file_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exog_data</span>              <span class="o">=</span> <span class="n">exog_data</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span>            <span class="o">=</span> <span class="n">constraints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span>     <span class="o">=</span> <span class="n">objective_function</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">SOLVER</span>                 <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span>                 <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eqLabels</span>               <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_vars</span>             <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eqs_number</span>             <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numberOfNewEqs</span>         <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">COMPLEMENTARITY_CONDITIONS</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="c1"># Use auto-differentiation autograd/jax package instead of symbolic differentiation with sympy package</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autodiff</span>               <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jaxdiff</span>                <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="c1"># Correct state equations if variable was assigned to fixed value:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ss</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">equations</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">eq</span> <span class="ow">in</span> <span class="n">ss</span><span class="p">:</span>
+                    <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="o">=</span> <span class="n">ss</span><span class="p">[</span><span class="n">eq</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ss_equations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span>
+		
+
+    <span class="c1"># def eval_formula(self, expr, dataframe=None, calib=None):</span>
+    <span class="c1">#      &quot;&quot;&quot;Evaluate formula.&quot;&quot;&quot;</span>
+    <span class="c1">#      from snowdrop.src.snowdrop.src.preprocessor.eval_formula import eval_formula  as evaluate</span>
+    <span class="c1">#      if calib is None:</span>
+    <span class="c1">#          calib = self.calibration_dict</span>
+    <span class="c1">#      return evaluate(expr,dataframe=dataframe,context=calib)</span>
+    
+      
+    <span class="c1"># def get_exogenous(self, **opts):</span>
+    <span class="c1">#      &quot;&quot;&quot;</span>
+    <span class="c1">#      Return exogenous process object.</span>
+         
+    <span class="c1">#      Parameters:</span>
+    <span class="c1">#          :param self: Model object.</span>
+    <span class="c1">#          :type self: &#39;SymbolicModel&#39;</span>
+    <span class="c1">#          :param opts: Keyword arguments .</span>
+    <span class="c1">#          :type opts: Dictionary.</span>
+    <span class="c1">#          :returns:  Exogenous process object.</span>
+             
+    <span class="c1">#      &quot;&quot;&quot;</span>
+    <span class="c1">#      from snowdrop.src.preprocessor.processes import IIDProcess</span>
+    <span class="c1">#      import copy</span>
+    <span class="c1">#      gg = self.exogenous</span>
+    <span class="c1">#      if gg is None:</span>
+    <span class="c1">#          raise Exception(&quot;Model has no exogenous process.&quot;)</span>
+    <span class="c1">#      d = copy.deepcopy(gg)</span>
+    <span class="c1">#      d.update(opts)</span>
+    <span class="c1">#      if &#39;type&#39; in d: d.pop(&#39;type&#39;)</span>
+    <span class="c1">#      obj =  d.eval(self.calibration_dict.flat)</span>
+    <span class="c1">#      if not isinstance(obj, IIDProcess):</span>
+    <span class="c1">#          raise Exception(&quot;Exogenous shocks don&#39;t follow an IID process.&quot;)</span>
+    <span class="c1">#      else:</span>
+    <span class="c1">#          return obj</span>
+    
+    
+<div class="viewcode-block" id="Interface.get_exogenous">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.interface.Interface.get_exogenous">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_exogenous</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Exogenous process assumption.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.language</span> <span class="kn">import</span> <span class="n">Normal</span><span class="p">,</span><span class="n">MvNormal</span><span class="p">,</span><span class="n">LogNormal</span><span class="p">,</span><span class="n">Beta</span><span class="p">,</span><span class="n">Binomial</span><span class="p">,</span><span class="n">Gamma</span><span class="p">,</span><span class="n">Logistic</span><span class="p">,</span><span class="n">Uniform</span>
+        
+        <span class="n">exo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exogenous&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">calibration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_calibration</span><span class="p">()</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">get_type</span><span class="p">(</span><span class="n">exo</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Normal&quot;</span><span class="p">:</span>
+            <span class="n">exog</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="o">**</span><span class="n">exo</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;MvNormal&quot;</span><span class="p">:</span>
+            <span class="n">exog</span> <span class="o">=</span> <span class="n">MvNormal</span><span class="p">(</span><span class="o">**</span><span class="n">exo</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;LogNormal&quot;</span><span class="p">:</span>
+            <span class="n">exog</span> <span class="o">=</span> <span class="n">LogNormal</span><span class="p">(</span><span class="o">**</span><span class="n">exo</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Beta&quot;</span><span class="p">:</span>
+            <span class="n">exog</span> <span class="o">=</span> <span class="n">Beta</span><span class="p">(</span><span class="o">**</span><span class="n">exo</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Binomial&quot;</span><span class="p">:</span>
+            <span class="n">exog</span> <span class="o">=</span> <span class="n">Binomial</span><span class="p">(</span><span class="o">**</span><span class="n">exo</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Gamma&quot;</span><span class="p">:</span>
+            <span class="n">exog</span> <span class="o">=</span> <span class="n">Gamma</span><span class="p">(</span><span class="o">**</span><span class="n">exo</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Logistic&quot;</span><span class="p">:</span>
+            <span class="n">exog</span> <span class="o">=</span> <span class="n">Logistic</span><span class="p">(</span><span class="o">**</span><span class="n">exo</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Uniform&quot;</span><span class="p">:</span>
+            <span class="n">exog</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="o">**</span><span class="n">exo</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unknown exogenous type </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">))</span>
+            
+        <span class="n">d</span> <span class="o">=</span> <span class="n">exog</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">calibration</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">d</span></div>
+
+   
+    
+<div class="viewcode-block" id="Interface.get_distribution">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.interface.Interface.get_distribution">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+<span class="w">         </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         Return random process distribution.</span>
+<span class="sd">         </span>
+<span class="sd">         Parameters:</span>
+<span class="sd">             :param self: Model object.</span>
+<span class="sd">             :type self: &#39;SymbolicModel&#39;</span>
+<span class="sd">             :param opts: Keyword arguments.</span>
+<span class="sd">             :type opts: Dictionary.</span>
+<span class="sd">             :returns:  Exogenous process object.</span>
+<span class="sd">         </span>
+<span class="sd">         &quot;&quot;&quot;</span>
+         <span class="kn">import</span> <span class="nn">copy</span>
+         <span class="n">gg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;distribution&#39;</span><span class="p">)</span>
+         <span class="k">if</span> <span class="n">gg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Model has no distribution.&quot;</span><span class="p">)</span>
+         <span class="n">d</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">gg</span><span class="p">)</span>
+         <span class="n">d</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+         <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span> 
+             <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span>
+         <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span><span class="o">.</span><span class="n">flat</span><span class="p">)</span></div>
+
+     
+     
+<div class="viewcode-block" id="Interface.get_cov">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.interface.Interface.get_cov">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+<span class="w">         </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         Return covariance of distribution.</span>
+<span class="sd">         </span>
+<span class="sd">         Parameters:</span>
+<span class="sd">             :param self: Model object.</span>
+<span class="sd">             :type self: &#39;SymbolicModel&#39;</span>
+<span class="sd">             :param opts: Keyword arguments .</span>
+<span class="sd">             :type opts: dict.</span>
+<span class="sd">             :returns:  Covariance matrix.</span>
+<span class="sd">             </span>
+<span class="sd">         &quot;&quot;&quot;</span>
+         <span class="n">gg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;distribution&#39;</span><span class="p">)</span>
+         <span class="k">if</span> <span class="n">gg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Model has no distribution.&quot;</span><span class="p">)</span>
+         <span class="k">return</span> <span class="n">gg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cov&quot;</span><span class="p">)</span></div>
+
+     
+    
+<div class="viewcode-block" id="Interface.get_domain">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.interface.Interface.get_domain">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">         </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         Return domain of endogenous variables.</span>
+<span class="sd">         </span>
+<span class="sd">         Parameters:</span>
+<span class="sd">             :param self: Model object.</span>
+<span class="sd">             :type self: &#39;SymbolicModel&#39;</span>
+<span class="sd">             :returns:  Domain of endogenous variables.</span>
+<span class="sd">             </span>
+<span class="sd">         &quot;&quot;&quot;</span>
+         <span class="n">sdomain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span>
+         <span class="n">states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;states&#39;</span><span class="p">]</span>
+         <span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.language</span> <span class="kn">import</span> <span class="n">Domain</span>
+         <span class="n">d</span> <span class="o">=</span> <span class="n">Domain</span><span class="p">(</span><span class="o">**</span><span class="n">sdomain</span><span class="p">)</span>
+         <span class="n">domain</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span><span class="o">.</span><span class="n">flat</span><span class="p">)</span>
+         <span class="c1"># a bit of a hack...</span>
+         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">domain</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+             <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+                 <span class="n">domain</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+         <span class="k">return</span> <span class="n">domain</span></div>
+
+     
+        
+    <span class="c1"># def get_grid(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;Grid definitions.&quot;&quot;&quot;</span>
+    <span class="c1">#     # determine bounds:</span>
+    <span class="c1">#     domain = self.get_domain()</span>
+    <span class="c1">#     min = domain.min</span>
+    <span class="c1">#     max = domain.max</span>
+
+    <span class="c1">#     options = self.data.get(&quot;options&quot;, {})</span>
+
+    <span class="c1">#     # determine grid_type</span>
+    <span class="c1">#     grid_type = get_type(options.get(&quot;grid&quot;))</span>
+    <span class="c1">#     if grid_type is None:</span>
+    <span class="c1">#         grid_type = get_address(self.data,</span>
+    <span class="c1">#                                 [&quot;options:grid:type&quot;, &quot;options:grid_type&quot;])</span>
+    <span class="c1">#     if grid_type is None:</span>
+    <span class="c1">#         raise Exception(&#39;Missing grid geometry (&quot;options:grid:type&quot;)&#39;)</span>
+
+    <span class="c1">#     if grid_type.lower() in (&#39;cartesian&#39;, &#39;cartesiangrid&#39;):</span>
+    <span class="c1">#         from snowdrop.src.utils.grids import CartesianGrid</span>
+    <span class="c1">#         orders = get_address(self.data,</span>
+    <span class="c1">#                              [&quot;options:grid:n&quot;, &quot;options:grid:orders&quot;])</span>
+    <span class="c1">#         if orders is None:</span>
+    <span class="c1">#             orders = [20] * len(min)</span>
+    <span class="c1">#         grid = CartesianGrid(min=min, max=max, n=orders)</span>
+            
+    <span class="c1">#     elif grid_type.lower() in (&#39;smolyak&#39;, &#39;smolyakgrid&#39;):</span>
+    <span class="c1">#         from snowdrop.src.utils.grids import SmolyakGrid</span>
+    <span class="c1">#         mu = get_address(self.data, [&quot;options:grid:mu&quot;])</span>
+    <span class="c1">#         if mu is None:</span>
+    <span class="c1">#             mu = 2</span>
+    <span class="c1">#         grid = SmolyakGrid(min=min, max=max, mu=mu)</span>
+            
+    <span class="c1">#     else:</span>
+    <span class="c1">#         raise Exception(&quot;Unknown grid type.&quot;)</span>
+
+    <span class="c1">#     return grid</span>
+     
+<div class="viewcode-block" id="Interface.get_grid">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.interface.Interface.get_grid">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">dis_opts</span><span class="p">):</span>
+<span class="w">         </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         Return model grid object.</span>
+<span class="sd">         </span>
+<span class="sd">         Parameters:</span>
+<span class="sd">             :param self: Model object.</span>
+<span class="sd">             :type self: &#39;SymbolicModel&#39;</span>
+<span class="sd">             :param dis_opts: Distribution options.</span>
+<span class="sd">             :type dis_opts: dict</span>
+<span class="sd">             :returns:  Domain of endogenous variables.</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+         <span class="kn">import</span> <span class="nn">copy</span>
+         <span class="n">domain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_domain</span><span class="p">()</span>
+         <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">domain</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+         <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">domain</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+    
+         <span class="n">gg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;grid&#39;</span><span class="p">,{})</span>
+    
+         <span class="n">d</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">gg</span><span class="p">)</span>
+         <span class="n">gtype</span> <span class="o">=</span> <span class="n">dis_opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span>
+         <span class="k">if</span> <span class="n">gtype</span><span class="p">:</span>
+             <span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.language</span> <span class="kn">import</span> <span class="n">minilang</span>
+             <span class="k">try</span><span class="p">:</span>
+                 <span class="bp">cls</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">minilang</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">==</span><span class="n">gtype</span><span class="o">.</span><span class="n">lower</span><span class="p">()][</span><span class="mi">0</span><span class="p">]</span>
+             <span class="k">except</span><span class="p">:</span>
+                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unknown grid type </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gtype</span><span class="p">))</span>
+             <span class="n">d</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">d</span><span class="p">)</span>
+    
+         <span class="n">d</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">dis_opts</span><span class="p">)</span>
+         <span class="k">if</span> <span class="s1">&#39;a&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+             <span class="n">d</span><span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+         <span class="k">if</span> <span class="s1">&#39;b&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+             <span class="n">d</span><span class="p">[</span><span class="s1">&#39;max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+         <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span>
+         <span class="n">grid</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span><span class="o">.</span><span class="n">flat</span><span class="p">)</span>
+         <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.grids</span> <span class="kn">import</span> <span class="n">CartesianGrid</span><span class="p">,</span> <span class="n">SmolyakGrid</span>
+         <span class="k">if</span> <span class="s1">&#39;Cartesian&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
+             <span class="k">return</span> <span class="n">CartesianGrid</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">orders</span><span class="p">)</span>
+         <span class="k">if</span> <span class="s1">&#39;Smolyak&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
+             <span class="k">return</span> <span class="n">SmolyakGrid</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span></div>
+
+
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Represent Model class object as a string.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            :param self: Model object.</span>
+<span class="sd">            :type self: Model.</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">equations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">equations</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">eqLabels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eqLabels</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Transition Equations:</span><span class="se">\n</span><span class="s1">---------------------</span><span class="se">\n\n</span><span class="s1">&#39;</span> 
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">equations</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">eqLabels</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">eqLabels</span><span class="p">):</span>
+                <span class="n">label</span> <span class="o">=</span> <span class="n">eqLabels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+                <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            
+            <span class="n">s</span> <span class="o">+=</span> <span class="sa">u</span><span class="s2">&quot; </span><span class="si">{label:4}</span><span class="s2"> :  </span><span class="si">{eqn}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">eqn</span><span class="o">=</span><span class="n">eq</span><span class="p">)</span>
+
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">measurement_equations</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Measurement Equations:</span><span class="se">\n</span><span class="s1">---------------------</span><span class="se">\n\n</span><span class="s1">&#39;</span> 
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">measurement_equations</span><span class="p">):</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="sa">u</span><span class="s2">&quot; </span><span class="si">{eqn:2}</span><span class="s2">  :  </span><span class="si">{eqs}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">eqn</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">eqs</span><span class="o">=</span><span class="n">eq</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">variables</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Variables:</span><span class="se">\n</span><span class="s1">----------</span><span class="se">\n</span><span class="s1">&#39;</span> 
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">  :  </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exogenous</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Exogenous variables:</span><span class="se">\n</span><span class="s1">-----------</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exogenous</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">parameters</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Parameters:</span><span class="se">\n</span><span class="s1">-----------</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">  :  </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Calibration:</span><span class="se">\n</span><span class="s1">-----------</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span><span class="p">:</span>  
+                <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">  :  </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">colored</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Objective Function: </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;func = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+          
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">colored</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Constraints:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+            <span class="c1">#ss += &quot;-&quot;*12 + &quot;\n&quot;</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.lt.&quot;</span><span class="p">,</span> <span class="s2">&quot; &lt; &quot;</span><span class="p">)</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.le.&quot;</span><span class="p">,</span> <span class="s2">&quot; &lt;= &quot;</span><span class="p">)</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.gt.&quot;</span><span class="p">,</span> <span class="s2">&quot; &gt; &quot;</span><span class="p">)</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.ge.&quot;</span><span class="p">,</span> <span class="s2">&quot; &gt;= &quot;</span><span class="p">)</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;   </span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            
+
+        <span class="k">return</span> <span class="n">s</span>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Official representation of Model class object.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            :param self: Model object.</span>
+<span class="sd">            :type self: Model.</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
+
+    
+    
+<div class="viewcode-block" id="get_type">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.interface.get_type">[docs]</a>
+<span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Type of a tag.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">tag</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;!&quot;</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span></div>
+
+		
+		
+<div class="viewcode-block" id="get_address">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.interface.get_address">[docs]</a>
+<span class="k">def</span> <span class="nf">get_address</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Type of a grid.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="p">[</span><span class="n">get_address</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">address</span><span class="p">]</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">found</span> <span class="k">if</span> <span class="n">f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">found</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+        
+    <span class="n">fields</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+        
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

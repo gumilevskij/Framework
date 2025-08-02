@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.preprocessor.condition &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.preprocessor.condition</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Mar 12 08:47:07 2021</span>
+
+<span class="sd">@author: alexei</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">erf</span>
+
+<div class="viewcode-block" id="log">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.condition.log">[docs]</a>
+<span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns negative number if argment is negative.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">100</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="Subs">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.condition.Subs">[docs]</a>
+<span class="k">def</span> <span class="nf">Subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Nothing to substitute.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="Derivative">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.condition.Derivative">[docs]</a>
+<span class="k">def</span> <span class="nf">Derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns derivative of a constant, i.e. zero</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        f : function</span>
+<span class="sd">            Function</span>
+<span class="sd">        x : float</span>
+<span class="sd">            variable.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="Positive">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.condition.Positive">[docs]</a>
+<span class="k">def</span> <span class="nf">Positive</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if argument is non-negative</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        x : float</span>
+<span class="sd">            variable.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Negative">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.condition.Negative">[docs]</a>
+<span class="k">def</span> <span class="nf">Negative</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if argument is non-negative</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        x : float</span>
+<span class="sd">            variable.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IfThen">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.condition.IfThen">[docs]</a>
+<span class="k">def</span> <span class="nf">IfThen</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks condition and returns x or 0.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        condition : bool</span>
+<span class="sd">            Condition.</span>
+<span class="sd">        x : float</span>
+<span class="sd">            Variable value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Variable x value if condition is satisfied and 0 if not.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">condition</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">if</span> <span class="n">condition</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>   </div>
+
+    
+    
+<div class="viewcode-block" id="IfThenElse">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.condition.IfThenElse">[docs]</a>
+<span class="k">def</span> <span class="nf">IfThenElse</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks condition and returns a or b.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        condition : bool</span>
+<span class="sd">            Condition.</span>
+<span class="sd">        a : float</span>
+<span class="sd">            Variable value.</span>
+<span class="sd">        b : float</span>
+<span class="sd">            Variable value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Variable &#39;a&#39; value if condition is satisfied and variable &#39;b&#39; value if not.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">condition</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">if</span> <span class="n">condition</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">a</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">b</span></div>
+
+    
+<div class="viewcode-block" id="myzif">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.preprocessor.html#snowdrop.src.preprocessor.condition.myzif">[docs]</a>
+<span class="k">def</span> <span class="nf">myzif</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return user defined function value.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        x : float</span>
+<span class="sd">            Variable value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">erf</span><span class="p">(</span><span class="mf">3.</span><span class="o">*</span><span class="n">x</span><span class="p">))</span><span class="o">/</span><span class="mf">2.</span>
+    <span class="k">return</span> <span class="n">y</span></div>
+
+    
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

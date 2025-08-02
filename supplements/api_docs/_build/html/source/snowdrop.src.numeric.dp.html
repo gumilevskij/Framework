@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.numeric.dp package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.numeric.estimation package" href="snowdrop.src.numeric.estimation.html" />
+    <link rel="prev" title="snowdrop.src.numeric.bayes package" href="snowdrop.src.numeric.bayes.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-numeric-dp-package">
+<h1>snowdrop.src.numeric.dp package<a class="headerlink" href="#snowdrop-src-numeric-dp-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.numeric.dp.bellman">
+<span id="snowdrop-src-numeric-dp-bellman-module"></span><h2>snowdrop.src.numeric.dp.bellman module<a class="headerlink" href="#module-snowdrop.src.numeric.dp.bellman" title="Link to this heading">¶</a></h2>
+<p>Dynamic Programming.</p>
+<p>Created on Mon Feb 15 16:48:37 2021
+&#64;author: A.Goumilevski</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.bellman.</span></span><span class="sig-name descname"><span class="pre">DynProg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_par</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utilities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eqs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">be_eqs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_boundary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_boundary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shk_stddedv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ngrid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.discrete">
+<span class="sig-name descname"><span class="pre">discrete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.discrete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.discrete" title="Link to this definition">¶</a></dt>
+<dd><p>Solve Bellman equation by discrete dynamic programming method.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.getBounds">
+<span class="sig-name descname"><span class="pre">getBounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.getBounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.getBounds" title="Link to this definition">¶</a></dt>
+<dd><p>Returns bound on variables.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>m<span class="classifier">dict</span></dt><dd><p>Locals mapping.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>Array of 2-tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.parametric_value_iteration">
+<span class="sig-name descname"><span class="pre">parametric_value_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.parametric_value_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.parametric_value_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the OGM by parametric value iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>n<span class="classifier">int, optional</span></dt><dd><p>Number of data points in the grid. The default is 20.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>iterations<span class="classifier">int</span></dt><dd><p>Number of iterations.</p>
+</dd>
+<dt>crit<span class="classifier">float</span></dt><dd><p>Convergence value.</p>
+</dd>
+<dt>y<span class="classifier">numpy array</span></dt><dd><p>Solution of Bellman equation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.policy_iteration">
+<span class="sig-name descname"><span class="pre">policy_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.policy_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.policy_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the OGM by policy function iteration (Howard method).</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>Instance of tis class.</p>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>iterations<span class="classifier">int</span></dt><dd><p>Number of iterations.</p>
+</dd>
+<dt>crit<span class="classifier">float</span></dt><dd><p>Convergence value.</p>
+</dd>
+<dt>y<span class="classifier">numpy array</span></dt><dd><p>Solution of Bellman equation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.stochastic_policy_iteration">
+<span class="sig-name descname"><span class="pre">stochastic_policy_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.stochastic_policy_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.stochastic_policy_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the stochastic OGM by policy iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>p<span class="classifier">float, optional</span></dt><dd><p>Probability value. The default is 0.9.
+It is used for discrete approximation of VAR(1) stochastic process.</p>
+</dd>
+<dt>kmin<span class="classifier">float, optional</span></dt><dd><p>Lower bound on the grid. The default is 0.2</p>
+</dd>
+<dt>kmax<span class="classifier">float, optional</span></dt><dd><p>Upper bound on the grid. The default is 6.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>iterations<span class="classifier">int</span></dt><dd><p>Number of iterations.</p>
+</dd>
+<dt>crit<span class="classifier">float</span></dt><dd><p>Convergence value.</p>
+</dd>
+<dt>y<span class="classifier">numpy array</span></dt><dd><p>Solution of Bellman equation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.stochastic_value_iteration">
+<span class="sig-name descname"><span class="pre">stochastic_value_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.stochastic_value_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.stochastic_value_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the stochastic OGM by value iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>p<span class="classifier">float, optional</span></dt><dd><p>Probability value. The default is 0.9.
+It is used for discrete approximation of VAR(1) stochastic process.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>iterations<span class="classifier">int</span></dt><dd><p>Number of iterations.</p>
+</dd>
+<dt>crit<span class="classifier">float</span></dt><dd><p>Convergence value.</p>
+</dd>
+<dt>y<span class="classifier">numpy array</span></dt><dd><p>Solution of Bellman equation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.transient_func">
+<span class="sig-name descname"><span class="pre">transient_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.transient_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.transient_func" title="Link to this definition">¶</a></dt>
+<dd><p>Compute function values.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>x<span class="classifier">list</span></dt><dd><p>Variables values.</p>
+</dd>
+<dt>params<span class="classifier">list</span></dt><dd><p>Parameters values.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>Function values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.updateVariables">
+<span class="sig-name descname"><span class="pre">updateVariables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.updateVariables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.updateVariables" title="Link to this definition">¶</a></dt>
+<dd><p>Updates control variables.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>d<span class="classifier">dict</span></dt><dd><p>Dictionary of variables and parameters names and values.</p>
+</dd>
+<dt>j<span class="classifier">int</span></dt><dd><p>Index of grid.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>numpy.array</dt><dd><p>Utility function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.utility_function">
+<span class="sig-name descname"><span class="pre">utility_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.utility_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.utility_function" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate utility function.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>m<span class="classifier">dict</span></dt><dd><p>Dictionary of variables and parameters names and values.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>numpy array</dt><dd><p>Utility values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.value">
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.value" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.DynProg.value_iteration">
+<span class="sig-name descname"><span class="pre">value_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#DynProg.value_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.DynProg.value_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the OGM by value function iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>Instance of tis class.</p>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>iterations<span class="classifier">int</span></dt><dd><p>Number of iterations.</p>
+</dd>
+<dt>crit<span class="classifier">float</span></dt><dd><p>Convergence value.</p>
+</dd>
+<dt>y<span class="classifier">numpy array</span></dt><dd><p>Solution of Bellman equation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.Plot">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.bellman.</span></span><span class="sig-name descname"><span class="pre">Plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#Plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.Plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.bellman.simulate">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.bellman.</span></span><span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/bellman.html#simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.bellman.simulate" title="Link to this definition">¶</a></dt>
+<dd><p>Solve Bellman equation.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>model<span class="classifier">Model object</span></dt><dd><p>Instance of model class.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>numpy.array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.dp.collard">
+<span id="snowdrop-src-numeric-dp-collard-module"></span><h2>snowdrop.src.numeric.dp.collard module<a class="headerlink" href="#module-snowdrop.src.numeric.dp.collard" title="Link to this heading">¶</a></h2>
+<p>Created on Mon Feb  8 17:50:30 2021</p>
+<p>Originally developed by Fabrice Collard.</p>
+<p>Please see Dynamic Programming Notes #7 at:
+<a class="reference external" href="http://fabcol.free.fr/pdf/lectnotes7.pdf">http://fabcol.free.fr/pdf/lectnotes7.pdf</a></p>
+<p>Translated from Matlab code to Python by A.Goumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.collard.Plot">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.collard.</span></span><span class="sig-name descname"><span class="pre">Plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/collard.html#Plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.collard.Plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.collard.parametric_value_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.collard.</span></span><span class="sig-name descname"><span class="pre">parametric_value_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/collard.html#parametric_value_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.collard.parametric_value_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the OGM by parametric value iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>n<span class="classifier">int, optional</span></dt><dd><p>Order of polynomials. The default is 10.</p>
+</dd>
+<dt>nbk<span class="classifier">int, optional</span></dt><dd><p>Number of data points in the grid. The default is 20.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>c<span class="classifier">numpy array</span></dt><dd><p>Consumption.</p>
+</dd>
+<dt>v<span class="classifier">numpy array</span></dt><dd><p>Value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.collard.policy_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.collard.</span></span><span class="sig-name descname"><span class="pre">policy_iteration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/collard.html#policy_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.collard.policy_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the OGM by policy function iteration (Howard method).</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>c<span class="classifier">numpy array</span></dt><dd><p>Consumption.</p>
+</dd>
+<dt>kp<span class="classifier">numpy array</span></dt><dd><p>Capital.</p>
+</dd>
+<dt>u<span class="classifier">numpy array</span></dt><dd><p>Utility.</p>
+</dd>
+<dt>v<span class="classifier">numpy array</span></dt><dd><p>Value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.collard.stochastic_constarined_policy_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.collard.</span></span><span class="sig-name descname"><span class="pre">stochastic_constarined_policy_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/collard.html#stochastic_constarined_policy_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.collard.stochastic_constarined_policy_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve and simulate the borrowing constraint problem (policy iteration).</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>p<span class="classifier">float, optional</span></dt><dd><p>Probability value. The default is 0.8.
+It is used for discrete approximation of VAR(1) stochastic process.</p>
+</dd>
+<dt>r<span class="classifier">float, optional</span></dt><dd><p>Interest rate. The default is 0.02.</p>
+</dd>
+<dt>beta<span class="classifier">float, optional</span></dt><dd><p>Discount factor. The default is 0.95.</p>
+</dd>
+<dt>gam<span class="classifier">float, optional</span></dt><dd><p>Replacement ratio. The default is 0.5.</p>
+</dd>
+<dt>amin<span class="classifier">float, optional</span></dt><dd><p>Lower bound on the grid. The default is 0.</p>
+</dd>
+<dt>amax<span class="classifier">float, optional</span></dt><dd><p>Upper bound on the grid. The default is 10.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>c<span class="classifier">numpy array</span></dt><dd><p>Consumption.</p>
+</dd>
+<dt>k<span class="classifier">numpy array</span></dt><dd><p>Capital.</p>
+</dd>
+<dt>ast<span class="classifier">numpy array</span></dt><dd><p>Asset values.</p>
+</dd>
+<dt>v<span class="classifier">numpy array</span></dt><dd><p>Value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.collard.stochastic_policy_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.collard.</span></span><span class="sig-name descname"><span class="pre">stochastic_policy_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/collard.html#stochastic_policy_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.collard.stochastic_policy_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the stochastic OGM by policy iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>p<span class="classifier">float, optional</span></dt><dd><p>Probability value. The default is 0.9.
+It is used for discrete approximation of VAR(1) stochastic process.</p>
+</dd>
+<dt>kmin<span class="classifier">float, optional</span></dt><dd><p>Lower bound on the grid. The default is 0.2</p>
+</dd>
+<dt>kmax<span class="classifier">float, optional</span></dt><dd><p>Upper bound on the grid. The default is 6.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>c<span class="classifier">numpy array</span></dt><dd><p>Consumption.</p>
+</dd>
+<dt>kp<span class="classifier">numpy array</span></dt><dd><p>Capital.</p>
+</dd>
+<dt>v<span class="classifier">numpy array</span></dt><dd><p>Value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.collard.stochastic_value_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.collard.</span></span><span class="sig-name descname"><span class="pre">stochastic_value_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/collard.html#stochastic_value_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.collard.stochastic_value_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the stochastic OGM by value iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>p<span class="classifier">float, optional</span></dt><dd><p>Probability value. The default is 0.9.
+It is used for discrete approximation of VAR(1) stochastic process.</p>
+</dd>
+<dt>interpolate<span class="classifier">bool, optional</span></dt><dd><p>If True interpolate grid. The default is False.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>c<span class="classifier">numpy array</span></dt><dd><p>Consumption.</p>
+</dd>
+<dt>u<span class="classifier">numpy array</span></dt><dd><p>Utility.</p>
+</dd>
+<dt>v<span class="classifier">numpy array</span></dt><dd><p>Value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.collard.value_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.collard.</span></span><span class="sig-name descname"><span class="pre">value_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/collard.html#value_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.collard.value_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the OGM by value function iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>interpolate<span class="classifier">bool, optional</span></dt><dd><p>If True performs interpolation of value function to grid nodes. 
+The default is False.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.dp.discrete">
+<span id="snowdrop-src-numeric-dp-discrete-module"></span><h2>snowdrop.src.numeric.dp.discrete module<a class="headerlink" href="#module-snowdrop.src.numeric.dp.discrete" title="Link to this heading">¶</a></h2>
+<p>Discrete programming example:
+QuantEcon website:  <a class="reference external" href="https://quantecon.org/quantecon-py/">https://quantecon.org/quantecon-py/</a></p>
+<p>Originally developed by Thomas J. Sargent and John Stachurski
+Please see lecture on Discrete State Dynamic Programming: 
+<a class="reference external" href="https://python-advanced.quantecon.org/_downloads/pdf/discrete_dp.pdf">https://python-advanced.quantecon.org/_downloads/pdf/discrete_dp.pdf</a></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.discrete.SimpleOG">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.discrete.</span></span><span class="sig-name descname"><span class="pre">SimpleOG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">B</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">α</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">β</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/discrete.html#SimpleOG"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.discrete.SimpleOG" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.discrete.SimpleOG.populate_Q">
+<span class="sig-name descname"><span class="pre">populate_Q</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/discrete.html#SimpleOG.populate_Q"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.discrete.SimpleOG.populate_Q" title="Link to this definition">¶</a></dt>
+<dd><p>Populate the Q matrix by setting</p>
+<blockquote>
+<div><p>Q[s, a, s’] = 1 / (1 + B) if a &lt;= s’ &lt;= a + B</p>
+</div></blockquote>
+<p>and zero otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.discrete.SimpleOG.populate_R">
+<span class="sig-name descname"><span class="pre">populate_R</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/discrete.html#SimpleOG.populate_R"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.discrete.SimpleOG.populate_R" title="Link to this definition">¶</a></dt>
+<dd><p>Populate the R matrix, with R[s, a] = -np.inf for infeasible
+state-action pairs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.discrete.SimpleOG.u">
+<span class="sig-name descname"><span class="pre">u</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/discrete.html#SimpleOG.u"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.discrete.SimpleOG.u" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.dp.grids">
+<span id="snowdrop-src-numeric-dp-grids-module"></span><h2>snowdrop.src.numeric.dp.grids module<a class="headerlink" href="#module-snowdrop.src.numeric.dp.grids" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.CartesianGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">CartesianGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#CartesianGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.CartesianGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.dp.grids.Grid" title="snowdrop.src.numeric.dp.grids.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>CartesianGrid is a sub-class of Grid class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.CartesianGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cartesian'</span></em><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.CartesianGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.EmptyGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">EmptyGrid</span></span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#EmptyGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.EmptyGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.dp.grids.Grid" title="snowdrop.src.numeric.dp.grids.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>EmptyGrid is a sub-class of Grid class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.EmptyGrid.n_nodes">
+<span class="sig-name descname"><span class="pre">n_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#EmptyGrid.n_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.EmptyGrid.n_nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.EmptyGrid.node">
+<span class="sig-name descname"><span class="pre">node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#EmptyGrid.node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.EmptyGrid.node" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.EmptyGrid.nodes">
+<span class="sig-name descname"><span class="pre">nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#EmptyGrid.nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.EmptyGrid.nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.EmptyGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'empty'</span></em><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.EmptyGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.Grid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">Grid</span></span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#Grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.Grid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Grid class is a parent class of EmptyGrid, PointGrid, UnstructuredGrid, 
+CartesianGrid, NonUniformCartesianGrid, and SmolyakGrid sub-classes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.Grid.n_nodes">
+<span class="sig-name descname"><span class="pre">n_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#Grid.n_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.Grid.n_nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.Grid.node">
+<span class="sig-name descname"><span class="pre">node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#Grid.node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.Grid.node" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.Grid.nodes">
+<span class="sig-name descname"><span class="pre">nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#Grid.nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.Grid.nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.NonUniformCartesianGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">NonUniformCartesianGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#NonUniformCartesianGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.NonUniformCartesianGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.dp.grids.Grid" title="snowdrop.src.numeric.dp.grids.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>NonUniformCartesianGrid is a sub-class of Grid class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.NonUniformCartesianGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NonUniformCartesian'</span></em><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.NonUniformCartesianGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.Plot">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">Plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#Plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.Plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.PointGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">PointGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#PointGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.PointGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.dp.grids.Grid" title="snowdrop.src.numeric.dp.grids.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>PointGrid is a sub-class of Grid class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.PointGrid.n_nodes">
+<span class="sig-name descname"><span class="pre">n_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#PointGrid.n_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.PointGrid.n_nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.PointGrid.node">
+<span class="sig-name descname"><span class="pre">node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#PointGrid.node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.PointGrid.node" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.PointGrid.nodes">
+<span class="sig-name descname"><span class="pre">nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#PointGrid.nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.PointGrid.nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.PointGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'point'</span></em><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.PointGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.SmolyakGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">SmolyakGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#SmolyakGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.SmolyakGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.dp.grids.Grid" title="snowdrop.src.numeric.dp.grids.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>SmolyakGrid is a sub-class of Grid class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.SmolyakGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Smolyak'</span></em><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.SmolyakGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.UnstructuredGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">UnstructuredGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#UnstructuredGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.UnstructuredGrid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snowdrop.src.numeric.dp.grids.Grid" title="snowdrop.src.numeric.dp.grids.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a></p>
+<p>UnstructuredGrid is a sub-class of Grid class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.UnstructuredGrid.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'unstructured'</span></em><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.UnstructuredGrid.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.cat_grids">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">cat_grids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#cat_grids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.cat_grids" title="Link to this definition">¶</a></dt>
+<dd><p>Concatenate grids.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>grid_1<span class="classifier">Grid</span></dt><dd><p>The first grid object.</p>
+</dd>
+<dt>grid_2<span class="classifier">Grid</span></dt><dd><p>The second grid object.</p>
+</dd>
+</dl>
+</dd>
+<dt>Raises:</dt><dd><p>Exception if grid is not Cartesian nor empty. is not Car</p>
+</dd>
+<dt>Returns:</dt><dd><p>Grid object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.mlinspace">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">mlinspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orders</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#mlinspace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.mlinspace" title="Link to this definition">¶</a></dt>
+<dd><p>Return Cartesian grid.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.n_nodes">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">n_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#n_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.n_nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.node">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.node" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.nodes">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.nodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.grids.prod">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.grids.</span></span><span class="sig-name descname"><span class="pre">prod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/grids.html#prod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.grids.prod" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.dp.hjb">
+<span id="snowdrop-src-numeric-dp-hjb-module"></span><h2>snowdrop.src.numeric.dp.hjb module<a class="headerlink" href="#module-snowdrop.src.numeric.dp.hjb" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.hjb.main">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.hjb.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/hjb.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.hjb.main" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.dp.olg">
+<span id="snowdrop-src-numeric-dp-olg-module"></span><h2>snowdrop.src.numeric.dp.olg module<a class="headerlink" href="#module-snowdrop.src.numeric.dp.olg" title="Link to this heading">¶</a></h2>
+<p>Created on Sun Mar 21 08:40:21 2021</p>
+<p>&#64;author: A.Goumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.olg.MSequilibrium">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.olg.</span></span><span class="sig-name descname"><span class="pre">MSequilibrium</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Labor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/olg.html#MSequilibrium"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.olg.MSequilibrium" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.olg.MSnext">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.olg.</span></span><span class="sig-name descname"><span class="pre">MSnext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Labor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Saving</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/olg.html#MSnext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.olg.MSnext" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.olg.Plot">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.olg.</span></span><span class="sig-name descname"><span class="pre">Plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/olg.html#Plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.olg.Plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.olg.Qtot">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.olg.</span></span><span class="sig-name descname"><span class="pre">Qtot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/olg.html#Qtot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.olg.Qtot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.olg.dQdL">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.olg.</span></span><span class="sig-name descname"><span class="pre">dQdL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/olg.html#dQdL"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.olg.dQdL" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.olg.dQdM">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.olg.</span></span><span class="sig-name descname"><span class="pre">dQdM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/olg.html#dQdM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.olg.dQdM" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.olg.dQdS">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.olg.</span></span><span class="sig-name descname"><span class="pre">dQdS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/olg.html#dQdS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.olg.dQdS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.olg.value_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.olg.</span></span><span class="sig-name descname"><span class="pre">value_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/olg.html#value_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.olg.value_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve Overlapping Generations Model by value function iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>Output: If True save results in excel file.</p>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>iterations<span class="classifier">int</span></dt><dd><p>Number of iterations.</p>
+</dd>
+<dt>crit<span class="classifier">float</span></dt><dd><p>Convergence value.</p>
+</dd>
+<dt>y<span class="classifier">numpy array</span></dt><dd><p>Solution of Bellman equation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.dp.tauchen">
+<span id="snowdrop-src-numeric-dp-tauchen-module"></span><h2>snowdrop.src.numeric.dp.tauchen module<a class="headerlink" href="#module-snowdrop.src.numeric.dp.tauchen" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.tauchen.GaussHermite">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.tauchen.</span></span><span class="sig-name descname"><span class="pre">GaussHermite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/tauchen.html#GaussHermite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.tauchen.GaussHermite" title="Link to this definition">¶</a></dt>
+<dd><p>Gauss Hermite nodes and weights following ‘Numerical Recipes for C’</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.tauchen.GaussNorm">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.tauchen.</span></span><span class="sig-name descname"><span class="pre">GaussNorm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/tauchen.html#GaussNorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.tauchen.GaussNorm" title="Link to this definition">¶</a></dt>
+<dd><p>Find Gaussian nodes and weights for the normal distribution
+n  = # nodes
+mu = mean
+s2 = variance</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.tauchen.tauchen_hussey">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.tauchen.</span></span><span class="sig-name descname"><span class="pre">tauchen_hussey</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseSigma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/tauchen.html#tauchen_hussey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.tauchen.tauchen_hussey" title="Link to this definition">¶</a></dt>
+<dd><p>Find a Markov chain whose sample paths approximate those of the AR(1) process</p>
+<div class="math notranslate nohighlight">
+\[z_{t+1} = (1-rho)*mu + rho*z_{t} + eps_{t+1}\]</div>
+<p>Here eps is the normal noise with stddev sigma</p>
+<dl>
+<dt>Format:     </dt><dd><p>Z, Zprob = tauchen_hussey(N,mu,rho,sigma,m)</p>
+</dd>
+<dt>Input:      </dt><dd><p>N:         scalar, number of nodes for Z</p>
+<p>mu:        scalar, unconditional mean of process</p>
+<p>rho:       scalar</p>
+<p>sigma:     scalar, std. dev. of epsilons</p>
+<p>baseSigma: scalar, std. dev. used to calculate Gaussian quadrature weights and nodes, i.e. to build the grid.</p>
+<dl>
+<dt>It is recommended to you use:</dt><dd><div class="math notranslate nohighlight">
+\[baseSigma = w*sigma +(1-w)*sigmaZ \]</div>
+</dd>
+<dt>where </dt><dd><div class="math notranslate nohighlight">
+\[sigmaZ = sigma/sqrt(1-rho^2), \]</div>
+</dd>
+<dt>and      </dt><dd><div class="math notranslate nohighlight">
+\[w = 0.5 + rho/4\]</div>
+</dd>
+</dl>
+<p>Tauchen &amp; Hussey recommend baseSigma = sigma, and also mention baseSigma = sigmaZ.</p>
+</dd>
+<dt>Output:     </dt><dd><dl class="simple">
+<dt>Z:       N*1 vector, nodes for Z</dt><dd><p>Zprob:   N*N matrix, transition probabilities</p>
+</dd>
+</dl>
+</dd>
+<dt>Author:         </dt><dd><p>Benjamin Tengelsen, Brigham Young University (python) Martin Floden, Stockholm School of Economics (original) January 2007 (updated August 2007)</p>
+</dd>
+</dl>
+<p>This procedure is an implementation of Tauchen and Hussey’s
+algorithm, Econometrica (1991, Vol. 59(2), pp. 371-396)</p>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.dp.test">
+<span id="snowdrop-src-numeric-dp-test-module"></span><h2>snowdrop.src.numeric.dp.test module<a class="headerlink" href="#module-snowdrop.src.numeric.dp.test" title="Link to this heading">¶</a></h2>
+<p>Created on Mon Feb  8 17:50:30 2021</p>
+<p>Originally developed by Fabrice Collard.</p>
+<p>Please see Dynamic Programming Notes #7 at:
+<a class="reference external" href="http://fabcol.free.fr/pdf/lectnotes7.pdf">http://fabcol.free.fr/pdf/lectnotes7.pdf</a></p>
+<p>Translated from Matlab code to Python by A.Goumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.test.Plot">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.test.</span></span><span class="sig-name descname"><span class="pre">Plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">titles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/test.html#Plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.test.Plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot graphs.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>header<span class="classifier">str.</span></dt><dd><p>Graphs header.</p>
+</dd>
+<dt>titles<span class="classifier">str,</span></dt><dd><p>Titles.</p>
+</dd>
+<dt>data<span class="classifier">numpy array</span></dt><dd><p>Data.</p>
+</dd>
+<dt>labels<span class="classifier">list, optional</span></dt><dd><p>Labels. The default is [].</p>
+</dd>
+<dt>save<span class="classifier">TYPE, optional</span></dt><dd><p>If True saves plots in a directory. The default is True.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.test.parametric_value_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.test.</span></span><span class="sig-name descname"><span class="pre">parametric_value_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/test.html#parametric_value_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.test.parametric_value_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the OGM by parametric value iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>n<span class="classifier">int, optional</span></dt><dd><p>Order of polynomials. The default is 10.</p>
+</dd>
+<dt>nbk<span class="classifier">int, optional</span></dt><dd><p>Number of data points in the grid. The default is 20.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>c<span class="classifier">numpy array</span></dt><dd><p>Consumption.</p>
+</dd>
+<dt>v<span class="classifier">numpy array</span></dt><dd><p>Value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.test.policy_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.test.</span></span><span class="sig-name descname"><span class="pre">policy_iteration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/test.html#policy_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.test.policy_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the OGM by policy iteration.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>c<span class="classifier">numpy array</span></dt><dd><p>Consumption.</p>
+</dd>
+<dt>kp<span class="classifier">numpy array</span></dt><dd><p>Capital.</p>
+</dd>
+<dt>u<span class="classifier">TYPE</span></dt><dd><p>Utility.</p>
+</dd>
+<dt>v<span class="classifier">numpy array</span></dt><dd><p>Value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.test.stochastic_constarined_policy_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.test.</span></span><span class="sig-name descname"><span class="pre">stochastic_constarined_policy_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/test.html#stochastic_constarined_policy_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.test.stochastic_constarined_policy_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve and simulate the borrowing constraint problem (policy iteration).</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>p<span class="classifier">float, optional</span></dt><dd><p>Probability value. The default is 0.8.
+It is used for discrete approximation of VAR(1) stochastic process.</p>
+</dd>
+<dt>r<span class="classifier">float, optional</span></dt><dd><p>Interest rate. The default is 0.02.</p>
+</dd>
+<dt>beta<span class="classifier">float, optional</span></dt><dd><p>Discount factor. The default is 0.95.</p>
+</dd>
+<dt>gam<span class="classifier">float, optional</span></dt><dd><p>Replacement ratio. The default is 0.5.</p>
+</dd>
+<dt>amin<span class="classifier">float, optional</span></dt><dd><p>Lower bound on the grid. The default is 0.</p>
+</dd>
+<dt>amax<span class="classifier">float, optional</span></dt><dd><p>Upper bound on the grid. The default is 10.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>c<span class="classifier">numpy array</span></dt><dd><p>Consumption.</p>
+</dd>
+<dt>k<span class="classifier">numpy array</span></dt><dd><p>Capital.</p>
+</dd>
+<dt>ast<span class="classifier">numpy array</span></dt><dd><p>Asset values.</p>
+</dd>
+<dt>v<span class="classifier">numpy array</span></dt><dd><p>Value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.test.stochastic_policy_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.test.</span></span><span class="sig-name descname"><span class="pre">stochastic_policy_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/test.html#stochastic_policy_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.test.stochastic_policy_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the stochastic OGM by policy iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>p<span class="classifier">float, optional</span></dt><dd><p>Probability value. The default is 0.9.
+It is used for discrete approximation of VAR(1) stochastic process.</p>
+</dd>
+<dt>kmin<span class="classifier">float, optional</span></dt><dd><p>Lower bound on the grid. The default is 0.2</p>
+</dd>
+<dt>kmax<span class="classifier">float, optional</span></dt><dd><p>Upper bound on the grid. The default is 6.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>c<span class="classifier">numpy array</span></dt><dd><p>Consumption.</p>
+</dd>
+<dt>kp<span class="classifier">numpy array</span></dt><dd><p>Capital.</p>
+</dd>
+<dt>v<span class="classifier">numpy array</span></dt><dd><p>Value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.test.stochastic_value_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.test.</span></span><span class="sig-name descname"><span class="pre">stochastic_value_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/test.html#stochastic_value_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.test.stochastic_value_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the stochastic OGM by value iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>p<span class="classifier">float, optional</span></dt><dd><p>Probability value. The default is 0.9.
+It is used for discrete approximation of VAR(1) stochastic process.</p>
+</dd>
+<dt>interpolate<span class="classifier">bool, optional</span></dt><dd><p>If True interpolate grid. The default is False.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>c<span class="classifier">numpy array</span></dt><dd><p>Consumption.</p>
+</dd>
+<dt>u<span class="classifier">numpy array</span></dt><dd><p>Utility.</p>
+</dd>
+<dt>v<span class="classifier">numpy array</span></dt><dd><p>Value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.test.value_iteration">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.test.</span></span><span class="sig-name descname"><span class="pre">value_iteration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/test.html#value_iteration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.test.value_iteration" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the OGM by value function iteration.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>interpolate<span class="classifier">bool, optional</span></dt><dd><p>If True performs interpolation of value function to grid nodes. 
+The default is False.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.dp.util">
+<span id="snowdrop-src-numeric-dp-util-module"></span><h2>snowdrop.src.numeric.dp.util module<a class="headerlink" href="#module-snowdrop.src.numeric.dp.util" title="Link to this heading">¶</a></h2>
+<p>Created on Mon Feb  8 15:30:10 2021</p>
+<p>Originally developed by Fabrice Collard.</p>
+<p>Please see Dynamic Programming Notes at:
+<a class="reference external" href="http://fabcol.free.fr/pdf/lectnotes7.pdf">http://fabcol.free.fr/pdf/lectnotes7.pdf</a></p>
+<p>Translated from Matlab code to Python by A. Goumilevski</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.util.Chebychev_Polinomial">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.util.</span></span><span class="sig-name descname"><span class="pre">Chebychev_Polinomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/util.html#Chebychev_Polinomial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.util.Chebychev_Polinomial" title="Link to this definition">¶</a></dt>
+<dd><p>Compute Chebychev polinomials.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>x<span class="classifier">numpy array.</span></dt><dd><p>Nodes.</p>
+</dd>
+<dt>n<span class="classifier">int.</span></dt><dd><p>Degree of polinomial.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tx<span class="classifier">numpy array.</span></dt><dd><p>Chebyshev Polinomial of order n.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.util.gauss_herm">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.util.</span></span><span class="sig-name descname"><span class="pre">gauss_herm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/util.html#gauss_herm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.util.gauss_herm" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the coefficients of Hermite polynomials using the recursion:</p>
+<div class="math notranslate nohighlight">
+\[H_{n+1} = 2*H_{n} - 2*n*H_{n-1}\]</div>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>n<span class="classifier">int</span></dt><dd><p>Number of nodes.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>x<span class="classifier">numpy array</span></dt><dd><p>Gauss Hermite nodes</p>
+</dd>
+<dt>w<span class="classifier">numpy array</span></dt><dd><p>Gauss Hermite weights</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.util.markov">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.util.</span></span><span class="sig-name descname"><span class="pre">markov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/util.html#markov"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.util.markov" title="Link to this definition">¶</a></dt>
+<dd><p>Simulate a Markov chain.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>PI: numpy array</dt><dd><p>Transition matrix of Markov states.</p>
+</dd>
+<dt>s<span class="classifier">list</span></dt><dd><p>State vector.</p>
+</dd>
+<dt>n<span class="classifier">int</span></dt><dd><p>Length of simulation.</p>
+</dd>
+<dt>s0: float, optional</dt><dd><p>Initial state (index)</p>
+</dd>
+<dt>seed<span class="classifier">int, optional</span></dt><dd><p>Random seed. The default is 1.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>chain<span class="classifier">list</span></dt><dd><p>Values for the simulated Markov chain</p>
+</dd>
+<dt>state<span class="classifier">numpy array</span></dt><dd><p>Index of the state</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.util.scalar_tv">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.util.</span></span><span class="sig-name descname"><span class="pre">scalar_tv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/util.html#scalar_tv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.util.scalar_tv" title="Link to this definition">¶</a></dt>
+<dd><p>Compute norm of a function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.util.tausc_hussey">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.util.</span></span><span class="sig-name descname"><span class="pre">tausc_hussey</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/util.html#tausc_hussey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.util.tausc_hussey" title="Link to this definition">¶</a></dt>
+<dd><p>Implement Tauchen-Hussey algorithm.</p>
+<p>It asymptotically reproduces AR(1) process</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[Z_{t+1} = (1-rx)*mx + rx*Z_{t} + eps_{t+1}\]</div>
+<p>Here eps is a random process with normal distribution with standard deviation, sigma.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>n<span class="classifier">int, optional</span></dt><dd><p>Number of nodes. The default is 4.</p>
+</dd>
+<dt>mx<span class="classifier">int, optional</span></dt><dd><p>Unconditional mean of process. The default is 0.</p>
+</dd>
+<dt>rx<span class="classifier">float, optional</span></dt><dd><p>Persistence coefficient. The default is 0.9.</p>
+</dd>
+<dt>sigma<span class="classifier">float, optional</span></dt><dd><p>Standard deviation. The default is 0.01.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>p<span class="classifier">numpy array</span></dt><dd><p>Transition probabilities.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.numeric.dp.util.tv">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.numeric.dp.util.</span></span><span class="sig-name descname"><span class="pre">tv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/numeric/dp/util.html#tv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.numeric.dp.util.tv" title="Link to this definition">¶</a></dt>
+<dd><p>Compute value function.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="simple">
+<dt>kp<span class="classifier">float</span></dt><dd><p>Grid nodes.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>res<span class="classifier">float</span></dt><dd><p>Minus value function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-snowdrop.src.numeric.dp">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.numeric.dp" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+  <li><a href="snowdrop.src.numeric.html">snowdrop.src.numeric package</a><ul>
+      <li>Previous: <a href="snowdrop.src.numeric.bayes.html" title="previous chapter">snowdrop.src.numeric.bayes package</a></li>
+      <li>Next: <a href="snowdrop.src.numeric.estimation.html" title="next chapter">snowdrop.src.numeric.estimation package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.numeric.dp.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

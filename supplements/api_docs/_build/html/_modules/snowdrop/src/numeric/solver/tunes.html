@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.solver.tunes &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.solver.tunes</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Implements judgemental adjustments to endogenous variables paths.</span>
+
+<span class="sd">Created on Fri Oct 23, 2020</span>
+<span class="sd">Part of the code translated from Matlab Iris to Python.</span>
+
+<span class="sd">@author: A.Goumlevski</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="k">as</span> <span class="nn">la</span>
+<span class="n">itr</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="forecast_with_tunes">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.forecast_with_tunes">[docs]</a>
+<span class="k">def</span> <span class="nf">forecast_with_tunes</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">Nperiods</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">Re</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">has_imaginary_shocks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">has_imaginary_values</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Forecast with judgmental adjustments (conditional forecasts).</span>
+<span class="sd">    This is a solution for a &#39;fixed path&#39; of endogenous variables.</span>
+<span class="sd">    </span>
+<span class="sd">    For references please see Michal Andrle&#39;s algorithm described in an unpubished paper:     </span>
+<span class="sd">    https://michalandrle.weebly.com/uploads/1/3/9/2/13921270/iris_simulate.pdf</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        model : Model.</span>
+<span class="sd">            Model object.</span>
+<span class="sd">        Nperiods : numpy.ndarray.</span>
+<span class="sd">            Number of time periods.</span>
+<span class="sd">        y : numpy.ndarray.</span>
+<span class="sd">            The solution with no tunes.</span>
+<span class="sd">        T : numpy.ndarray.</span>
+<span class="sd">            Transition matrix.</span>
+<span class="sd">        Re : numpy.ndarray.</span>
+<span class="sd">            Matrix of coefficiets of forward shocks.</span>
+<span class="sd">        C : numpy.ndarray.</span>
+<span class="sd">            Matrix of constants.</span>
+<span class="sd">        shocks : list.</span>
+<span class="sd">            Shocks at different time periods.</span>
+<span class="sd">        has_imaginary_shocks : bool.</span>
+<span class="sd">            Flag set to True if ay of the shocks is a complex number, and to False other otherwise.</span>
+<span class="sd">        has_imaginary_values : bool.</span>
+<span class="sd">            Flag set to True if any of the endogenous variables path is a complex number, and to False other otherwise.</span>
+<span class="sd">        scale : numpy.complex.</span>
+<span class="sd">            Scaling factor for standard deviations of expected and un-expected shocks.</span>
+<span class="sd">            If model.anticipate flag is set to True , then real part of scale is a multiplier</span>
+<span class="sd">            for standard devitions of expected shocks and the imaginary part is a multiplier</span>
+<span class="sd">            for standard devitions of un-expected shocks.</span>
+<span class="sd">            If model.anticipate flag is set to False, then it is wise versa.  </span>
+<span class="sd">           </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        model : Model.</span>
+<span class="sd">            Model object.</span>
+<span class="sd">        y : numpy array.</span>
+<span class="sd">            Numerical solution with tunes.</span>
+<span class="sd">            </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">isLinear</span><span class="p">:</span>
+       <span class="n">y</span><span class="p">,</span><span class="n">adjusted_shocks</span> <span class="o">=</span> <span class="n">mixed</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span><span class="n">Re</span><span class="o">=</span><span class="n">Re</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="o">=</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+       <span class="k">if</span> <span class="s2">&quot;periods&quot;</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+           <span class="k">del</span> <span class="n">model</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;periods&quot;</span><span class="p">]</span>
+       <span class="k">return</span> <span class="n">y</span><span class="p">,</span><span class="n">adjusted_shocks</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span><span class="n">model</span>
+    <span class="k">else</span><span class="p">:</span>
+       <span class="n">y</span><span class="p">,</span><span class="n">adjusted_shocks</span><span class="p">,</span><span class="n">err</span><span class="p">,</span><span class="n">elapsed</span> <span class="o">=</span> <span class="n">non_linear_mixed</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="o">=</span><span class="n">Nperiods</span><span class="p">)</span>
+       <span class="k">return</span> <span class="n">y</span><span class="p">,</span><span class="n">adjusted_shocks</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span><span class="n">model</span><span class="p">,</span><span class="n">itr</span><span class="p">,</span><span class="n">err</span><span class="p">,</span><span class="n">elapsed</span> </div>
+
+      
+
+<div class="viewcode-block" id="mixed">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.mixed">[docs]</a>
+<span class="k">def</span> <span class="nf">mixed</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">Re</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Forecast with judgmental adjustments (conditional forecasts).</span>
+<span class="sd">    </span>
+<span class="sd">    This is a generic case with a mixture of anticipated and un-anticipated shocks.  </span>
+<span class="sd">    This soltion also can handle conditional shocks.</span>
+<span class="sd">    </span>
+<span class="sd">    If model anticipate flag is set to True, then real numbers describe anticipated shocks</span>
+<span class="sd">    and imaginary numbers describe un-anticipated shocks.</span>
+<span class="sd">    If model anticipate flag is set to False, then real numbers describe un-anticipated shocks</span>
+<span class="sd">    and imaginary numbers describe anticipated shocks.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        model : Model.</span>
+<span class="sd">            `Model&#39; object.</span>
+<span class="sd">        x : numpy.ndarray.</span>
+<span class="sd">            Unadjusted values of endogenous variables.</span>
+<span class="sd">        T : numpy array.</span>
+<span class="sd">            Transition matrix.</span>
+<span class="sd">        Re : numpy.ndarray.</span>
+<span class="sd">            Matrix of coefficiets of shocks.</span>
+<span class="sd">        C : numpy.ndarray.</span>
+<span class="sd">            Matrix of constants.</span>
+<span class="sd">        shocks : list.</span>
+<span class="sd">            Shocks at different time periods.</span>
+<span class="sd">        Nperiods : int.</span>
+<span class="sd">            Simulation time range.</span>
+<span class="sd">        scale : numpy.complex.</span>
+<span class="sd">            Scaling factor for standard deviations of expected and un-expected shocks.</span>
+<span class="sd">            If model.anticipate flag is set to True , then real part of scale is a multiplier</span>
+<span class="sd">            for standard devitions of expected shocks and the imaginary part is a multiplier</span>
+<span class="sd">            for standard devitions of un-expected shocks.</span>
+<span class="sd">            If model.anticipate flag is set to False, then it is wise versa.    </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        x : numpy array.</span>
+<span class="sd">            Solution of the system.</span>
+<span class="sd">        ea : numpy array.</span>
+<span class="sd">            Anticipated shocks.</span>
+<span class="sd">        eu : numpy array.</span>
+<span class="sd">            Un-anticipated shocks.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Get time periods of user&#39;s judgmental adjusstments.</span>
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">mapSwap</span><span class="p">):</span>
+        <span class="n">rng</span>  <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">mapSwap</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="n">rng</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#     return x, shocks</span>
+        
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">condShocks</span><span class="p">):</span>
+        <span class="n">cond_rng</span>  <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">condShocks</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">last</span><span class="p">,</span><span class="n">cond_rng</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        
+    <span class="n">shock_values</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shock_values</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">shk</span> <span class="o">=</span> <span class="n">shock_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">shk</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">shk</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>    
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">shk</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+                <span class="k">break</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">last</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">last</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">shocks</span>
+            
+    
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="n">shock_var</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">]</span>
+    <span class="n">nx</span>        <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span> <span class="c1"># Number of endogenous variables</span>
+    <span class="n">ne</span>        <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shock_var</span><span class="p">)</span> <span class="c1"># Number of shocks</span>
+    <span class="n">nt</span>        <span class="o">=</span> <span class="mi">1</span><span class="o">+</span><span class="n">nx</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span> <span class="c1"># Total number of unknowns</span>
+    
+    
+    <span class="c1"># Indices of exogenized variables and endogenized shocks.</span>
+    <span class="n">indExog1</span><span class="p">,</span><span class="n">indEndog1</span><span class="p">,</span><span class="n">valExog</span><span class="p">,</span><span class="n">valEndog</span><span class="p">,</span><span class="n">indExp</span><span class="p">,</span><span class="n">indUnExp</span><span class="p">,</span><span class="n">indCond</span><span class="p">,</span><span class="n">indCondNotExog</span><span class="p">,</span><span class="n">valCond</span> <span class="o">=</span> \
+        <span class="n">getIndices</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">mapSwap</span><span class="p">,</span><span class="n">model</span><span class="o">.</span><span class="n">condShocks</span><span class="p">,</span><span class="n">model</span><span class="o">.</span><span class="n">anticipate</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="n">ne</span><span class="p">,</span><span class="n">last</span><span class="p">)</span>
+
+    <span class="c1"># Indices of exogenized data points and endogenized shocks.</span>
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">mapSwap</span><span class="p">):</span>
+        <span class="n">_indExog</span>  <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span>  <span class="n">nx</span>    <span class="o">+</span> <span class="n">indExog1</span>
+        <span class="n">indEndog</span>  <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">nx</span><span class="p">)</span> <span class="o">+</span> <span class="n">indEndog1</span> 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_indExog</span>  <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">nx</span><span class="p">)</span><span class="o">*</span><span class="n">last</span><span class="p">)</span>
+        <span class="n">indEndog</span>  <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span>  <span class="n">nt</span>
+        
+    <span class="n">indExog</span> <span class="o">=</span> <span class="n">indExog1</span>
+    <span class="n">not_indExog</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">indExog</span><span class="p">)</span>
+    <span class="n">not_indEndog</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">indEndog</span><span class="p">)</span>
+        
+    <span class="c1"># Get swapped system matrices</span>
+    <span class="n">Mb</span><span class="p">,</span><span class="n">M</span> <span class="o">=</span> <span class="n">computeMatrices</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span><span class="n">Re</span><span class="o">=</span><span class="n">Re</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">indExog</span><span class="o">=</span><span class="n">_indExog</span><span class="p">,</span><span class="n">indEndog</span><span class="o">=</span><span class="n">indEndog</span><span class="p">,</span><span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span><span class="n">ne</span><span class="o">=</span><span class="n">ne</span><span class="p">,</span><span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">)</span>
+
+    <span class="c1"># Flip over expected and un-expected shocks if anticipate flag is set to False.</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">anticipate</span><span class="p">:</span>
+        <span class="n">eu1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">shocks</span><span class="p">[:</span><span class="n">last</span><span class="p">])</span>
+        <span class="n">ea1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">shocks</span><span class="p">[:</span><span class="n">last</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">eu1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">shocks</span><span class="p">[:</span><span class="n">last</span><span class="p">])</span>
+        <span class="n">ea1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">shocks</span><span class="p">[:</span><span class="n">last</span><span class="p">])</span>
+              
+    <span class="n">inp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">eu1</span><span class="p">))</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">ea1</span><span class="p">)))</span>
+    
+    <span class="c1"># Swap exogenized outputs and endogenized inputs.</span>
+    <span class="c1"># rhs = [inp(~endi);outp(exi)]</span>
+    <span class="n">tmp1</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">not_indEndog</span><span class="p">]</span>
+    <span class="n">tmp2</span> <span class="o">=</span> <span class="n">valExog</span><span class="p">[</span><span class="n">indExog</span><span class="p">]</span>
+    <span class="n">tmp</span>  <span class="o">=</span> <span class="n">tmp1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">tmp2</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">rhs</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+    <span class="c1"># lhs = [outp(~exi);inp(endi)]</span>
+    <span class="c1"># tmp1 = valExog[not_indExog]</span>
+    <span class="c1"># tmp2 = inp[indEndog]</span>
+    <span class="c1"># lhs  = tmp1.tolist() + tmp2.tolist()</span>
+    
+    <span class="c1"># Solve the swapped system.</span>
+    <span class="n">lhs</span>  <span class="o">=</span> <span class="n">M</span>  <span class="o">@</span> <span class="n">rhs</span>
+    <span class="c1"># Values of variables at the end of adjustments.</span>
+    <span class="n">xadj</span> <span class="o">=</span> <span class="n">Mb</span> <span class="o">@</span> <span class="n">rhs</span>
+    
+    <span class="c1"># For conditional shocks minimize the difference between LHS and RHS... </span>
+    <span class="c1"># Use KF equations for update step where observables are the user&#39;s judgemental values </span>
+    <span class="c1"># of endogenous variables and the standard deviations of these exogenized variables are zero.</span>
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">condShocks</span><span class="p">):</span>
+        
+        <span class="c1"># Create correlation matrices of expected and un-expected shocks.</span>
+        <span class="c1"># Set the standard deviations of endogenized shocks to zero. Otherwise an anticipated </span>
+        <span class="c1"># endogenized shock would have a non-zero unanticipated standard deviation, and vice versa.</span>
+        <span class="n">stdAntShk</span>              <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">ne</span><span class="p">,</span><span class="n">last</span><span class="p">))</span>
+        <span class="n">stdAntShk</span><span class="p">[</span><span class="n">indExp</span><span class="p">]</span>      <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">stdAntShk</span><span class="p">[</span><span class="n">indUnExp</span><span class="p">]</span>    <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">stdUnAntShk</span>            <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">ne</span><span class="p">,</span><span class="n">last</span><span class="p">))</span>
+        <span class="n">stdUnAntShk</span><span class="p">[</span><span class="n">indExp</span><span class="p">]</span>    <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">stdUnAntShk</span><span class="p">[</span><span class="n">indUnExp</span><span class="p">]</span>  <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">stdAntShk</span>             <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+        <span class="n">stdUnAntShk</span>           <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+        <span class="c1"># For anticipated shocks swap standard deviations</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">anticipate</span><span class="p">:</span>
+            <span class="n">stdAntShk</span><span class="p">,</span><span class="n">stdUnAntShk</span> <span class="o">=</span> <span class="n">stdUnAntShk</span><span class="p">,</span><span class="n">stdAntShk</span>
+            
+        <span class="c1"># Compute the covariance matrix of the RHS in the swapped system.</span>
+        <span class="n">P</span>     <span class="o">=</span> <span class="n">calcPrhs</span><span class="p">(</span><span class="n">stdUnAntShk</span><span class="p">,</span><span class="n">stdAntShk</span><span class="p">,</span><span class="n">indEndog</span><span class="p">,</span><span class="n">indExog</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="n">ne</span><span class="p">,</span><span class="n">nt</span><span class="p">,</span><span class="n">last</span><span class="p">)</span>
+        <span class="n">Z</span>     <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="n">indCondNotExog</span><span class="p">]</span>
+        <span class="c1"># Prediction error</span>
+        <span class="n">err</span>   <span class="o">=</span> <span class="n">valCond</span> <span class="o">-</span> <span class="n">lhs</span><span class="p">[</span><span class="n">indCondNotExog</span><span class="p">]</span>
+        <span class="c1"># Update mean forecast</span>
+        <span class="n">PZt</span>   <span class="o">=</span> <span class="n">P</span>   <span class="o">@</span> <span class="n">Z</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">F</span>     <span class="o">=</span> <span class="n">Z</span>   <span class="o">@</span> <span class="n">PZt</span>
+        <span class="n">K</span>     <span class="o">=</span> <span class="n">PZt</span> <span class="o">@</span> <span class="n">la</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">F</span><span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">K</span>   <span class="o">@</span> <span class="n">err</span>
+        <span class="n">rhs</span>  <span class="o">+=</span> <span class="n">delta</span>
+        <span class="n">lhs</span>  <span class="o">+=</span> <span class="n">M</span> <span class="o">@</span> <span class="n">delta</span>
+        <span class="n">xadj</span> <span class="o">+=</span> <span class="n">Mb</span> <span class="o">@</span> <span class="n">delta</span>
+        <span class="k">del</span> <span class="n">P</span>
+  
+    <span class="c1"># Release memory allocated to large arrays.</span>
+    <span class="k">del</span> <span class="n">Mb</span><span class="p">,</span> <span class="n">M</span>
+    
+    <span class="n">outp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">)</span>
+    <span class="n">inp</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nt</span><span class="p">)</span>
+    <span class="n">n1</span>   <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">not_indExog</span><span class="p">)</span>
+    <span class="n">n2</span>   <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">not_indEndog</span><span class="p">)</span>
+    <span class="n">outp</span><span class="p">[</span><span class="n">not_indExog</span><span class="p">]</span> <span class="o">=</span> <span class="n">lhs</span><span class="p">[:</span><span class="n">n1</span><span class="p">]</span>
+    <span class="n">outp</span><span class="p">[</span><span class="n">indExog</span><span class="p">]</span>     <span class="o">=</span> <span class="n">rhs</span><span class="p">[</span><span class="n">n2</span><span class="p">:]</span>
+    <span class="n">inp</span><span class="p">[</span><span class="n">not_indEndog</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs</span><span class="p">[:</span><span class="n">n2</span><span class="p">]</span>
+    <span class="n">inp</span><span class="p">[</span><span class="n">indEndog</span><span class="p">]</span>     <span class="o">=</span> <span class="n">lhs</span><span class="p">[</span><span class="n">n1</span><span class="p">:]</span>
+    
+    <span class="c1"># Un-anticipated shocks</span>
+    <span class="n">eu</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">nx</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">nx</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">],(</span><span class="n">last</span><span class="p">,</span><span class="n">ne</span><span class="p">))</span>
+    <span class="c1"># Anticipated shocks.</span>
+    <span class="n">ea</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">nx</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">:],(</span><span class="n">last</span><span class="p">,</span><span class="n">ne</span><span class="p">))</span>
+    
+    <span class="c1"># Combine un-expected and expected shocks</span>
+    <span class="n">shocks</span> <span class="o">=</span> <span class="n">shocks</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">complex</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ne</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">anticipate</span><span class="p">:</span>
+                <span class="n">shocks</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">eu</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">ea</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shocks</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">eu</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="nb">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">ea</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="c1"># Forecasted solution.</span>
+    <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">last</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">outp</span><span class="p">,(</span><span class="n">last</span><span class="p">,</span><span class="n">nx</span><span class="p">))</span>
+    <span class="c1"># Compute solution for the rest of time range</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last</span><span class="p">,</span><span class="n">Nperiods</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span> <span class="o">@</span> <span class="n">x</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">C</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">Nperiods</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Re</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="n">t</span><span class="p">])</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">shocks</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+             
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">shocks</span></div>
+
+
+
+<div class="viewcode-block" id="getIndices">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.getIndices">[docs]</a>
+<span class="k">def</span> <span class="nf">getIndices</span><span class="p">(</span><span class="n">mapSwap</span><span class="p">,</span><span class="n">condShocks</span><span class="p">,</span><span class="n">anticipate</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="n">ne</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return indices of exogenized variables and endogenized shocks and judgemental adjustments.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        mapSwap : dict.</span>
+<span class="sd">            Map of indices and values of exogenized variables and endogenized shocks.</span>
+<span class="sd">        condShocks : dict.</span>
+<span class="sd">            Map of conditinal shocks.</span>
+<span class="sd">        anticipate : bool.</span>
+<span class="sd">            True if shocks are anticipated.</span>
+<span class="sd">        nx : int</span>
+<span class="sd">            The number of endogenous variables.</span>
+<span class="sd">        ne : int</span>
+<span class="sd">            The number of shocks.</span>
+<span class="sd">        last : int</span>
+<span class="sd">            The last time period of adjustments.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Indices of exogenized variables and endogenized shocks and values of judgemental adjustments.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="n">indExp</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">))</span>
+    <span class="n">indUnExp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">))</span>
+    <span class="n">indEndog</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">mapSwap</span><span class="p">):</span>
+        <span class="n">index0</span><span class="o">=</span><span class="p">{};</span> <span class="n">index1</span><span class="o">=</span><span class="p">{};</span> <span class="n">index2</span><span class="o">=</span><span class="p">{};</span> <span class="n">index3</span><span class="o">=</span><span class="p">{};</span> <span class="n">indExog</span><span class="o">=</span><span class="p">{};</span> <span class="n">values1</span><span class="o">=</span><span class="p">{};</span> <span class="n">values2</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">mapSwap</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">rng</span><span class="p">:</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="n">ind0</span><span class="o">=</span><span class="p">[];</span> <span class="n">ind1</span><span class="o">=</span><span class="p">[];</span> <span class="n">ind2</span><span class="o">=</span><span class="p">[];</span> <span class="n">ind3</span><span class="o">=</span><span class="p">[];</span> <span class="n">val1</span><span class="o">=</span><span class="p">[];</span> <span class="n">val2</span><span class="o">=</span><span class="p">[]</span>
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">i0</span><span class="p">,</span><span class="n">i1</span><span class="p">,</span><span class="n">v1</span><span class="p">,</span><span class="n">i2</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="n">ind0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i0</span><span class="p">)</span>
+                <span class="n">ind1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i2</span><span class="p">)</span>
+                <span class="n">val1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span>
+                <span class="n">val2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">ind2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                    <span class="n">ind3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i2</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ind2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i2</span><span class="p">)</span>
+                    <span class="n">ind3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                
+            <span class="n">index0</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>  <span class="o">=</span> <span class="n">ind0</span>
+            <span class="n">index1</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>  <span class="o">=</span> <span class="n">ind1</span>
+            <span class="n">index2</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>  <span class="o">=</span> <span class="n">ind2</span>
+            <span class="n">index3</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>  <span class="o">=</span> <span class="n">ind3</span>
+            <span class="n">values1</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">val1</span>
+            <span class="n">values2</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">val2</span>
+            
+        <span class="n">tmp1</span>      <span class="o">=</span> <span class="n">getData</span><span class="p">(</span><span class="n">m1</span><span class="o">=</span><span class="n">index3</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">ne</span><span class="p">)</span>
+        <span class="n">tmp2</span>      <span class="o">=</span> <span class="n">getData</span><span class="p">(</span><span class="n">m1</span><span class="o">=</span><span class="n">index2</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">ne</span><span class="p">)</span>
+        <span class="n">indExog</span>   <span class="o">=</span> <span class="n">getData</span><span class="p">(</span><span class="n">m1</span><span class="o">=</span><span class="n">index0</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">nx</span><span class="p">)</span>
+        <span class="n">valExog</span>   <span class="o">=</span> <span class="n">getData</span><span class="p">(</span><span class="n">m1</span><span class="o">=</span><span class="n">index0</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span><span class="n">m2</span><span class="o">=</span><span class="n">values1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indExog</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">:</span>
+            <span class="n">indExog</span> <span class="o">+=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">indExog</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">):</span>
+            <span class="n">ii</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="n">ne</span><span class="o">*</span><span class="n">last</span>
+            <span class="k">if</span> <span class="n">anticipate</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp1</span><span class="p">):</span>
+                    <span class="n">indEndog</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="o">=</span> <span class="n">tmp2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp2</span><span class="p">):</span>
+                    <span class="n">indEndog</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>  <span class="o">=</span> <span class="n">tmp1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp1</span><span class="p">):</span>
+                    <span class="n">indEndog</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="o">=</span> <span class="n">tmp1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp2</span><span class="p">):</span>
+                    <span class="n">indEndog</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>  <span class="o">=</span> <span class="n">tmp2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">condShocks</span><span class="p">:</span>
+            <span class="c1">#tmp = [(x-1)*ne+np.arange(ne) for x in rng]</span>
+            <span class="c1">#indx = [item for sublist in tmp for item in sublist]</span>
+            <span class="n">indx</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">rng</span><span class="p">:</span>
+                <span class="n">indx</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">ne</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ne</span><span class="p">))</span>
+            <span class="n">indUnExp</span><span class="p">[</span><span class="n">indx</span><span class="p">]</span> <span class="o">=</span>  <span class="n">tmp1</span>
+            <span class="n">indExp</span><span class="p">[</span><span class="n">indx</span><span class="p">]</span>   <span class="o">=</span>  <span class="n">tmp2</span>
+        
+        <span class="n">tmp3</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">getData</span><span class="p">(</span><span class="n">m1</span><span class="o">=</span><span class="n">index3</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">ne</span><span class="p">,</span><span class="n">m2</span><span class="o">=</span><span class="n">values2</span><span class="p">),</span><span class="n">newshape</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+        <span class="n">tmp4</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">getData</span><span class="p">(</span><span class="n">m1</span><span class="o">=</span><span class="n">index2</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">ne</span><span class="p">,</span><span class="n">m2</span><span class="o">=</span><span class="n">values2</span><span class="p">),</span><span class="n">newshape</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+        <span class="n">valEndog</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">tmp3</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">tmp4</span><span class="p">))</span>
+        <span class="n">valExog</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">valExog</span><span class="p">,</span><span class="n">newshape</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valExog</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">:</span>
+            <span class="n">valExog</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">valExog</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">valExog</span><span class="p">)))</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">indExog</span>   <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">)</span>
+        <span class="n">indEndog</span>  <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">)</span>
+        <span class="n">indExp</span>    <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">)</span>
+        <span class="n">indUnExp</span>  <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">)</span>
+        <span class="n">valExog</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">)</span>
+        <span class="n">valEndog</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">)</span>
+        
+    <span class="n">indExp</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">indExp</span><span class="p">,</span><span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">ne</span><span class="p">,</span><span class="n">last</span><span class="p">),</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+    <span class="n">indUnExp</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">indUnExp</span><span class="p">,</span><span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">ne</span><span class="p">,</span><span class="n">last</span><span class="p">),</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">condShocks</span><span class="p">:</span>
+        
+        <span class="n">indCond</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last</span><span class="p">):</span>
+            <span class="n">tp1</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">tp1</span> <span class="ow">in</span> <span class="n">condShocks</span><span class="p">:</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="ow">in</span> <span class="n">condShocks</span><span class="p">[</span><span class="n">tp1</span><span class="p">]]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ind</span><span class="p">:</span>
+                    <span class="n">indCond</span><span class="p">[</span><span class="n">t</span><span class="o">*</span><span class="n">nx</span><span class="o">+</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># Index of conditions on transition variables excluding exogenized positions.</span>
+        <span class="c1"># tmp = indCond[not_indExog]</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indCond</span><span class="p">,</span><span class="n">indExog</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">y</span><span class="p">]</span>
+        <span class="n">indCondNotExog</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">+</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indCond</span><span class="p">)</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
+        <span class="n">valCond</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="o">+</span><span class="n">last</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">condShocks</span><span class="p">:</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="ow">in</span> <span class="n">condShocks</span><span class="p">[</span><span class="n">t</span><span class="p">]]</span>
+                <span class="n">valCond</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">valCond</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">valCond</span><span class="p">)</span>   
+    <span class="k">else</span><span class="p">:</span> 
+        <span class="n">indCond</span> <span class="o">=</span> <span class="kc">None</span><span class="p">;</span> <span class="n">indCondNotExog</span> <span class="o">=</span> <span class="kc">None</span><span class="p">;</span> <span class="n">valCond</span> <span class="o">=</span> <span class="kc">None</span>
+        
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">IndExog:&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">indExog</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">IndEndog:&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">indEndog</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">IndUnExp:&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">indUnExp</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">IndExp:&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">indExp</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">ValExog:&#39;</span><span class="p">,</span><span class="n">valExog</span><span class="p">[</span><span class="n">indExog</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">ValEndog:&#39;</span><span class="p">,</span><span class="n">valEndog</span><span class="p">[</span><span class="n">indEndog</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">condShocks</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">IndCond:&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">indCond</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">IndCondNotExog:&#39;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">indCondNotExog</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">CondValue:&#39;</span><span class="p">,</span><span class="n">valCond</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">indExog</span><span class="p">,</span><span class="n">indEndog</span><span class="p">,</span><span class="n">valExog</span><span class="p">,</span><span class="n">valEndog</span><span class="p">,</span><span class="n">indExp</span><span class="p">,</span><span class="n">indUnExp</span><span class="p">,</span><span class="n">indCond</span><span class="p">,</span><span class="n">indCondNotExog</span><span class="p">,</span><span class="n">valCond</span></div>
+
+
+
+<div class="viewcode-block" id="computeMatrices">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.computeMatrices">[docs]</a>
+<span class="k">def</span> <span class="nf">computeMatrices</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">Re</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">indExog</span><span class="p">,</span><span class="n">indEndog</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="n">ne</span><span class="p">,</span><span class="n">last</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute system solution matrices with swapped exogenized variables and endogenized shocks.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        model : Model</span>
+<span class="sd">            Model object.</span>
+<span class="sd">        T : numpy.ndarray.</span>
+<span class="sd">            Transition matrix of endogenous variables.</span>
+<span class="sd">        Re : numpy.ndarray.</span>
+<span class="sd">            Forward matrix of coefficients of shocks for the entire range of adjustments.</span>
+<span class="sd">        C : numpy.ndarray.</span>
+<span class="sd">            Array of constants.</span>
+<span class="sd">        indExog : list.</span>
+<span class="sd">            Indices of exogenized variables.</span>
+<span class="sd">        indEndog : list.</span>
+<span class="sd">            Indices of endogenized variables.</span>
+<span class="sd">        nx : int</span>
+<span class="sd">            Number of endogenous variables.</span>
+<span class="sd">        ne : int</span>
+<span class="sd">            Number of shocks.</span>
+<span class="sd">        last : int</span>
+<span class="sd">            Last period of adjustments.</span>
+<span class="sd">    </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            M : Numpy array.</span>
+<span class="sd">                Swapped matrix of shocks.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Constant.</span>
+    <span class="n">Mc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">))</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+    <span class="c1"># Multipliers on initial condition.</span>
+    <span class="n">M0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">,</span> <span class="n">nx</span><span class="p">))</span>
+    <span class="n">m0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+    <span class="c1"># Multipliers on unexpected shocks.</span>
+    <span class="n">Mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">,</span> <span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">))</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">))</span>
+    <span class="c1"># Multipliers on expected shocks.</span>
+    <span class="n">Me</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">,</span> <span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">))</span>
+    <span class="n">me</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ne</span><span class="o">*</span><span class="n">last</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last</span><span class="p">):</span>
+        <span class="c1"># Constants.</span>
+        <span class="n">mc</span> <span class="o">=</span> <span class="n">T</span> <span class="o">@</span> <span class="n">mc</span> <span class="o">+</span> <span class="n">C</span>
+        <span class="n">Mc</span><span class="p">[</span><span class="n">t</span><span class="o">*</span><span class="n">nx</span><span class="p">:(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">nx</span><span class="p">]</span> <span class="o">=</span> <span class="n">mc</span>
+        <span class="c1"># Initial conditions.</span>
+        <span class="n">m0</span> <span class="o">=</span> <span class="n">T</span> <span class="o">@</span> <span class="n">m0</span>
+        <span class="n">M0</span><span class="p">[</span><span class="n">t</span><span class="o">*</span><span class="n">nx</span><span class="p">:(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">nx</span><span class="p">]</span> <span class="o">=</span> <span class="n">m0</span>
+        <span class="c1"># Unexpected shocks.</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">T</span> <span class="o">@</span> <span class="n">mu</span>
+        <span class="n">mu</span><span class="p">[:,</span> <span class="n">t</span><span class="o">*</span><span class="n">ne</span><span class="p">:(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">ne</span><span class="p">]</span> <span class="o">+=</span> <span class="n">Re</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">Mu</span><span class="p">[</span><span class="n">t</span><span class="o">*</span><span class="n">nx</span><span class="p">:(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">nx</span><span class="p">]</span>  <span class="o">=</span> <span class="n">mu</span>
+        <span class="c1"># Expected shocks.</span>
+        <span class="n">me</span> <span class="o">=</span> <span class="n">T</span> <span class="o">@</span> <span class="n">me</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">last</span><span class="p">):</span>
+            <span class="n">me</span><span class="p">[:,</span><span class="n">j</span><span class="o">*</span><span class="n">ne</span><span class="p">:(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">ne</span><span class="p">]</span> <span class="o">+=</span> <span class="n">Re</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="n">t</span><span class="p">]</span>
+        <span class="n">Me</span><span class="p">[</span><span class="n">t</span><span class="o">*</span><span class="n">nx</span><span class="p">:(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">nx</span><span class="p">]</span> <span class="o">=</span> <span class="n">me</span>
+
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">mc</span><span class="p">,(</span><span class="n">nx</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">Mc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Mc</span><span class="p">,(</span><span class="n">nx</span><span class="o">*</span><span class="n">last</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    
+    <span class="n">tmp1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">mc</span><span class="p">,</span><span class="n">m0</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">me</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">tmp2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">Mc</span><span class="p">,</span><span class="n">M0</span><span class="p">,</span><span class="n">Mu</span><span class="p">,</span><span class="n">Me</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">M</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">tmp1</span><span class="p">,</span><span class="n">tmp2</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">indExog</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">indEndog</span><span class="p">):</span>
+        <span class="c1"># Swap endogenised and exogenised columns in I and M matrices.</span>
+        <span class="n">not_indExog</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">indExog</span><span class="p">)</span>
+        <span class="n">not_indEndog</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">indEndog</span><span class="p">)</span>
+        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">I</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="p">))</span>
+            <span class="n">I1</span>   <span class="o">=</span> <span class="n">I</span><span class="p">[:,</span> <span class="n">not_indExog</span><span class="p">]</span>
+            <span class="n">I2</span>   <span class="o">=</span> <span class="n">I</span><span class="p">[:,</span> <span class="n">indExog</span><span class="p">]</span>
+            <span class="n">M1</span>   <span class="o">=</span> <span class="n">M</span><span class="p">[:,</span> <span class="n">not_indEndog</span><span class="p">]</span>
+            <span class="n">M2</span>   <span class="o">=</span> <span class="n">M</span><span class="p">[:,</span> <span class="n">indEndog</span><span class="p">]</span>
+            <span class="n">tmp1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">M1</span><span class="p">,</span><span class="o">-</span><span class="n">I2</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">tmp2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">I1</span><span class="p">,</span><span class="o">-</span><span class="n">M2</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">M</span>    <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">tmp2</span><span class="p">,</span><span class="n">tmp1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">M11</span>  <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">not_indExog</span><span class="p">,</span> <span class="n">not_indEndog</span><span class="p">)]</span>
+            <span class="n">M12</span>  <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">not_indExog</span><span class="p">,</span> <span class="n">indEndog</span><span class="p">)]</span>
+            <span class="n">M21</span>  <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">indExog</span><span class="p">,</span> <span class="n">not_indEndog</span><span class="p">)]</span>
+            <span class="n">M22</span>  <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">indExog</span><span class="p">,</span> <span class="n">indEndog</span><span class="p">)]</span>
+            <span class="n">iM22</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M22</span><span class="p">)</span>
+            <span class="n">tmp1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">M11</span><span class="o">-</span><span class="n">M12</span><span class="nd">@iM22@M21</span><span class="p">,</span> <span class="n">M12</span><span class="nd">@iM22</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">tmp2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="o">-</span><span class="n">iM22</span><span class="nd">@M21</span><span class="p">,</span> <span class="n">iM22</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">M</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">tmp1</span><span class="p">,</span><span class="n">tmp2</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="n">Mb</span> <span class="o">=</span> <span class="n">M</span><span class="p">[:</span><span class="n">nx</span><span class="p">];</span> <span class="n">M</span>  <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="n">nx</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="n">Mb</span><span class="p">,</span><span class="n">M</span></div>
+
+ 
+    
+<div class="viewcode-block" id="stdcorr2cov">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.stdcorr2cov">[docs]</a>
+<span class="k">def</span> <span class="nf">stdcorr2cov</span><span class="p">(</span><span class="n">stdDev</span><span class="p">,</span><span class="n">ne</span><span class="p">,</span><span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create covariance matrix given standard deviations.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        stdDev : numpy.ndarray</span>
+<span class="sd">            Standard deviations.</span>
+<span class="sd">        ne : int</span>
+<span class="sd">            Number of shocks.</span>
+<span class="sd">        T : int</span>
+<span class="sd">            Number of time periods.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        cov : Numpy array</span>
+<span class="sd">            Diagonal covariance matrix.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">ne</span><span class="p">,</span><span class="n">ne</span><span class="p">,</span><span class="n">T</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">stdDev</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ne</span><span class="p">):</span>
+            <span class="n">cov</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+        
+    <span class="k">return</span> <span class="n">cov</span></div>
+
+    
+    
+<div class="viewcode-block" id="calcPrhs">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.calcPrhs">[docs]</a>
+<span class="k">def</span> <span class="nf">calcPrhs</span><span class="p">(</span><span class="n">stdUnAntShk</span><span class="p">,</span><span class="n">stdAntShk</span><span class="p">,</span><span class="n">indEndog</span><span class="p">,</span><span class="n">indExog</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="n">ne</span><span class="p">,</span><span class="n">nt</span><span class="p">,</span><span class="n">last</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute MSE/Cov matrix of the RHS in the swapped system.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        stdUnAntShk : numpy .ndarray.</span>
+<span class="sd">            Covariance matrix of un-anticipated shocks.</span>
+<span class="sd">        stdAntShk : numpy .ndarray.</span>
+<span class="sd">            Covariance matrix of anticipated shocks.</span>
+<span class="sd">        indEndog : list.</span>
+<span class="sd">            Indices of endogenized variables.</span>
+<span class="sd">        indExog : list.</span>
+<span class="sd">            Indices of exogenized variables.</span>
+<span class="sd">        nx : int.</span>
+<span class="sd">            Number of endogenous variables.</span>
+<span class="sd">        ne : int.</span>
+<span class="sd">            Number of shocks.</span>
+<span class="sd">        nt : int.</span>
+<span class="sd">            Size of covariance matrix.</span>
+<span class="sd">        last : int.</span>
+<span class="sd">            Last period of adjustments.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Prhs : Numpy array.</span>
+<span class="sd">            Covariance matrix of shocks.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">block_diag</span>
+    
+    <span class="n">P</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">nt</span><span class="p">,</span><span class="n">nt</span><span class="p">))</span>
+    <span class="n">Pu</span>   <span class="o">=</span> <span class="n">stdcorr2cov</span><span class="p">(</span><span class="n">stdUnAntShk</span><span class="p">,</span><span class="n">ne</span><span class="p">,</span><span class="n">last</span><span class="p">)</span>
+    <span class="n">Pe</span>   <span class="o">=</span> <span class="n">stdcorr2cov</span><span class="p">(</span><span class="n">stdAntShk</span><span class="p">,</span><span class="n">ne</span><span class="p">,</span><span class="n">last</span><span class="p">)</span>
+    <span class="n">pos</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">nx</span><span class="p">,</span><span class="mi">1</span><span class="o">+</span><span class="n">nx</span><span class="o">+</span><span class="n">ne</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last</span><span class="p">):</span>
+        <span class="n">P</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">pos</span><span class="p">)]</span> <span class="o">=</span> <span class="n">Pu</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">pos</span> <span class="o">+=</span> <span class="n">ne</span>
+   
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last</span><span class="p">):</span>
+        <span class="n">P</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">pos</span><span class="p">)]</span> <span class="o">=</span> <span class="n">Pe</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">pos</span> <span class="o">+=</span> <span class="n">ne</span>
+   
+    <span class="n">not_indEndog</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">indEndog</span><span class="p">)</span> 
+    
+    <span class="n">P</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">not_indEndog</span><span class="p">,</span> <span class="n">not_indEndog</span><span class="p">)]</span>
+    <span class="c1"># Add np.zeros for the std errors of exogenized data points.</span>
+    <span class="c1"># if len(P) &lt; nt:</span>
+    <span class="c1">#     n = nt - len(P)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">indExog</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">indExog</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">)))</span>
+        
+    <span class="k">return</span> <span class="n">P</span></div>
+
+
+
+<div class="viewcode-block" id="hasImaginaryValues">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.hasImaginaryValues">[docs]</a>
+<span class="k">def</span> <span class="nf">hasImaginaryValues</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if any shock at any time is a complex number.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        m : dict.</span>
+<span class="sd">            Map of indices and values of exogenized variables and endogenized shocks.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        imaginary_values : bool</span>
+<span class="sd">            Returns True if any path has imaginary value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">imaginary_values</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">rng</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">rng</span><span class="p">:</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">i0</span><span class="p">,</span><span class="n">i1</span><span class="p">,</span><span class="n">v1</span><span class="p">,</span><span class="n">i2</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplex</span><span class="p">(</span><span class="n">v1</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplex</span><span class="p">(</span><span class="n">v2</span><span class="p">)):</span>
+                <span class="n">imaginary_values</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+    
+    <span class="k">return</span> <span class="n">imaginary_values</span></div>
+
+    
+
+<div class="viewcode-block" id="hasImaginaryShocks">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.hasImaginaryShocks">[docs]</a>
+<span class="k">def</span> <span class="nf">hasImaginaryShocks</span><span class="p">(</span><span class="n">shocks</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if any shock at any time is a complex number.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        shocks : Numpy array</span>
+<span class="sd">            List of shocks.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        imaginary_shocks : bool</span>
+<span class="sd">            Returns True if any shock is a complex.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">imaginary_shocks</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">shk</span> <span class="ow">in</span> <span class="n">shocks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplex</span><span class="p">(</span><span class="n">shk</span><span class="p">)):</span>
+            <span class="n">imaginary_shocks</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">break</span>
+     
+    <span class="k">return</span> <span class="n">imaginary_shocks</span></div>
+
+    
+
+<div class="viewcode-block" id="getData">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.getData">[docs]</a>
+<span class="k">def</span> <span class="nf">getData</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">m2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get list of indices or 2d array or values.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        m1 : dict</span>
+<span class="sd">            Map with key as time period and index as value.</span>
+<span class="sd">        n : int, optional</span>
+<span class="sd">            The number of variables.</span>
+<span class="sd">        m2 : dict, optional</span>
+<span class="sd">            Map with time periods and values of variables. The default is None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        arr : list or numpy array</span>
+<span class="sd">            Indices of exogenized variables and endogenized shocks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+    
+    <span class="n">rng</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">m1</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">rng</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">m2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        
+        <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
+            <span class="n">tp1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">t</span>
+            <span class="k">if</span> <span class="n">tp1</span> <span class="ow">in</span> <span class="n">m1</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">m1</span><span class="p">[</span><span class="n">tp1</span><span class="p">]</span> <span class="k">else</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+            <span class="n">arr</span> <span class="o">+=</span> <span class="n">x</span>
+            
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span><span class="n">T</span><span class="p">));</span> <span class="n">arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
+            <span class="n">tp1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">t</span>
+            <span class="k">if</span> <span class="n">tp1</span> <span class="ow">in</span> <span class="n">m1</span><span class="p">:</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">m1</span><span class="p">[</span><span class="n">tp1</span><span class="p">])</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">else</span> <span class="kc">True</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">tp1</span> <span class="ow">in</span> <span class="n">m2</span><span class="p">:</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="n">m2</span><span class="p">[</span><span class="n">tp1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">arr</span><span class="p">[</span><span class="n">indices</span><span class="p">,</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">arr</span><span class="p">[</span><span class="n">indices</span><span class="p">,</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">indexes</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+                        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">)[</span><span class="n">b</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span><span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indexes</span><span class="p">,</span><span class="n">values</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+                                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                                    <span class="n">arr</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="n">arr</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;Time period </span><span class="si">{}</span><span class="s2"> is missing in the value dictionary </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">m2</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+                <span class="c1">#cprint(&quot;Time period {} is missing in the index dictionary {}&quot;.format(t,m1.keys()),&quot;red&quot;)</span>
+        
+    <span class="k">return</span> <span class="n">arr</span>    </div>
+
+    
+
+<div class="viewcode-block" id="not_anticipated">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.not_anticipated">[docs]</a>
+<span class="k">def</span> <span class="nf">not_anticipated</span><span class="p">(</span><span class="n">mapSwap</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">rng</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Forecast of linear model with a fixed path of some of the endogenous variables with all un-anticipated shocks.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        mapSwap : dict.</span>
+<span class="sd">            Map of indices and values of exogenized variables and endogenized shocks.</span>
+<span class="sd">        y : numpy.ndarray.</span>
+<span class="sd">            The solution with no tunes.</span>
+<span class="sd">        shocks : list.</span>
+<span class="sd">            Shocks at different time periods.</span>
+<span class="sd">        T : numpy.ndarray.</span>
+<span class="sd">            Transition matrix.</span>
+<span class="sd">        R : numpy.ndarray.</span>
+<span class="sd">            Matrix of coefficiets of shocks.</span>
+<span class="sd">        C : numpy.ndarray.</span>
+<span class="sd">            Matrix of constants.</span>
+<span class="sd">        Nperiods : numpy array.</span>
+<span class="sd">            Number of time periods.</span>
+<span class="sd">        rng : list.</span>
+<span class="sd">            Time range of the tunes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        y : numpy.ndarray.</span>
+<span class="sd">            Numerical solution with tunes.</span>
+<span class="sd">        shocks : numpy.ndarray.</span>
+<span class="sd">            Shocks that bring path of endogenous variables to the desired level.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">rng</span><span class="p">:</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        <span class="n">ind0</span><span class="o">=</span><span class="p">[];</span> <span class="n">val1</span><span class="o">=</span><span class="p">[];</span> <span class="n">ind2</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">i0</span><span class="p">,</span><span class="n">i1</span><span class="p">,</span><span class="n">v1</span><span class="p">,</span><span class="n">i2</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="n">ind0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i0</span><span class="p">)</span>
+            <span class="n">ind2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i2</span><span class="p">)</span>
+            <span class="n">val1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span>
+        <span class="n">Rsh</span> <span class="o">=</span> <span class="n">R</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">ind0</span><span class="p">,</span><span class="n">ind2</span><span class="p">)]</span>
+        <span class="n">yd</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">ind0</span><span class="p">]</span> <span class="o">-</span> <span class="n">val1</span>
+        <span class="c1"># Correct shocks.</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">Rsh</span><span class="p">,</span><span class="n">yd</span><span class="p">)</span>
+        <span class="n">shocks</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">ind2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">delta</span> 
+        
+        <span class="c1"># Recalculate solution with the new shocks.</span>
+        <span class="k">for</span> <span class="n">tt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">Nperiods</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">tt</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span> <span class="o">@</span> <span class="n">y</span><span class="p">[</span><span class="n">tt</span><span class="p">]</span> <span class="o">+</span> <span class="n">C</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">R</span><span class="p">)</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">shocks</span><span class="p">[</span><span class="n">tt</span><span class="p">])</span>
+  
+    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">shocks</span></div>
+
+         
+
+<div class="viewcode-block" id="anticipated">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.anticipated">[docs]</a>
+<span class="k">def</span> <span class="nf">anticipated</span><span class="p">(</span><span class="n">mapSwap</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">Re</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">rng</span><span class="p">,</span><span class="n">total_nmbr_shocks</span><span class="p">,</span><span class="n">n_shocks</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Forecast of linear model with a fixed path of some of the endogenous variables.</span>
+<span class="sd">    </span>
+<span class="sd">    This is a solution when all shocks are anticipated.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        mapSwap : dict.</span>
+<span class="sd">            Map of indices and values of exogenized variables and endogenized shocks.</span>
+<span class="sd">        y : numpy.ndarray.</span>
+<span class="sd">            The solution with no tunes.</span>
+<span class="sd">        shocks : list.</span>
+<span class="sd">            Shocks at different time periods.</span>
+<span class="sd">        T : numpy.ndarray.</span>
+<span class="sd">            Transition matrix.</span>
+<span class="sd">        Re : numpy.ndarray.</span>
+<span class="sd">            Forward matrix of coefficiets of shocks.</span>
+<span class="sd">        C : numpy.ndarray.</span>
+<span class="sd">            Matrix of constants.</span>
+<span class="sd">        Nperiods : int.</span>
+<span class="sd">            Number of time periods.</span>
+<span class="sd">        rng : list.</span>
+<span class="sd">            Time range of the tunes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        y : numpy.ndarray.</span>
+<span class="sd">            Numerical solution with judgemental adjustments.</span>
+<span class="sd">        shocks : numpy.ndarray.</span>
+<span class="sd">            Shocks that bring path of endogenous variables to the desired level.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">n_rng</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+    <span class="n">yds</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">js</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">total_nmbr_shocks</span> <span class="o">=</span> <span class="n">total_nmbr_shocks</span>
+    <span class="n">Rsh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">total_nmbr_shocks</span><span class="p">,</span><span class="n">total_nmbr_shocks</span><span class="p">))</span> 
+    <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_rng</span><span class="p">,</span><span class="n">n_rng</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">n_shocks</span><span class="p">))</span>
+    <span class="c1"># Build matrix S</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_rng</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_rng</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">S</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">Re</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">S</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span> <span class="o">@</span> <span class="n">S</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> 
+                <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="n">k</span><span class="p">:</span>
+                    <span class="n">S</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">Re</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">jj</span><span class="p">,</span><span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rng</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+        <span class="n">n1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">ind1</span><span class="o">=</span><span class="p">[];</span> <span class="n">val1</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">i0</span><span class="p">,</span><span class="n">i1</span><span class="p">,</span><span class="n">v1</span><span class="p">,</span><span class="n">i2</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="n">ind1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i0</span><span class="p">)</span>  
+            <span class="n">val1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span> 
+        <span class="n">j1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">js</span><span class="p">,</span><span class="n">js</span><span class="o">+</span><span class="n">n1</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">js</span> <span class="o">+=</span> <span class="n">n1</span>
+        <span class="n">ks</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Compute matrix of coefficients of shocks to account for user&#39;s judgmental adjustments.</span>
+        <span class="n">yd</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">ind1</span><span class="p">]</span> <span class="o">-</span> <span class="n">val1</span> 
+        <span class="n">yds</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">yd</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">rng</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">n2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">ind2</span><span class="o">=</span><span class="p">[]</span>
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">i0</span><span class="p">,</span><span class="n">i1</span><span class="p">,</span><span class="n">v1</span><span class="p">,</span><span class="n">i2</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="n">ind2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i2</span><span class="p">)</span>
+            <span class="n">k1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span><span class="n">ks</span><span class="o">+</span><span class="n">n2</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">ks</span> <span class="o">+=</span> <span class="n">n2</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">Rsh</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">j1</span><span class="p">,</span><span class="n">k1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">ind1</span><span class="p">,</span><span class="n">ind2</span><span class="p">)]</span>
+              
+    <span class="n">y_delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">yds</span><span class="p">)</span>
+    <span class="c1"># Find shocks that make the solution equal to the &#39;fixed path&#39; of endogenous variables.   </span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">Rsh</span><span class="p">,</span><span class="n">y_delta</span><span class="p">)</span>
+    <span class="n">js</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rng</span><span class="p">):</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">rng</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span>
+        <span class="n">n1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
+        <span class="n">ind</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">i0</span><span class="p">,</span><span class="n">i1</span><span class="p">,</span><span class="n">v1</span><span class="p">,</span><span class="n">i2</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="n">ind</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i2</span><span class="p">)</span>
+        <span class="n">shocks</span><span class="p">[</span><span class="n">r</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">ind</span><span class="p">]</span> <span class="o">-=</span> <span class="n">delta</span><span class="p">[</span><span class="n">js</span><span class="p">:</span><span class="n">js</span><span class="o">+</span><span class="n">n1</span><span class="p">]</span>
+        <span class="n">js</span> <span class="o">+=</span> <span class="n">n1</span>
+        
+    <span class="c1"># Recalculate solution with the new shocks.</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nperiods</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span> <span class="o">@</span> <span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">C</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">Nperiods</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Re</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="n">t</span><span class="p">])</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">shocks</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+        
+    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">shocks</span></div>
+
+
+
+<div class="viewcode-block" id="non_linear_mixed">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.non_linear_mixed">[docs]</a>
+<span class="k">def</span> <span class="nf">non_linear_mixed</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Forecast of non-linear model with a fixed path of some of the endogenous variables.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param model: Model object.</span>
+<span class="sd">        :type model: `Model&#39;.</span>
+<span class="sd">        :param shocks: Shocks at different time periods..</span>
+<span class="sd">        :type shocks: list.</span>
+<span class="sd">        :param Nperiods: Number of time periods.</span>
+<span class="sd">        :type Nperiods: int.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: Array of endogenous variables steady states and their growth.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">anticipate</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">non_linear_anticipated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">non_linear_not_anticipated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">)</span></div>
+
+        
+
+<div class="viewcode-block" id="non_linear_not_anticipated">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.non_linear_not_anticipated">[docs]</a>
+<span class="k">def</span> <span class="nf">non_linear_not_anticipated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">minimizeObjFunc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Forecast of non-linear model with a fixed path of some of the endogenous variables and all un-anticipated shocks.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param model: Model object.</span>
+<span class="sd">        :type model: `Model&#39;.</span>
+<span class="sd">        :param shocks: Shocks at different time periods..</span>
+<span class="sd">        :type shocks: list.</span>
+<span class="sd">        :param Nperiods: Number of time periods.</span>
+<span class="sd">        :type Nperiods: int.</span>
+<span class="sd">        :param minimizeObjFunc: If True applies minimization algorithm to find desired path.</span>
+<span class="sd">        :type minimizeObjFunc: bool.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: Array of endogenous variables steady states and their growth.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+    <span class="kn">import</span> <span class="nn">more_itertools</span> <span class="k">as</span> <span class="nn">mit</span>
+    <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.util</span> <span class="kn">import</span> <span class="n">getParameters</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.util</span> <span class="kn">import</span> <span class="n">get_adjusted_shocks</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.LBJ</span> <span class="kn">import</span> <span class="n">solver_with_tunes</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+    
+    <span class="n">TOLERANCE</span> <span class="o">=</span> <span class="mf">1.e-8</span><span class="p">;</span> <span class="n">NITERATIONS</span> <span class="o">=</span> <span class="mi">100</span>
+    
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+    <span class="n">f_dynamic</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;f_dynamic&quot;</span><span class="p">]</span>
+    <span class="n">bHasAttr</span>  <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f_dynamic</span><span class="p">,</span><span class="s2">&quot;py_func&quot;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">getParameters</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">bSolverHasAttr</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">solver_with_tunes</span><span class="p">,</span><span class="s2">&quot;py_func&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Define objective function</span>
+    <span class="k">def</span> <span class="nf">fobj</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">itr</span>
+        <span class="n">itr</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">z1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">]</span>
+                <span class="n">z2</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                <span class="n">z3</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="o">-</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">mapSwap</span><span class="p">:</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                        <span class="n">ind</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                        <span class="n">z1</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="k">if</span> <span class="n">t</span><span class="o">+</span><span class="n">start</span> <span class="ow">in</span> <span class="n">mapSwap</span><span class="p">:</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                        <span class="n">ind</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                        <span class="n">z2</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="k">if</span> <span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="o">+</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">mapSwap</span><span class="p">:</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                        <span class="n">ind</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                        <span class="n">z3</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">z3</span><span class="p">,</span><span class="n">z2</span><span class="p">,</span><span class="n">z1</span><span class="p">,</span><span class="n">shocks</span><span class="p">[</span><span class="n">t</span><span class="p">]])</span>
+                
+                <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">z1</span>
+                <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">z2</span>
+                <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">z3</span>
+                <span class="k">if</span> <span class="n">bHasAttr</span><span class="p">:</span>
+                    <span class="n">func</span><span class="p">,</span><span class="n">jacob</span> <span class="o">=</span> <span class="n">f_dynamic</span><span class="o">.</span><span class="n">py_func</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">func</span><span class="p">,</span><span class="n">jacob</span> <span class="o">=</span> <span class="n">f_dynamic</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+                <span class="n">err</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">func</span><span class="o">*</span><span class="n">func</span><span class="p">)</span>
+                
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="mf">1.e10</span> <span class="o">+</span> <span class="n">itr</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">err</span><span class="p">):</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="mf">1.e10</span> <span class="o">+</span> <span class="n">itr</span>
+        <span class="k">if</span> <span class="n">debug</span> <span class="ow">and</span> <span class="n">itr</span><span class="o">%</span><span class="mi">500</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> 
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;iteration=</span><span class="si">{</span><span class="n">itr</span><span class="si">}</span><span class="s2">,  error=</span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+	
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="o">.</span><span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">y</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span>
+    
+    <span class="n">mapSwap</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">mapSwap</span>
+    <span class="n">periods</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">mit</span><span class="o">.</span><span class="n">consecutive_groups</span><span class="p">(</span><span class="n">periods</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">minimizeObjFunc</span><span class="p">:</span>
+            
+        <span class="n">y0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">3</span><span class="o">+</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">y0</span>
+        <span class="n">groups</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,[</span><span class="mi">0</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">groups</span><span class="p">),</span><span class="n">Nperiods</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+            <span class="n">tmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+            <span class="n">tmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">tmin</span><span class="p">:</span><span class="mi">3</span><span class="o">+</span><span class="n">tmax</span><span class="p">]</span>
+            <span class="n">xprev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">T</span> <span class="o">=</span> <span class="mi">1</span><span class="o">+</span><span class="n">tmax</span><span class="o">-</span><span class="n">tmin</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">err</span> <span class="o">&gt;</span> <span class="n">TOLERANCE</span> <span class="ow">and</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="n">NITERATIONS</span><span class="p">):</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">bSolverHasAttr</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">solver_with_tunes</span><span class="o">.</span><span class="n">py_func</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">start</span><span class="o">=</span><span class="n">tmin</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">x</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">[</span><span class="n">tmin</span><span class="p">:])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">solver_with_tunes</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">start</span><span class="o">=</span><span class="n">tmin</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">[</span><span class="n">tmin</span><span class="p">:])</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">xprev</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.e-10</span><span class="p">,</span><span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+                <span class="n">xprev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">tmin</span><span class="p">:</span><span class="mi">3</span><span class="o">+</span><span class="n">tmax</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+            
+        <span class="n">model</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">;</span>
+            
+        <span class="c1"># Get shocks that satisfy original equations based on the new solution</span>
+        <span class="n">adjusted_shocks</span> <span class="o">=</span> <span class="n">get_adjusted_shocks</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span>
+            
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+            <span class="n">tmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+            <span class="n">tmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">tmin</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">tmax</span><span class="o">+</span><span class="mi">11</span><span class="p">)</span>
+            
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span><span class="o">//</span><span class="n">n</span>
+        
+            <span class="c1"># Methods: &#39;Nelder-Mead&#39;,&#39;Powell&#39;,&#39;SLSQP&#39;</span>
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fobj</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;Nelder-Mead&#39;</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="n">TOLERANCE</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="n">NITERATIONS</span><span class="p">,</span> <span class="s2">&quot;disp&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
+            
+            <span class="n">y</span> <span class="o">=</span> <span class="n">sol</span><span class="o">.</span><span class="n">x</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">t</span><span class="o">+</span><span class="n">start</span> <span class="ow">in</span> <span class="n">mapSwap</span><span class="p">:</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                        <span class="n">ind</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                        <span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+            <span class="n">z</span><span class="p">[</span><span class="n">tmin</span><span class="p">:</span><span class="n">tmax</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">10</span><span class="p">:</span><span class="o">-</span><span class="mi">11</span><span class="p">]</span>
+                        
+            <span class="n">err</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">fun</span><span class="p">)</span>
+            <span class="c1">#bConverged = err &lt; TOLERANCE</span>
+            
+            <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">z</span><span class="p">[:</span><span class="n">start</span><span class="p">],</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">[</span><span class="n">end</span><span class="p">:]])</span>
+    
+            
+            <span class="c1"># Get shocks that satisfy original equations based on the new solution</span>
+            <span class="n">adjusted_shocks</span> <span class="o">=</span> <span class="n">get_adjusted_shocks</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">)</span>
+            <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span>
+            
+            <span class="k">if</span> <span class="n">sol</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+                <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;numeric.solver.tunes:</span><span class="se">\n</span><span class="s2"> Elapsed time </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> (sec.), Number of terations </span><span class="si">{</span><span class="n">itr</span><span class="si">}</span><span class="s2">, Error </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;numeric.solver.tunes: No convergence</span><span class="se">\n</span><span class="s2"> Elapsed time </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> (sec.), Number of terations </span><span class="si">{</span><span class="n">itr</span><span class="si">}</span><span class="s2">, Error </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+                 
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">adjusted_shocks</span><span class="p">,</span><span class="n">err</span><span class="p">,</span><span class="n">elapsed</span></div>
+
+    
+
+<div class="viewcode-block" id="non_linear_anticipated">
+<a class="viewcode-back" href="../../../../../source/snowdrop.src.numeric.solver.html#snowdrop.src.numeric.solver.tunes.non_linear_anticipated">[docs]</a>
+<span class="k">def</span> <span class="nf">non_linear_anticipated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">minimizeObjFunc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Forecast of non-linear model with a fixed path of some of the endogenous variables and anticipated shocks.</span>
+<span class="sd">        </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param model: Model object.</span>
+<span class="sd">        :type model: `Model&#39;.</span>
+<span class="sd">        :param shocks: Shocks at different time periods..</span>
+<span class="sd">        :type shocks: list.</span>
+<span class="sd">        :param Nperiods: Number of time periods.</span>
+<span class="sd">        :type Nperiods: int.</span>
+<span class="sd">        :param minimizeObjFunc: If True applies minimization algorithm to find desired path.</span>
+<span class="sd">        :type minimizeObjFunc: bool.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: Array of steady states of endogenous variables and their growth.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+    <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.util</span> <span class="kn">import</span> <span class="n">getParameters</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.util</span> <span class="kn">import</span> <span class="n">get_adjusted_shocks</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.LBJ</span> <span class="kn">import</span> <span class="n">solver_with_tunes</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+    <span class="n">TOLERANCE</span> <span class="o">=</span> <span class="mf">1.e-8</span><span class="p">;</span> <span class="n">NITERATIONS</span> <span class="o">=</span> <span class="mi">100</span>
+    
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+    
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">getParameters</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">minimizeObjFunc</span><span class="p">:</span>
+        <span class="n">bHasAttr</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">solver_with_tunes</span><span class="p">,</span><span class="s2">&quot;py_func&quot;</span><span class="p">)</span>
+        
+        <span class="n">y0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">2</span><span class="o">+</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">y0</span><span class="p">;</span>  <span class="n">yprev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="k">while</span> <span class="p">(</span><span class="n">err</span> <span class="o">&gt;</span> <span class="n">TOLERANCE</span> <span class="ow">and</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="n">NITERATIONS</span><span class="p">):</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">bHasAttr</span><span class="p">:</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">solver_with_tunes</span><span class="o">.</span><span class="n">py_func</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">solver_with_tunes</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="n">Nperiods</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">p</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">)</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">yprev</span><span class="o">-</span><span class="n">y</span><span class="p">)</span><span class="o">/</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.e-10</span><span class="p">,</span><span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+            <span class="n">yprev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+            
+        <span class="c1"># Get shocks that satisfy original equations based on the new solution</span>
+        <span class="n">adjusted_shocks</span> <span class="o">=</span> <span class="n">get_adjusted_shocks</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">f_dynamic</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;f_dynamic&quot;</span><span class="p">]</span>
+        <span class="n">bHasAttr</span>  <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f_dynamic</span><span class="p">,</span><span class="s2">&quot;py_func&quot;</span><span class="p">)</span>
+        <span class="n">mapSwap</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">mapSwap</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">min</span><span class="p">(</span><span class="n">mapSwap</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Nperiods</span><span class="p">,</span><span class="nb">max</span><span class="p">(</span><span class="n">mapSwap</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">+</span><span class="mi">11</span><span class="p">)</span>
+        
+        <span class="c1"># Define objective function</span>
+        <span class="k">def</span> <span class="nf">fobj</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">global</span> <span class="n">itr</span>
+            <span class="n">itr</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">z1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">]</span>
+                    <span class="n">z2</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="n">z3</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span>
+                    <span class="k">if</span> <span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="o">-</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">mapSwap</span><span class="p">:</span>
+                        <span class="n">arr</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                            <span class="n">ind</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="n">val</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                            <span class="n">z1</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                    <span class="k">if</span> <span class="n">t</span><span class="o">+</span><span class="n">start</span> <span class="ow">in</span> <span class="n">mapSwap</span><span class="p">:</span>
+                        <span class="n">arr</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                            <span class="n">ind</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="n">val</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                            <span class="n">z2</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                    <span class="k">if</span> <span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="o">+</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">mapSwap</span><span class="p">:</span>
+                        <span class="n">arr</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                            <span class="n">ind</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="n">val</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                            <span class="n">z3</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">z3</span><span class="p">,</span><span class="n">z2</span><span class="p">,</span><span class="n">z1</span><span class="p">,</span><span class="n">shocks</span><span class="p">[</span><span class="n">t</span><span class="p">]])</span>
+                    
+                    <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">z1</span>
+                    <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">t</span><span class="p">:</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">z2</span>
+                    <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">z3</span>
+                    <span class="k">if</span> <span class="n">bHasAttr</span><span class="p">:</span>
+                        <span class="n">func</span><span class="p">,</span><span class="n">jacob</span> <span class="o">=</span> <span class="n">f_dynamic</span><span class="o">.</span><span class="n">py_func</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">func</span><span class="p">,</span><span class="n">jacob</span> <span class="o">=</span> <span class="n">f_dynamic</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+                    <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+                    <span class="n">err</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">func</span><span class="o">*</span><span class="n">func</span><span class="p">)</span>
+                    
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="mf">1.e10</span> <span class="o">+</span> <span class="n">itr</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">err</span><span class="p">):</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="mf">1.e10</span> <span class="o">+</span> <span class="n">itr</span>
+            <span class="k">if</span> <span class="n">debug</span> <span class="ow">and</span> <span class="n">itr</span><span class="o">%</span><span class="mi">500</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> 
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;iteration=</span><span class="si">{</span><span class="n">itr</span><span class="si">}</span><span class="s2">, error=</span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="o">/</span><span class="n">size</span>
+	    
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="o">.</span><span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">y</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span><span class="o">//</span><span class="n">n</span>
+
+        <span class="c1"># Methods: &#39;Nelder-Mead&#39;,&#39;Powell&#39;,&#39;SLSQP&#39;</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">fobj</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;Nelder-Mead&#39;</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="n">TOLERANCE</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="n">NITERATIONS</span><span class="p">,</span> <span class="s2">&quot;disp&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
+        
+        <span class="n">y</span> <span class="o">=</span> <span class="n">sol</span><span class="o">.</span><span class="n">x</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">t</span><span class="o">+</span><span class="n">start</span> <span class="ow">in</span> <span class="n">mapSwap</span><span class="p">:</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="n">mapSwap</span><span class="p">[</span><span class="n">t</span><span class="o">+</span><span class="n">start</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                    <span class="n">ind</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                    
+        <span class="n">err</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">fun</span><span class="p">)</span>
+        <span class="c1">#bConverged = err &lt; TOLERANCE</span>
+        
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">z</span><span class="p">[:</span><span class="n">start</span><span class="p">],</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">[</span><span class="n">end</span><span class="p">:]])</span>
+        
+        <span class="c1"># Get shocks that satisfy original equations based on the new solution</span>
+        <span class="n">adjusted_shocks</span> <span class="o">=</span> <span class="n">get_adjusted_shocks</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">Nperiods</span><span class="p">)</span>
+    
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span>
+        
+        <span class="k">if</span> <span class="n">sol</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;numeric.solver.tunes:</span><span class="se">\n</span><span class="s2"> Elapsed time </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> (sec.), Number of terations </span><span class="si">{</span><span class="n">itr</span><span class="si">}</span><span class="s2">, Error </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;numeric.solver.tunes: No convergence</span><span class="se">\n</span><span class="s2"> Elapsed time </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> (sec.), Number of terations </span><span class="si">{</span><span class="n">itr</span><span class="si">}</span><span class="s2">, Error </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+             
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">adjusted_shocks</span><span class="p">,</span><span class="n">err</span><span class="p">,</span><span class="n">elapsed</span></div>
+
+    
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

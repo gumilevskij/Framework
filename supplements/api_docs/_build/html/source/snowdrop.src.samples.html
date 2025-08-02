@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>snowdrop.src.samples package &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="snowdrop.src.tests package" href="snowdrop.src.tests.html" />
+    <link rel="prev" title="snowdrop.src.preprocessor package" href="snowdrop.src.preprocessor.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="snowdrop-src-samples-package">
+<h1>snowdrop.src.samples package<a class="headerlink" href="#snowdrop-src-samples-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="snowdrop-src-samples-alternatives-module">
+<h2>snowdrop.src.samples.alternatives module<a class="headerlink" href="#snowdrop-src-samples-alternatives-module" title="Link to this heading">¶</a></h2>
+</section>
+<section id="snowdrop-src-samples-forecast-module">
+<h2>snowdrop.src.samples.forecast module<a class="headerlink" href="#snowdrop-src-samples-forecast-module" title="Link to this heading">¶</a></h2>
+</section>
+<section id="snowdrop-src-samples-fpe-model-module">
+<h2>snowdrop.src.samples.fpe_model module<a class="headerlink" href="#snowdrop-src-samples-fpe-model-module" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.samples.in_sample">
+<span id="snowdrop-src-samples-in-sample-module"></span><h2>snowdrop.src.samples.in_sample module<a class="headerlink" href="#module-snowdrop.src.samples.in_sample" title="Link to this heading">¶</a></h2>
+<p>Created on Tue May 8, 2020</p>
+<p>&#64;author: Alexei Goumilevski</p>
+<p>Reproduces results of  <a class="reference external" href="https://www.edx.org/">https://www.edx.org/</a>  MPAF course.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.samples.in_sample.in_sample">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.samples.in_sample.</span></span><span class="sig-name descname"><span class="pre">in_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/samples/in_sample.html#in_sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.samples.in_sample.in_sample" title="Link to this definition">¶</a></dt>
+<dd><p>In sample forecast of endogenous variables given user judgements.</p>
+</dd></dl>
+
+</section>
+<section id="snowdrop-src-samples-in-sample-mpaf-module">
+<h2>snowdrop.src.samples.in_sample_mpaf module<a class="headerlink" href="#snowdrop-src-samples-in-sample-mpaf-module" title="Link to this heading">¶</a></h2>
+</section>
+<section id="snowdrop-src-samples-judgements-module">
+<h2>snowdrop.src.samples.judgements module<a class="headerlink" href="#snowdrop-src-samples-judgements-module" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.samples.kalmanfilter">
+<span id="snowdrop-src-samples-kalmanfilter-module"></span><h2>snowdrop.src.samples.kalmanfilter module<a class="headerlink" href="#module-snowdrop.src.samples.kalmanfilter" title="Link to this heading">¶</a></h2>
+<p>Created on Wed May 6, 2020
+&#64;author: Alexei Goumilevski
+Reproduces results of <a class="reference external" href="https://www.edx.org">https://www.edx.org</a> Monetary Policy Analysis and Forecasting course.</p>
+<dl class="simple">
+<dt>Please note that for time series variables the following rule applies for varible leads and lags:</dt><dd><p>var(-1) -&gt; var.shift(1) and var(+1) -&gt; var.shift(-1)</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.samples.kalmanfilter.kalmanfilter">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.samples.kalmanfilter.</span></span><span class="sig-name descname"><span class="pre">kalmanfilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/samples/kalmanfilter.html#kalmanfilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.samples.kalmanfilter.kalmanfilter" title="Link to this definition">¶</a></dt>
+<dd><p>Run Kalman filter and smoother.</p>
+</dd></dl>
+
+</section>
+<section id="snowdrop-src-samples-kalmanfilter-mpaf-module">
+<h2>snowdrop.src.samples.kalmanfilter_mpaf module<a class="headerlink" href="#snowdrop-src-samples-kalmanfilter-mpaf-module" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.samples.makedata">
+<span id="snowdrop-src-samples-makedata-module"></span><h2>snowdrop.src.samples.makedata module<a class="headerlink" href="#module-snowdrop.src.samples.makedata" title="Link to this heading">¶</a></h2>
+<p>Created on Tue Apr 23 14:12:20 2019</p>
+<p>&#64;author: Alexei Goumilevski</p>
+<blockquote>
+<div><p>Reproduces results of  <a class="reference external" href="https://www.edx.org">https://www.edx.org</a> Monetary Policy Analysis and Forecasting course.</p>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.samples.makedata.makedata">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.samples.makedata.</span></span><span class="sig-name descname"><span class="pre">makedata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/samples/makedata.html#makedata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.samples.makedata.makedata" title="Link to this definition">¶</a></dt>
+<dd><p>Prepares data.</p>
+</dd></dl>
+
+</section>
+<section id="snowdrop-src-samples-makedata-mpaf-module">
+<h2>snowdrop.src.samples.makedata_mpaf module<a class="headerlink" href="#snowdrop-src-samples-makedata-mpaf-module" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.samples.modelproperties">
+<span id="snowdrop-src-samples-modelproperties-module"></span><h2>snowdrop.src.samples.modelproperties module<a class="headerlink" href="#module-snowdrop.src.samples.modelproperties" title="Link to this heading">¶</a></h2>
+<p>Created on Thursday May 7, 2020
+&#64;author: Alexei Goumilevski</p>
+<p>Reproduces results of  <a class="reference external" href="https://www.edx.org">https://www.edx.org</a> Monetary Policy Analysis and Forecasting course.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snowdrop.src.samples.modelproperties.modelproperties">
+<span class="sig-prename descclassname"><span class="pre">snowdrop.src.samples.modelproperties.</span></span><span class="sig-name descname"><span class="pre">modelproperties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/snowdrop/src/samples/modelproperties.html#modelproperties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snowdrop.src.samples.modelproperties.modelproperties" title="Link to this definition">¶</a></dt>
+<dd><p>Simulates a set of basic shocks.</p>
+</dd></dl>
+
+</section>
+<section id="snowdrop-src-samples-modelproperties-mpaf-module">
+<h2>snowdrop.src.samples.modelproperties_mpaf module<a class="headerlink" href="#snowdrop-src-samples-modelproperties-mpaf-module" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-snowdrop.src.samples">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-snowdrop.src.samples" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">snowdrop</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="snowdrop.html">snowdrop package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">snowdrop</a><ul>
+  <li><a href="snowdrop.html">snowdrop package</a><ul>
+  <li><a href="snowdrop.src.html">snowdrop.src package</a><ul>
+      <li>Previous: <a href="snowdrop.src.preprocessor.html" title="previous chapter">snowdrop.src.preprocessor package</a></li>
+      <li>Next: <a href="snowdrop.src.tests.html" title="next chapter">snowdrop.src.tests package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/source/snowdrop.src.samples.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

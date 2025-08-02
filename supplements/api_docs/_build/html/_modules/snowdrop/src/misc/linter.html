@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.misc.linter &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.misc.linter</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Set of utilities to check correctness of model file syntax.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">import</span> <span class="nn">ruamel.yaml</span> <span class="k">as</span> <span class="nn">ry</span>
+<span class="kn">from</span> <span class="nn">ruamel.yaml.comments</span> <span class="kn">import</span> <span class="n">CommentedSeq</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.symbolic</span> <span class="kn">import</span> <span class="n">check_expression</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.recipes</span> <span class="kn">import</span> <span class="n">recipes</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">colored</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+
+<span class="n">known_symbol_types</span> <span class="o">=</span> <span class="n">recipes</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">ry</span><span class="o">.</span><span class="n">__version__</span>
+
+<div class="viewcode-block" id="ModelException">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.ModelException">[docs]</a>
+<span class="k">class</span> <span class="nc">ModelException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Model exception class.&quot;&quot;&quot;</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span></div>
+
+
+
+<div class="viewcode-block" id="check_symbol_validity">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.check_symbol_validity">[docs]</a>
+<span class="k">def</span> <span class="nf">check_symbol_validity</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check symbol validity.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param s: Symbol</span>
+<span class="sd">        :type s: str.</span>
+<span class="sd">        :returns:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">ast</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="check_symbols">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.check_symbols">[docs]</a>
+<span class="k">def</span> <span class="nf">check_symbols</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check model symbols validity.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param data: Model content.</span>
+<span class="sd">        :type data: Dictionary.</span>
+<span class="sd">        :returns: List of exceptions if any.</span>
+<span class="sd">        </span>
+<span class="sd">    Can raise three types of exceptions:</span>
+<span class="sd">      - unknown symbol</span>
+<span class="sd">      - invalid symbol</span>
+<span class="sd">      - already declared</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">symbols</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span>
+    <span class="n">cm_symbols</span> <span class="o">=</span> <span class="n">symbols</span>
+    <span class="n">already_declared</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># symbol: symbol_type, position</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">cm_symbols</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># (start_line, start_column, end_line, end_column) of the key</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">known_symbol_types</span><span class="p">:</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;Unknown symbol type &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cm_symbols</span><span class="p">,</span><span class="s2">&quot;lc&quot;</span><span class="p">):</span>
+                <span class="n">l0</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">c1</span> <span class="o">=</span> <span class="n">cm_symbols</span><span class="o">.</span><span class="n">lc</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">l0</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">c1</span><span class="p">)</span>
+                <span class="c1"># print(l0,c0,l1,c1)</span>
+            <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">assert</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">CommentedSeq</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="n">l0</span> <span class="o">=</span> <span class="n">c0</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">check_symbol_validity</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;Invalid symbol &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="s1">&#39;lc&#39;</span><span class="p">):</span>
+                    <span class="p">(</span><span class="n">l0</span><span class="p">,</span> <span class="n">c0</span><span class="p">)</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">lc</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="n">l1</span> <span class="o">=</span> <span class="n">l0</span>
+                    <span class="n">c1</span> <span class="o">=</span> <span class="n">c0</span> <span class="o">+</span> <span class="n">length</span>
+                    <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">l0</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">c1</span><span class="p">)</span>
+                <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">already_declared</span><span class="p">:</span>
+                <span class="n">ll</span> <span class="o">=</span> <span class="n">already_declared</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="s1">&#39;lc&#39;</span><span class="p">):</span>
+                    <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span>
+                        <span class="s2">&quot;Symbol &#39;</span><span class="si">{}</span><span class="s2">&#39; already declared as &#39;</span><span class="si">{}</span><span class="s2">&#39;. (pos </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">v</span><span class="p">,</span> <span class="n">ll</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">ll</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ll</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">l0</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">c1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span>
+                        <span class="s2">&quot;Symbol &#39;</span><span class="si">{}</span><span class="s2">&#39; already declared as &#39;</span><span class="si">{}</span><span class="s2">&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">ll</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="p">)</span>
+                    
+                <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">already_declared</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">l0</span><span class="p">,</span> <span class="n">c0</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">exceptions</span></div>
+
+
+
+<div class="viewcode-block" id="check_extra_symbols">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.check_extra_symbols">[docs]</a>
+<span class="k">def</span> <span class="nf">check_extra_symbols</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check extra variables declaration.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param data: Model content.</span>
+<span class="sd">        :type data: Dictionary.</span>
+<span class="sd">        :returns: List of exceptions if any.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">re</span>
+    
+    <span class="n">delimiters</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;^&quot;</span><span class="p">,</span> <span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;}&quot;</span><span class="p">,</span> <span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span>
+    <span class="n">regexPattern</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">,</span> <span class="n">delimiters</span><span class="p">))</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span>
+    <span class="n">all_symbols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">eq</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">eq</span> <span class="o">=</span> <span class="n">eq</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">regexPattern</span><span class="p">,</span><span class="n">eq</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">arr</span><span class="p">))</span>
+        <span class="n">all_symbols</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        
+    <span class="n">symbols</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span><span class="s2">&quot;lc&quot;</span><span class="p">):</span>
+        <span class="n">l0</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">c1</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">lc</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+        <span class="n">pos0</span> <span class="o">=</span> <span class="p">(</span><span class="n">l0</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">c1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pos0</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">][</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_symbols</span><span class="p">:</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;An extra variable </span><span class="si">{}</span><span class="s2"> was declared. Please remove it.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+            <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">pos0</span>
+            <span class="n">exc</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
+            <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="n">exceptions</span></div>
+
+
+
+<div class="viewcode-block" id="check_equations">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.check_equations">[docs]</a>
+<span class="k">def</span> <span class="nf">check_equations</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check correctness of model equations.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param data: Model content.</span>
+<span class="sd">        :type data: Dictionary.</span>
+<span class="sd">        :returns: List of exceptions if any.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="s1">&#39;lc&#39;</span><span class="p">):</span>
+        <span class="n">pos0</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">lc</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pos0</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span>
+
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">specs</span> <span class="o">=</span> <span class="n">recipes</span><span class="p">[</span><span class="s1">&#39;specs&#39;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">eq_type</span> <span class="ow">in</span> <span class="n">specs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">eq_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">specs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;optional&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)):</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;Missing equation type </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">eq_type</span><span class="p">))</span>
+            <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">pos0</span>
+            <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">exceptions</span></div>
+
+
+
+<div class="viewcode-block" id="check_variables">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.check_variables">[docs]</a>
+<span class="k">def</span> <span class="nf">check_variables</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check number of endogenous variables.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param data: Model content.</span>
+<span class="sd">        :type data: Dictionary.</span>
+<span class="sd">        :returns: List of exceptions if any.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">][</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;log_variables&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]:</span>
+        <span class="n">variables</span> <span class="o">+=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">][</span><span class="s1">&#39;log_variables&#39;</span><span class="p">]</span>
+    <span class="n">shocks</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">][</span><span class="s1">&#39;shocks&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;shocks&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">][</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;parameters&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="n">n_eqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
+    <span class="n">n_vars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">n_eqs</span> <span class="o">==</span> <span class="n">n_vars</span><span class="p">:</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The number of equations (</span><span class="si">{</span><span class="n">n_eqs</span><span class="si">}</span><span class="s2">) and the number of endogenous variables (</span><span class="si">{</span><span class="n">n_vars</span><span class="si">}</span><span class="s2">) are different!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">exc</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
+        <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+     
+    <span class="c1"># Check duplicates of endogenous and exogenous variables    </span>
+    <span class="n">duplicate</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">shocks</span><span class="p">:</span>
+            <span class="n">duplicate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">duplicate</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">common</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">duplicate</span><span class="p">)</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Endogenous and exogenous variables have common members </span><span class="si">{</span><span class="n">common</span><span class="si">}</span><span class="s2">!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">exc</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
+        <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            
+    <span class="c1"># Check duplicates of endogenous variables and parameters   </span>
+    <span class="n">duplicate</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="n">duplicate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">duplicate</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">common</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">duplicate</span><span class="p">)</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Endogenous variables and parameters have common members </span><span class="si">{</span><span class="n">common</span><span class="si">}</span><span class="s2">!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">exc</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
+        <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">exceptions</span></div>
+
+
+
+<div class="viewcode-block" id="check_definitions">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.check_definitions">[docs]</a>
+<span class="k">def</span> <span class="nf">check_definitions</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check correctness of model definitions.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param data: Model content.</span>
+<span class="sd">        :type data: Dictionary.</span>
+<span class="sd">        :returns: List of exceptions if any.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;definitions&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">definitions</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;definitions&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">definitions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">known_symbols</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="p">[])</span>
+
+    <span class="n">allowed_symbols</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">known_symbols</span><span class="p">}</span>
+    <span class="k">if</span> <span class="s1">&#39;parameters&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">][</span><span class="s1">&#39;parameters&#39;</span><span class="p">]:</span>
+            <span class="n">allowed_symbols</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span>
+
+    <span class="n">new_definitions</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">definitions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">lc</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">known_symbols</span><span class="p">:</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span>
+                <span class="s1">&#39;Symbol </span><span class="si">{}</span><span class="s1"> has already been defined as a model symbol.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+            <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span>
+            <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_definitions</span><span class="p">:</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span>
+                <span class="s1">&#39;Symbol </span><span class="si">{}</span><span class="s1"> cannot be defined twice.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+            <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span>
+            <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">check_symbol_validity</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;Invalid symbol &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+            <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span>
+            <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+
+            <span class="c1"># pos = equations[eq_type].lc.data[n]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+
+            <span class="c1"># print(allowed_symbols)</span>
+            <span class="n">check</span> <span class="o">=</span> <span class="n">check_expression</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">allowed_symbols</span><span class="p">)</span>
+            <span class="c1"># print(check[&#39;problems&#39;])</span>
+            <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">check</span><span class="p">[</span><span class="s1">&#39;problems&#39;</span><span class="p">]:</span>
+                <span class="n">name</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">err_type</span> <span class="o">=</span> <span class="p">[</span><span class="n">pb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pb</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pb</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">pb</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span>
+                <span class="k">if</span> <span class="n">err_type</span> <span class="o">==</span> <span class="s1">&#39;timing_error&#39;</span><span class="p">:</span>
+                    <span class="n">exc</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span>
+                        <span class="s1">&#39;Timing for variable </span><span class="si">{}</span><span class="s1"> could not be determined.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pb</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="k">elif</span> <span class="n">err_type</span> <span class="o">==</span> <span class="s1">&#39;incorrect_timing&#39;</span><span class="p">:</span>
+                    <span class="n">exc</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span>
+                        <span class="s1">&#39;Variable </span><span class="si">{}</span><span class="s1"> cannot have time </span><span class="si">{}</span><span class="s1">. (Allowed: </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">pb</span><span class="p">[</span><span class="mi">4</span><span class="p">]))</span>
+                <span class="k">elif</span> <span class="n">err_type</span> <span class="o">==</span> <span class="s1">&#39;unknown_function&#39;</span><span class="p">:</span>
+                    <span class="n">exc</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span>
+                        <span class="s1">&#39;Unknown variable/function </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">err_type</span> <span class="o">==</span> <span class="s1">&#39;unknown_variable&#39;</span><span class="p">:</span>
+                    <span class="n">exc</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span>
+                        <span class="s1">&#39;Unknown variable/parameter </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">err_type</span><span class="p">)</span>
+                <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset</span><span class="p">,</span> <span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                           <span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+                <span class="n">exc</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
+                <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+
+            <span class="n">new_definitions</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+            <span class="n">allowed_symbols</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span>  <span class="c1"># TEMP</span>
+            <span class="c1"># allowed_symbols[k] = None</span>
+
+        <span class="k">except</span> <span class="ne">SyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">pp</span> <span class="o">=</span> <span class="n">pos</span>  
+            <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;Syntax Error.&quot;</span><span class="p">)</span>
+            <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">[</span><span class="n">pp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">pp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">offset</span><span class="p">]</span>
+            <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">exceptions</span></div>
+
+
+
+<div class="viewcode-block" id="check_calibration">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.check_calibration">[docs]</a>
+<span class="k">def</span> <span class="nf">check_calibration</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check correctness of model calibration.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param data: Model content.</span>
+<span class="sd">        :type data: Dictionary.</span>
+<span class="sd">        :returns: List of exceptions if any.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># what happens here if symbols are not clean ?</span>
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1">#all_symbols = []</span>
+    <span class="n">symbols</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="s1">&#39;lc&#39;</span><span class="p">):</span>
+        <span class="n">pos0</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">lc</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;calibration&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pos0</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;calibration&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">exceptions</span>
+    <span class="n">calibration</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;calibration&#39;</span><span class="p">]</span>
+    <span class="c1"># for v in symbols.values():</span>
+    <span class="c1">#     all_symbols += v</span>
+    <span class="k">if</span> <span class="s2">&quot;parameters&quot;</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+                <span class="c1"># should skip invalid symbols there</span>
+                <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span>
+                    <span class="s2">&quot;Parameter </span><span class="si">{}</span><span class="s2"> has not been set in a model file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+                <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">pos0</span>
+                <span class="n">exc</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;warning&#39;</span>
+                <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+    <span class="n">lv</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+            <span class="n">lv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">lv</span><span class="p">):</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Initial values of endogenous variables:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">are not set in a model file!</span><span class="se">\n\n</span><span class="s2">Please set these variables either by passing a csv file with historical data</span><span class="se">\n</span><span class="s2">to importModel() function or by calling setStartingValues() method.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lv</span><span class="p">)),</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">calibration</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">calibration</span><span class="p">[</span><span class="n">s</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">SyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;Syntax error raised while parsing expression: &quot;</span> <span class="o">+</span> <span class="n">val</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">calibration</span><span class="p">,</span><span class="s1">&#39;lc&#39;</span><span class="p">):</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">lc</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+                <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">[</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">offset</span><span class="p">]</span>
+            <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">exceptions</span></div>
+
+
+
+<div class="viewcode-block" id="check_all">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.check_all">[docs]</a>
+<span class="k">def</span> <span class="nf">check_all</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check correctness of model file.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param data: Model content.</span>
+<span class="sd">        :type data: Dictionary.</span>
+<span class="sd">        :returns: List of exceptions if any.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">serious</span><span class="p">(</span><span class="n">exsc</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;error&#39;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">type</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exsc</span><span class="p">])</span>
+
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="n">check_infos</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">serious</span><span class="p">(</span><span class="n">exceptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exceptions</span>
+    
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="n">check_symbols</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">serious</span><span class="p">(</span><span class="n">exceptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exceptions</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;bellman_equation&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">exceptions</span> <span class="o">+=</span> <span class="n">check_extra_symbols</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">serious</span><span class="p">(</span><span class="n">exceptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">exceptions</span>
+        <span class="n">exceptions</span> <span class="o">+=</span> <span class="n">check_variables</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">serious</span><span class="p">(</span><span class="n">exceptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">exceptions</span>
+                        
+    <span class="n">exceptions</span> <span class="o">+=</span> <span class="n">check_definitions</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">serious</span><span class="p">(</span><span class="n">exceptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exceptions</span>
+    
+    <span class="n">exceptions</span> <span class="o">+=</span> <span class="n">check_equations</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">serious</span><span class="p">(</span><span class="n">exceptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exceptions</span>
+    
+    <span class="n">exceptions</span> <span class="o">+=</span> <span class="n">check_calibration</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">serious</span><span class="p">(</span><span class="n">exceptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exceptions</span>
+    
+    <span class="k">return</span> <span class="n">exceptions</span></div>
+
+
+
+<div class="viewcode-block" id="human_format">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.human_format">[docs]</a>
+<span class="k">def</span> <span class="nf">human_format</span><span class="p">(</span><span class="n">err</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Highlights exceptions represntation by red color if it is an error and by yellow color if it is warning..</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param err: Error.</span>
+<span class="sd">        :type err: ModelException.</span>
+<span class="sd">        :returns:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">err_type</span> <span class="o">=</span> <span class="n">err</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+    <span class="n">err_type</span> <span class="o">=</span> <span class="n">colored</span><span class="p">(</span><span class="n">err_type</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span>
+        <span class="s1">&#39;red&#39;</span> <span class="k">if</span> <span class="n">err_type</span> <span class="o">==</span> <span class="s1">&#39;error&#39;</span> <span class="k">else</span> <span class="s1">&#39;yellow&#39;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">err</span><span class="p">,</span><span class="s1">&#39;range&#39;</span><span class="p">):</span>
+        <span class="n">err_range</span> <span class="o">=</span> <span class="nb">str</span><span class="p">([</span><span class="n">e</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">err</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]])[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{:7}</span><span class="s1">: </span><span class="si">{:6}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">err_type</span><span class="p">,</span>
+            <span class="n">err_range</span><span class="p">,</span>
+            <span class="n">err</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{:7}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">err_type</span><span class="p">,</span>
+            <span class="n">err</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+        
+
+
+<div class="viewcode-block" id="check_infos">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.check_infos">[docs]</a>
+<span class="k">def</span> <span class="nf">check_infos</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check model info.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param data: Model info.</span>
+<span class="sd">        :type data: Dictionary.</span>
+<span class="sd">        :returns: List of exceptions if any.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s1">&#39;name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;Missing field: &#39;name&#39;.&quot;</span><span class="p">)</span>
+        <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">exc</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;warning&#39;</span>
+        <span class="n">exceptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">exceptions</span></div>
+
+
+
+<div class="viewcode-block" id="lint">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.misc.html#snowdrop.src.misc.linter.lint">[docs]</a>
+<span class="k">def</span> <span class="nf">lint</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s1">&#39;&lt;string&gt;&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;human&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert model file text to Python objects. Check syntax of model file for any errors.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param txt: Model file content.</span>
+<span class="sd">        :type txt: str.</span>
+<span class="sd">        :param source: Source type.</span>
+<span class="sd">        :type source: str.</span>
+<span class="sd">        :param format: Format of exceptions display.</span>
+<span class="sd">        :type format: str.</span>
+<span class="sd">        :returns: Exceptions if any, otherwise a ruamel.yaml object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># raise ModelException if it doesn&#39;t work correctly</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="s1">&#39;0.18&#39;</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">ry</span><span class="o">.</span><span class="n">YAML</span><span class="p">(</span><span class="n">typ</span><span class="o">=</span><span class="s1">&#39;rt&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">ry</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">ry</span><span class="o">.</span><span class="n">RoundTripLoader</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[]</span>  <span class="c1"># should return parse error</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="s1">&#39;symbols&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">or</span> <span class="s1">&#39;equations&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">or</span> <span class="s1">&#39;calibration&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">):</span>
+        <span class="c1"># this is probably not a yaml filename</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exceptions</span> <span class="o">=</span> <span class="n">check_all</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># raise(e)</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;Linter Error: Uncaught Exception - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="n">exc</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">exc</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
+            <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[</span><span class="n">exc</span><span class="p">]</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">exceptions</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">err_type</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">type</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">err_type</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="s1">&#39;pos&#39;</span><span class="p">):</span> 
+                <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">err_type</span><span class="p">,</span>
+                    <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span>
+                    <span class="s1">&#39;range&#39;</span><span class="p">:</span> <span class="p">((</span><span class="n">k</span><span class="o">.</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k</span><span class="o">.</span><span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">pos</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">k</span><span class="o">.</span><span class="n">pos</span><span class="p">[</span><span class="mi">3</span><span class="p">])),</span>
+                    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">k</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">err_type</span><span class="p">,</span>
+                    <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span>
+                    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">k</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">})</span>
+
+    <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s1">&#39;json&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s1">&#39;human&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">human_format</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">output</span><span class="p">]))</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">format</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">output</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;Unkown format </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">format</span><span class="p">))</span></div>
+
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.numeric.solver.AIM.Amalg &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.numeric.solver.AIM.Amalg</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Import the numpy package</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># Import necessary user-defined functions</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.AIM.Shifts</span> <span class="kn">import</span> <span class="n">exactShift</span><span class="p">,</span> <span class="n">numericShift</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.AIM.buildA</span> <span class="kn">import</span> <span class="n">buildA</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.AIM.Eigensystem</span> <span class="kn">import</span> <span class="n">Eigensystem</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.AIM.copyW</span> <span class="kn">import</span> <span class="n">copyW</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.AIM.reducedForm</span> <span class="kn">import</span> <span class="n">reducedForm</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.AIM.checkA</span> <span class="kn">import</span> <span class="n">existsNaN</span><span class="p">,</span> <span class="n">existsInf</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.AIM.makePhi</span> <span class="kn">import</span> <span class="n">makePhi</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.solver.AIM.makeF</span> <span class="kn">import</span> <span class="n">makeF</span>
+
+<div class="viewcode-block" id="Amalg">
+<a class="viewcode-back" href="../../../../../../source/snowdrop.src.numeric.solver.AIM.html#snowdrop.src.numeric.solver.AIM.Amalg.Amalg">[docs]</a>
+<span class="k">def</span> <span class="nf">Amalg</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">neq</span><span class="p">,</span><span class="n">nlag</span><span class="p">,</span><span class="n">nlead</span><span class="p">,</span><span class="n">condn</span><span class="p">,</span><span class="n">uprbnd</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;  </span>
+<span class="sd">      Solve a linear perfect foresight model using the matlab eig</span>
+<span class="sd">      function to find the invariant subspace associated with the big</span>
+<span class="sd">      roots.  This procedure will fail if the companion matrix is</span>
+<span class="sd">      defective and does not have a linearly independent set of</span>
+<span class="sd">      eigenvectors associated with the big roots.</span>
+<span class="sd">    </span>
+<span class="sd">      Input arguments:</span>
+<span class="sd">     </span>
+<span class="sd">        h         Structural coefficient matrix (neq,neq*(nlag+1+nlead)).</span>
+<span class="sd">        neq       Number of equations.</span>
+<span class="sd">        nlag      Number of lags.</span>
+<span class="sd">        nlead     Number of leads.</span>
+<span class="sd">        condn     Zero tolerance used as a condition number test</span>
+<span class="sd">                  by numeric_shift and reduced_form.</span>
+<span class="sd">        uprbnd    Inclusive upper bound for the modulus of roots</span>
+<span class="sd">                  allowed in the reduced form.</span>
+<span class="sd">    </span>
+<span class="sd">      Output arguments:</span>
+<span class="sd">     </span>
+<span class="sd">        b         Reduced form coefficient matrix (neq,neq*nlag).</span>
+<span class="sd">        rts       Roots returned by eig.</span>
+<span class="sd">        ia        Dimension of companion matrix (number of non-trivial</span>
+<span class="sd">                  elements in rts).</span>
+<span class="sd">        nexact    Number of exact shiftrights.</span>
+<span class="sd">        nnumeric  Number of numeric shiftrights.</span>
+<span class="sd">        lgroots   Number of roots greater in modulus than uprbnd.</span>
+<span class="sd">        aimcode     Return code: see function aimerr.</span>
+<span class="sd">    </span>
+<span class="sd">     Original author: Gary Anderson</span>
+<span class="sd">     Original file downloaded from:</span>
+<span class="sd">     http://www.federalreserve.gov/Pubs/oss/oss4/code.html</span>
+<span class="sd">    </span>
+<span class="sd">     This code is in the public domain and may be used freely.</span>
+<span class="sd">     However the authors would appreciate acknowledgement of the source by</span>
+<span class="sd">     citation of any of the following papers:</span>
+<span class="sd">    </span>
+<span class="sd">     Anderson, G. and Moore, G.</span>
+<span class="sd">     &quot;A Linear Algebraic Procedure for Solving Linear Perfect Foresight</span>
+<span class="sd">     Models.&quot;</span>
+<span class="sd">     Economics Letters, 17, 1985.</span>
+<span class="sd">    </span>
+<span class="sd">     Anderson, G.</span>
+<span class="sd">     &quot;Solving Linear Rational Expectations Models: A Horse Race&quot;</span>
+<span class="sd">     Computational Economics, 2008, vol. 31, issue 2, pages 95-113</span>
+<span class="sd">    </span>
+<span class="sd">     Anderson, G.</span>
+<span class="sd">     &quot;A Reliable and Computationally Efficient Algorithm for Imposing the</span>
+<span class="sd">     Saddle Point Property in Dynamic Models&quot;</span>
+<span class="sd">     Journal of Economic Dynamics and Control, 2010, vol. 34, issue 3,</span>
+<span class="sd">     pages 472-489</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="k">if</span> <span class="n">nlag</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">nlead</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span> 
+        <span class="n">np</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Aim_eig: model must have at least one lag and one lead.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Initialization.</span>
+    <span class="n">nexact</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nnumeric</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">lgroots</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">iq</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">aimcode</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">qrows</span> <span class="o">=</span> <span class="n">neq</span><span class="o">*</span><span class="n">nlead</span>
+    <span class="n">qcols</span> <span class="o">=</span> <span class="n">neq</span><span class="o">*</span><span class="p">(</span><span class="n">nlag</span><span class="o">+</span><span class="n">nlead</span><span class="p">)</span>
+    <span class="n">bcols</span> <span class="o">=</span> <span class="n">neq</span><span class="o">*</span><span class="n">nlag</span>
+    <span class="n">qq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">((</span><span class="n">qrows</span><span class="p">,</span><span class="n">qcols</span><span class="p">))))</span>
+    <span class="n">rts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">((</span><span class="n">qcols</span><span class="p">,</span><span class="mi">1</span><span class="p">))))</span>
+    <span class="n">originalH</span> <span class="o">=</span> <span class="n">h</span>
+
+    <span class="c1"># Compute the auxiliary initial conditions and store them in q.</span>
+
+    <span class="n">h</span><span class="p">,</span> <span class="n">qq</span><span class="p">,</span> <span class="n">iq</span><span class="p">,</span> <span class="n">nexact</span> <span class="o">=</span> <span class="n">exactShift</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">qq</span><span class="p">,</span><span class="n">iq</span><span class="p">,</span><span class="n">qrows</span><span class="p">,</span><span class="n">qcols</span><span class="p">,</span><span class="n">neq</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">iq</span> <span class="o">&gt;</span> <span class="n">qrows</span><span class="p">:</span> 
+        <span class="n">aimcode</span> <span class="o">=</span> <span class="mi">61</span>
+        <span class="k">return</span>
+
+    <span class="n">h</span><span class="p">,</span> <span class="n">qq</span><span class="p">,</span> <span class="n">iq</span><span class="p">,</span> <span class="n">nnumeric</span> <span class="o">=</span> <span class="n">numericShift</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">qq</span><span class="p">,</span><span class="n">iq</span><span class="p">,</span><span class="n">qrows</span><span class="p">,</span><span class="n">qcols</span><span class="p">,</span><span class="n">neq</span><span class="p">,</span><span class="n">condn</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">iq</span> <span class="o">&gt;</span> <span class="n">qrows</span><span class="p">:</span> 
+        <span class="n">aimcode</span> <span class="o">=</span> <span class="mi">62</span>
+        <span class="k">return</span>
+
+
+    <span class="c1">#  Build the companion matrix.  Compute the stability conditions, and</span>
+    <span class="c1">#  combine them with the auxiliary initial conditions in q.  </span>
+
+    <span class="n">a</span><span class="p">,</span> <span class="n">ia</span><span class="p">,</span> <span class="n">js</span> <span class="o">=</span> <span class="n">buildA</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">qcols</span><span class="p">,</span><span class="n">neq</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ia</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">existsNaN</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="ow">or</span> <span class="n">existsInf</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="p">:</span> 
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;A is NAN or INF&quot;</span><span class="p">)</span>
+            <span class="n">aimcode</span><span class="o">=</span><span class="mi">63</span> 
+            <span class="k">return</span> 
+        <span class="n">w</span><span class="p">,</span> <span class="n">rts</span><span class="p">,</span> <span class="n">lgroots</span> <span class="o">=</span> <span class="n">Eigensystem</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">uprbnd</span><span class="p">,</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">js</span><span class="p">),</span><span class="n">qrows</span><span class="o">-</span><span class="n">iq</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">qq</span> <span class="o">=</span> <span class="n">copyW</span><span class="p">(</span><span class="n">qq</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="n">js</span><span class="p">,</span><span class="n">iq</span><span class="p">,</span><span class="n">qrows</span><span class="p">)</span>
+
+    <span class="n">test</span> <span class="o">=</span> <span class="n">nexact</span> <span class="o">+</span> <span class="n">nnumeric</span> <span class="o">+</span> <span class="n">lgroots</span>
+    <span class="k">if</span> <span class="n">test</span> <span class="o">&gt;</span> <span class="n">qrows</span><span class="p">:</span>
+        <span class="n">aimcode</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="k">elif</span> <span class="n">test</span> <span class="o">&lt;</span> <span class="n">qrows</span><span class="p">:</span>
+        <span class="n">aimcode</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="c1"># Find phi and F matrices</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">makePhi</span><span class="p">(</span><span class="n">qq</span><span class="p">,</span><span class="n">originalH</span><span class="p">,</span><span class="n">nlag</span><span class="p">,</span><span class="n">nlead</span><span class="p">,</span><span class="n">neq</span><span class="p">)</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="n">makeF</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span><span class="n">originalH</span><span class="p">,</span><span class="n">qq</span><span class="p">,</span><span class="n">nlag</span><span class="p">,</span><span class="n">nlead</span><span class="p">,</span><span class="n">neq</span><span class="p">)</span>
+
+    <span class="c1"># If the right-hand block of q is invertible, compute the reduced form.</span>
+
+    <span class="n">nonsing</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">aimcode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">nonsing</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">reducedForm</span><span class="p">(</span><span class="n">qq</span><span class="p">,</span><span class="n">qrows</span><span class="p">,</span><span class="n">qcols</span><span class="p">,</span><span class="n">bcols</span><span class="p">,</span><span class="n">neq</span><span class="p">,</span><span class="n">condn</span><span class="p">)</span>
+        <span class="c1">#print(nonsing)</span>
+    
+    <span class="k">if</span> <span class="n">nonsing</span> <span class="ow">and</span> <span class="n">aimcode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">aimcode</span> <span class="o">=</span>  <span class="mi">1</span>
+    <span class="k">elif</span> <span class="ow">not</span><span class="p">(</span><span class="n">nonsing</span><span class="p">)</span> <span class="ow">and</span> <span class="n">aimcode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">aimcode</span> <span class="o">=</span>  <span class="mi">5</span>
+    <span class="k">elif</span> <span class="ow">not</span><span class="p">(</span><span class="n">nonsing</span><span class="p">)</span> <span class="ow">and</span> <span class="n">aimcode</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">aimcode</span> <span class="o">=</span> <span class="mi">35</span>
+    <span class="k">elif</span> <span class="ow">not</span><span class="p">(</span><span class="n">nonsing</span><span class="p">)</span> <span class="ow">and</span> <span class="n">aimcode</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">aimcode</span> <span class="o">=</span> <span class="mi">45</span>
+        
+    <span class="k">return</span> <span class="n">b</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">rts</span><span class="p">,</span> <span class="n">ia</span><span class="p">,</span> <span class="n">nexact</span><span class="p">,</span> <span class="n">nnumeric</span><span class="p">,</span> <span class="n">lgroots</span><span class="p">,</span> <span class="n">aimcode</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main program</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">.98</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">0.9702</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">.886</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">lead</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">neq</span><span class="p">,</span> <span class="n">condn</span><span class="p">,</span> <span class="n">upbnd</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mf">0.00000001</span><span class="p">,</span> <span class="mf">1.00000001</span>
+    
+    <span class="n">b</span><span class="p">,</span> <span class="n">rts</span><span class="p">,</span> <span class="n">ia</span><span class="p">,</span> <span class="n">nexact</span><span class="p">,</span> <span class="n">nnumeric</span><span class="p">,</span> <span class="n">lgroots</span><span class="p">,</span> <span class="n">aimcode</span> <span class="o">=</span> <span class="n">Amalg</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">neq</span><span class="p">,</span><span class="n">lag</span><span class="p">,</span><span class="n">lead</span><span class="p">,</span><span class="n">condn</span><span class="p">,</span><span class="n">upbnd</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;b = &quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

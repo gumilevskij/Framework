@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.gui.multiColumnListBox &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.gui.multiColumnListBox</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Version: 2.3</span>
+<span class="c1"># Author: Miguel Martinez Lopez</span>
+<span class="c1"># Uncomment the next line to see my email</span>
+<span class="c1"># print(&quot;Author&#39;s email: %s&quot;%&quot;61706c69636163696f6e616d656469646140676d61696c2e636f6d&quot;.decode(&quot;hex&quot;))</span>
+
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">Frame</span><span class="p">,</span> <span class="n">Label</span>
+<span class="kn">from</span> <span class="nn">tkinter.constants</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">tkinter.font</span> <span class="kn">import</span> <span class="n">Font</span><span class="p">,</span> <span class="n">nametofont</span>
+<span class="kn">from</span> <span class="nn">tkinter.ttk</span> <span class="kn">import</span> <span class="n">Treeview</span><span class="p">,</span> <span class="n">Style</span>
+
+<div class="viewcode-block" id="Row">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Row">[docs]</a>
+<span class="k">class</span> <span class="nc">Row</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span> <span class="o">=</span> <span class="n">table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index</span> <span class="o">=</span> <span class="n">index</span>
+
+<div class="viewcode-block" id="Row.data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Row.data">[docs]</a>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">row_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Row.delete">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Row.delete">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">delete_row</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Row.update">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Row.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">update_row</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Row.select">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Row.select">[docs]</a>
+    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">select_row</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Row.deselect">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Row.deselect">[docs]</a>
+    <span class="k">def</span> <span class="nf">deselect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">deselect_row</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">)</span></div>
+
+    
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">())</span>
+        
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">number_of_columns</span></div>
+
+    
+<div class="viewcode-block" id="Column">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Column">[docs]</a>
+<span class="k">class</span> <span class="nc">Column</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span> <span class="o">=</span> <span class="n">table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index</span> <span class="o">=</span> <span class="n">index</span>
+    
+<div class="viewcode-block" id="Column.data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Column.data">[docs]</a>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">column_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Column.delete">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Column.delete">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">delete_column</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Column.update">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Column.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">update_column</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">())</span>
+        
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">number_of_rows</span></div>
+
+    
+<div class="viewcode-block" id="Multicolumn_Listbox">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox">[docs]</a>
+<span class="k">class</span> <span class="nc">Multicolumn_Listbox</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">_style_index</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Rows">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows">[docs]</a>
+    <span class="k">class</span> <span class="nc">List_Of_Rows</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multicolumn_listbox</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span> <span class="o">=</span> <span class="n">multicolumn_listbox</span>
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Rows.data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.data">[docs]</a>
+        <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">row_data</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+            
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Rows.get">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.get">[docs]</a>
+        <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Row</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Rows.insert">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.insert">[docs]</a>
+        <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">insert_row</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Rows.delete">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.delete">[docs]</a>
+        <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">delete_row</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Rows.update">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.update">[docs]</a>
+        <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">update_row</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Rows.select">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.select">[docs]</a>
+        <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">select_row</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Rows.deselect">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.deselect">[docs]</a>
+        <span class="k">def</span> <span class="nf">deselect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">deselect_row</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Rows.set_selection">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Rows.set_selection">[docs]</a>
+        <span class="k">def</span> <span class="nf">set_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">set_selection</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span></div>
+
+
+        <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span> 
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span> 
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">update_row</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">delete_row</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">number_of_rows</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Columns">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns">[docs]</a>
+    <span class="k">class</span> <span class="nc">List_Of_Columns</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multicolumn_listbox</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span> <span class="o">=</span> <span class="n">multicolumn_listbox</span>
+        
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Columns.data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.data">[docs]</a>
+        <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Columns.get">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.get">[docs]</a>
+        <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Column</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Columns.delete">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.delete">[docs]</a>
+        <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">delete_column</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.List_Of_Columns.update">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.List_Of_Columns.update">[docs]</a>
+        <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">update_column</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+
+        <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span> 
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span> 
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">update_column</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">delete_column</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multicolumn_listbox</span><span class="o">.</span><span class="n">number_of_columns</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">select_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">heading_anchor</span> <span class="o">=</span> <span class="n">CENTER</span><span class="p">,</span> <span class="n">cell_anchor</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">adjust_heading_to_content</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stripped_rows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">selection_background</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">selection_foreground</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">field_background</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">heading_font</span><span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">heading_background</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">heading_foreground</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cell_pady</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">cell_background</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cell_foreground</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cell_font</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span> <span class="o">=</span> <span class="n">stripped_rows</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="o">=</span> <span class="n">columns</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">List_Of_Rows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">column</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">List_Of_Columns</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        
+        <span class="n">s</span> <span class="o">=</span> <span class="n">Style</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">style</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">style_name</span> <span class="o">=</span> <span class="s2">&quot;Multicolumn_Listbox</span><span class="si">%s</span><span class="s2">.Treeview&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_style_index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_style_index</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">style_name</span> <span class="o">=</span> <span class="n">style</span>
+        
+        <span class="n">style_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">selection_background</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">style_map</span><span class="p">[</span><span class="s2">&quot;background&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;selected&#39;</span><span class="p">,</span> <span class="n">selection_background</span><span class="p">)]</span>
+            
+        <span class="k">if</span> <span class="n">selection_foreground</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">style_map</span><span class="p">[</span><span class="s2">&quot;foeground&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;selected&#39;</span><span class="p">,</span> <span class="n">selection_foreground</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="n">style_map</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">style_name</span><span class="p">,</span> <span class="o">**</span><span class="n">style_map</span><span class="p">)</span>
+
+        <span class="n">style_config</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">cell_background</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">style_config</span><span class="p">[</span><span class="s2">&quot;background&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_background</span>
+
+        <span class="k">if</span> <span class="n">cell_foreground</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">style_config</span><span class="p">[</span><span class="s2">&quot;foreground&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_foreground</span>
+
+        <span class="k">if</span> <span class="n">cell_font</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">font_name</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">style_name</span><span class="p">,</span> <span class="s2">&quot;font&quot;</span><span class="p">)</span>
+            <span class="n">cell_font</span> <span class="o">=</span> <span class="n">nametofont</span><span class="p">(</span><span class="n">font_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cell_font</span><span class="p">,</span> <span class="n">Font</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cell_font</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">cell_font</span> <span class="o">=</span> <span class="n">nametofont</span><span class="p">(</span><span class="n">cell_font</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">font</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">cell_font</span> <span class="o">=</span> <span class="n">Font</span><span class="p">(</span><span class="n">family</span><span class="o">=</span><span class="n">cell_font</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">font</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">cell_font</span> <span class="o">=</span> <span class="n">Font</span><span class="p">(</span><span class="n">family</span><span class="o">=</span><span class="n">cell_font</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="n">cell_font</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        
+                    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">font</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                        <span class="n">cell_font</span> <span class="o">=</span> <span class="n">Font</span><span class="p">(</span><span class="n">family</span><span class="o">=</span><span class="n">cell_font</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="n">cell_font</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">weight</span><span class="o">=</span><span class="n">cell_font</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not possible more than 3 values for font&quot;</span><span class="p">)</span>
+        
+            <span class="n">style_config</span><span class="p">[</span><span class="s2">&quot;font&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_font</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cell_font</span> <span class="o">=</span> <span class="n">cell_font</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rowheight</span> <span class="o">=</span> <span class="n">cell_font</span><span class="o">.</span><span class="n">metrics</span><span class="p">(</span><span class="s2">&quot;linespace&quot;</span><span class="p">)</span><span class="o">+</span><span class="n">cell_pady</span>
+        <span class="n">style_config</span><span class="p">[</span><span class="s2">&quot;rowheight&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rowheight</span>
+
+        <span class="k">if</span> <span class="n">field_background</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">style_config</span><span class="p">[</span><span class="s2">&quot;fieldbackground&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">field_background</span>
+
+        <span class="n">s</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">style_name</span><span class="p">,</span> <span class="o">**</span><span class="n">style_config</span><span class="p">)</span>
+
+        <span class="n">heading_style_config</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">heading_font</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">heading_style_config</span><span class="p">[</span><span class="s2">&quot;font&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">heading_font</span>
+        <span class="k">if</span> <span class="n">heading_background</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">heading_style_config</span><span class="p">[</span><span class="s2">&quot;background&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">heading_background</span>
+        <span class="k">if</span> <span class="n">heading_foreground</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">heading_style_config</span><span class="p">[</span><span class="s2">&quot;foreground&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">heading_foreground</span>
+
+        <span class="n">heading_style_name</span> <span class="o">=</span> <span class="n">style_name</span> <span class="o">+</span> <span class="s2">&quot;.Heading&quot;</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">heading_style_name</span><span class="p">,</span> <span class="o">**</span><span class="n">heading_style_config</span><span class="p">)</span>
+
+        <span class="n">treeview_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="n">style_name</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">height</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">treeview_kwargs</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">height</span>
+            
+        <span class="k">if</span> <span class="n">padding</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">treeview_kwargs</span><span class="p">[</span><span class="s2">&quot;padding&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">padding</span>
+            
+        <span class="k">if</span> <span class="n">headers</span><span class="p">:</span>
+            <span class="n">treeview_kwargs</span><span class="p">[</span><span class="s2">&quot;show&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;headings&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">treeview_kwargs</span><span class="p">[</span><span class="s2">&quot;show&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">select_mode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">treeview_kwargs</span><span class="p">[</span><span class="s2">&quot;selectmode&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">select_mode</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span> <span class="o">=</span> <span class="n">Treeview</span><span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">,</span> <span class="o">**</span><span class="n">treeview_kwargs</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">command</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_command</span> <span class="o">=</span> <span class="n">command</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;&lt;TreeviewSelect&gt;&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_select</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">sort</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">heading</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">columns</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">anchor</span><span class="o">=</span><span class="n">heading_anchor</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="k">lambda</span> <span class="n">col</span><span class="o">=</span><span class="n">i</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sort_by</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">heading</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">columns</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">anchor</span><span class="o">=</span><span class="n">heading_anchor</span><span class="p">)</span>
+                
+            <span class="k">if</span> <span class="n">adjust_heading_to_content</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">Font</span><span class="p">()</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">cell_anchor</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">insert_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">row_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rowheight</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">font</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_font</span>
+
+<div class="viewcode-block" id="Multicolumn_Listbox.configure_column">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.configure_column">[docs]</a>
+    <span class="k">def</span> <span class="nf">configure_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">minwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">config_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="s2">&quot;anchor&quot;</span><span class="p">,</span> <span class="s2">&quot;stretch&quot;</span><span class="p">,</span> <span class="s2">&quot;minwidth&quot;</span><span class="p">):</span>
+            <span class="n">config_value</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">config_name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">config_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="n">config_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">config_value</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="s1">&#39;#</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.row_data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.row_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">row_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">item_ID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Row index out of range: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>        
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_ID_to_row_data</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.update_row">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update_row">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">item_ID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Row index out of range: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="n">item_ID</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The multicolumn listbox has only </span><span class="si">%d</span><span class="s2"> columns&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.delete_row">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.delete_row">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">list_of_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">item_ID</span> <span class="o">=</span> <span class="n">list_of_items</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Row index out of range: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span> <span class="o">-=</span> <span class="mi">1</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">tag_configure</span><span class="p">(</span><span class="n">list_of_items</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">background</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="mi">2</span><span class="p">])</span></div>
+
+            
+<div class="viewcode-block" id="Multicolumn_Listbox.insert_row">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.insert_row">[docs]</a>
+    <span class="k">def</span> <span class="nf">insert_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The multicolumn listbox has only </span><span class="si">%d</span><span class="s2"> columns&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span><span class="o">-</span><span class="mi">1</span>
+
+        <span class="n">item_ID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="n">item_ID</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="n">item_ID</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span> <span class="o">+=</span> <span class="mi">1</span>        
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span><span class="p">:</span>            
+            <span class="n">list_of_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">tag_configure</span><span class="p">(</span><span class="n">item_ID</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span><span class="p">[</span><span class="n">index</span><span class="o">%</span><span class="mi">2</span><span class="p">])</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">tag_configure</span><span class="p">(</span><span class="n">list_of_items</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">background</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="mi">2</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.column_data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.column_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">column_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">child_ID</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">child_ID</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)]</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.update_column">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update_column">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item_ID</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()):</span> 
+            <span class="n">data_row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_ID_to_row_data</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span>
+            <span class="n">data_row</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="n">item_ID</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">data_row</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.clear">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.clear">[docs]</a>
+    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Another possibility:</span>
+        <span class="c1">#  self.interior.delete(*self.interior.get_children())</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+            
+<div class="viewcode-block" id="Multicolumn_Listbox.update">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insert_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span></div>
+
+            
+<div class="viewcode-block" id="Multicolumn_Listbox.focus">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.focus">[docs]</a>
+    <span class="k">def</span> <span class="nf">focus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">focus</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()[</span><span class="n">index</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">focus</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.state">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.state">[docs]</a>
+    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">stateSpec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">state</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_columns</span>
+        
+<div class="viewcode-block" id="Multicolumn_Listbox.toogle_selection">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.toogle_selection">[docs]</a>
+    <span class="k">def</span> <span class="nf">toogle_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">list_of_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">item_ID</span> <span class="o">=</span> <span class="n">list_of_items</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Row index out of range: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">selection_toggle</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span>     </div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.select_row">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.select_row">[docs]</a>
+    <span class="k">def</span> <span class="nf">select_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">list_of_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">item_ID</span> <span class="o">=</span> <span class="n">list_of_items</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Row index out of range: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">selection_add</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.deselect_row">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.deselect_row">[docs]</a>
+    <span class="k">def</span> <span class="nf">deselect_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">list_of_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">item_ID</span> <span class="o">=</span> <span class="n">list_of_items</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Row index out of range: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">selection_remove</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span></div>
+
+        
+<div class="viewcode-block" id="Multicolumn_Listbox.deselect_all">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.deselect_all">[docs]</a>
+    <span class="k">def</span> <span class="nf">deselect_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">selection_remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">selection</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.set_selection">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.set_selection">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="n">list_of_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">selection_set</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">list_of_items</span><span class="p">[</span><span class="n">row_index</span><span class="p">]</span> <span class="k">for</span> <span class="n">row_index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">))</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">selected_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">item_ID</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">selection</span><span class="p">():</span>
+            <span class="n">data_row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_ID_to_row_data</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_row</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">indices_of_selected_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">list_of_indices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">item_ID</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">item_ID</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">selection</span><span class="p">():</span>
+                <span class="n">list_of_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">list_of_indices</span>
+        
+<div class="viewcode-block" id="Multicolumn_Listbox.delete_all_selected_rows">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.delete_all_selected_rows">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_all_selected_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">selected_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">selection</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">item_ID</span> <span class="ow">in</span> <span class="n">selected_items</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span>
+        
+        <span class="n">number_of_deleted_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected_items</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_rows</span> <span class="o">-=</span> <span class="n">number_of_deleted_rows</span>
+
+        <span class="k">return</span> <span class="n">number_of_deleted_rows</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_on_select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item_ID</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">selection</span><span class="p">():</span>
+            <span class="n">data_row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_ID_to_row_data</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_command</span><span class="p">(</span><span class="n">data_row</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Multicolumn_Listbox.item_ID_to_row_data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.item_ID_to_row_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">item_ID_to_row_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ID</span><span class="p">):</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span></div>
+
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">table_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">item_ID</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">():</span>
+            <span class="n">data_row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_ID_to_row_data</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_row</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span>
+    
+    <span class="nd">@table_data</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">table_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="Multicolumn_Listbox.cell_data">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.cell_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">cell_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the value of a table cell&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()[</span><span class="n">row</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Row index out of range: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">row</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span></div>
+
+            
+<div class="viewcode-block" id="Multicolumn_Listbox.update_cell">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.update_cell">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_cell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the value of a table cell&quot;&quot;&quot;</span>
+
+        <span class="n">item_ID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()[</span><span class="n">row</span><span class="p">]</span>
+        
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_ID_to_row_data</span><span class="p">(</span><span class="n">item_ID</span><span class="p">)</span>
+        
+        <span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="n">item_ID</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+    
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">row</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="n">index</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Row and column indices are required&quot;</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">row</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="n">index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_cell</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Row and column indices are required&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Multicolumn_Listbox.bind">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.bind">[docs]</a>
+    <span class="k">def</span> <span class="nf">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.sort_by">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.sort_by">[docs]</a>
+    <span class="k">def</span> <span class="nf">sort_by</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">descending</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        sort tree contents when a column header is clicked</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># grab values to sort</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">child_ID</span><span class="p">,</span> <span class="n">col</span><span class="p">),</span> <span class="n">child_ID</span><span class="p">)</span> <span class="k">for</span> <span class="n">child_ID</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)]</span>
+        
+        <span class="c1"># if the data to be sorted is numeric change to float</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">float</span><span class="p">(</span><span class="n">number</span><span class="p">),</span> <span class="n">child_ID</span><span class="p">)</span> <span class="k">for</span> <span class="n">number</span><span class="p">,</span> <span class="n">child_ID</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># now sort the data in place</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="n">descending</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+
+        <span class="c1"># switch the heading so that it will sort in the opposite direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">heading</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="k">lambda</span> <span class="n">col</span><span class="o">=</span><span class="n">col</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sort_by</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="ow">not</span> <span class="n">descending</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span><span class="p">:</span>
+            <span class="n">list_of_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_of_items</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">tag_configure</span><span class="p">(</span><span class="n">list_of_items</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">background</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stripped_rows</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="mi">2</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Multicolumn_Listbox.destroy">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.destroy">[docs]</a>
+    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span></div>
+
+        
+<div class="viewcode-block" id="Multicolumn_Listbox.item_ID">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.gui.html#snowdrop.src.gui.multiColumnListBox.Multicolumn_Listbox.item_ID">[docs]</a>
+    <span class="k">def</span> <span class="nf">item_ID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">get_children</span><span class="p">()[</span><span class="n">index</span><span class="p">]</span></div>
+</div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">Tkinter</span> <span class="kn">import</span> <span class="n">Tk</span>
+        <span class="kn">import</span> <span class="nn">tkMessageBox</span> <span class="k">as</span> <span class="nn">messagebox</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">Tk</span>
+        <span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">messagebox</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Tk</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">on_select</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;called command when row is selected&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">show_info</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+        <span class="n">messagebox</span><span class="o">.</span><span class="n">showinfo</span><span class="p">(</span><span class="s2">&quot;Table Data&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">Multicolumn_Listbox</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;column one&quot;</span><span class="p">,</span><span class="s2">&quot;column two&quot;</span><span class="p">,</span> <span class="s2">&quot;column three&quot;</span><span class="p">],</span> <span class="n">stripped_rows</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;white&quot;</span><span class="p">,</span><span class="s2">&quot;#f2f2f2&quot;</span><span class="p">),</span> <span class="n">command</span><span class="o">=</span><span class="n">on_select</span><span class="p">,</span> <span class="n">cell_anchor</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span><span class="n">adjust_heading_to_content</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">mc</span><span class="o">.</span><span class="n">interior</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+    
+    <span class="n">mc</span><span class="o">.</span><span class="n">insert_row</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+    <span class="n">show_info</span><span class="p">(</span><span class="s2">&quot;mc.insert_row([1,2,3])&quot;</span><span class="p">)</span>
+    
+    <span class="n">mc</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">insert</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">])</span>
+    <span class="n">show_info</span><span class="p">(</span><span class="s2">&quot;mc.row.insert([4,5,7])&quot;</span><span class="p">)</span>
+
+    <span class="n">mc</span><span class="o">.</span><span class="n">update_row</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">])</span>
+    <span class="n">show_info</span><span class="p">(</span><span class="s2">&quot;mc.update_row(0, [4,5,6])&quot;</span><span class="p">)</span>
+    
+    <span class="n">mc</span><span class="o">.</span><span class="n">update</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">]])</span>
+    <span class="n">show_info</span><span class="p">(</span><span class="s2">&quot;mc.update([[1,2,3], [4,5,6]])&quot;</span><span class="p">)</span>
+    
+    <span class="n">mc</span><span class="o">.</span><span class="n">select_row</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">show_info</span><span class="p">(</span><span class="s2">&quot;mc.select_row(0)&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mc.selected_rows&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">mc</span><span class="o">.</span><span class="n">selected_rows</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mc.table_data&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">mc</span><span class="o">.</span><span class="n">table_data</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mc.row[0]&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">mc</span><span class="o">.</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mc.row_data(0)&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">mc</span><span class="o">.</span><span class="n">row_data</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mc.column[1]&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">mc</span><span class="o">.</span><span class="n">column</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mc[0,1]&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">mc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">mc</span><span class="o">.</span><span class="n">column</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;item1&quot;</span><span class="p">,</span> <span class="s2">&quot;item2&quot;</span><span class="p">]</span>
+
+    <span class="n">mc</span><span class="o">.</span><span class="n">update_column</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">])</span>
+    <span class="n">show_info</span><span class="p">(</span><span class="s2">&quot;mc.update_column(2, [8,9])&quot;</span><span class="p">)</span>
+    
+    <span class="n">mc</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">show_info</span><span class="p">(</span><span class="s2">&quot;mc.clear()&quot;</span><span class="p">)</span>
+    
+    <span class="n">mc</span><span class="o">.</span><span class="n">table_data</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">],</span> <span class="p">[</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">],</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">18</span><span class="p">],</span> <span class="p">[</span><span class="mi">19</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">]]</span>
+    <span class="n">show_info</span><span class="p">(</span><span class="s2">&quot;mc.table_data = [[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15], [16,17,18], [19,20,21]]&quot;</span><span class="p">)</span>
+
+    <span class="n">mc</span><span class="o">.</span><span class="n">delete_row</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">show_info</span><span class="p">(</span><span class="s2">&quot;mc.delete_row(1)&quot;</span><span class="p">)</span>
+    
+    <span class="n">row</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">])</span>
+    <span class="n">show_info</span><span class="p">(</span><span class="s2">&quot;mc.row[0].update([2,4,5])&quot;</span><span class="p">)</span>
+
+    <span class="n">root</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.model.factory &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.model.factory</h1><div class="highlight"><pre>
+<span></span><span class="c1">### Factory produces `Model&#39; class instances</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">sys</span><span class="o">,</span><span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.utils.load</span> <span class="kn">import</span> <span class="n">read_file_or_url</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.model.model</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.model.interface</span> <span class="kn">import</span> <span class="n">Interface</span>
+
+
+<div class="viewcode-block" id="import_model">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.factory.import_model">[docs]</a>
+<span class="k">def</span> <span class="nf">import_model</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">return_interface</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">hist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">boundary_conditions_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">exogenous</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">shocks_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">steady_state_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">measurement_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">calibration_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">calibration</span><span class="o">=</span><span class="p">{},</span><span class="n">tag_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">tag_shocks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">tag_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">tag_equations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">tag_measurement_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">tag_measurement_equations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{},</span><span class="n">conditions</span><span class="o">=</span><span class="p">{},</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse a model file and create a model object.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param fname: Path to model file.</span>
+<span class="sd">        :type fname: str.</span>
+<span class="sd">        :param order: Approximation order of solution of the non-linear system of equations.</span>
+<span class="sd">        :type order: int.</span>
+<span class="sd">        :param return_interface: if True returns Interface object.</span>
+<span class="sd">        :type return_interface: bool.</span>
+<span class="sd">        :param check: If True checks syntax of model file.</span>
+<span class="sd">        :type check: bool.</span>
+<span class="sd">        :param hist: Path to history file.</span>
+<span class="sd">        :type hist: str.</span>
+<span class="sd">        :param boundary_conditions_path: Path to the boundary conditions excel file.  This file contains initial and terminal conditions.</span>
+<span class="sd">        :type boundary_conditions_path: str.</span>
+<span class="sd">        :param exogenous: Exogenous variables list.</span>
+<span class="sd">        :type exogenous: list.</span>
+<span class="sd">        :param shocks_file_path: Path to a file containing shock values.</span>
+<span class="sd">        :type shocks_file_path: str.</span>
+<span class="sd">        :param steady_state_file_path: Path to a file containing steady-state values.</span>
+<span class="sd">        :type steady_state_file_path: str.</span>
+<span class="sd">        :param measurement_file_path: Path to a file with measurement data.</span>
+<span class="sd">        :type measurement_file_path: str.</span>
+<span class="sd">        :param calibration_file_path: Path to calibration files or a file.</span>
+<span class="sd">        :type calibration_file_path: list or str.</span>
+<span class="sd">        :param calibration: Map with values of calibrated parameters and starting values of endogenous variables.</span>
+<span class="sd">        :type calibration: dict.</span>
+<span class="sd">        :param variables: Tag for endogenous variables section.</span>
+<span class="sd">        :type variables: list, optional.</span>
+<span class="sd">        :param tag_shocks: Tag for shock variables section.</span>
+<span class="sd">        :type tag_shocks: str, optional.</span>
+<span class="sd">        :param tag_parameters: Tag for parameters section.</span>
+<span class="sd">        :type tag_parameters: str, optional.</span>
+<span class="sd">        :param tag_equations: Tag for equations section.</span>
+<span class="sd">        :type tag_equations: str, optional.</span>
+<span class="sd">        :param tag_measurement_variables: Tag for measurement variables section.</span>
+<span class="sd">        :type tag_measurement_variables: str, optional.</span>
+<span class="sd">        :param tag_measurement_equations: Tag for measurement equations section.</span>
+<span class="sd">        :type tag_measurement_equations: str, optional.</span>
+<span class="sd">        :param options: Dictionary of options.</span>
+<span class="sd">        :type options: dict, optional.</span>
+<span class="sd">        :param conditions: Dictionary of preprocessing directives.</span>
+<span class="sd">        :type conditions: dict, optional.</span>
+<span class="sd">        :param debug: If set to True prints information on Iris model file sections. The default is False.</span>
+<span class="sd">        :type debug: bool, optional.</span>
+<span class="sd">            </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        model : Interface.</span>
+<span class="sd">            `Interface&#39; object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fname</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">infos</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span><span class="s1">&#39;filename&#39;</span> <span class="p">:</span> <span class="n">fname</span><span class="p">}</span> 
+    
+    <span class="c1">#print(f&quot;Model file: {fname}&quot;)</span>
+    
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.mod&quot;</span><span class="p">:</span>        <span class="c1"># Dynare model file</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.utils.getDynareData</span> <span class="kn">import</span> <span class="n">readDynareModelFile</span>
+        
+        <span class="n">eqs</span><span class="p">,</span><span class="n">variables</span><span class="p">,</span><span class="n">variables_values</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">shock_values</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">mapCalibration</span><span class="p">,</span><span class="n">labels</span> <span class="o">=</span> \
+            <span class="n">readDynareModelFile</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">fname</span><span class="p">,</span><span class="n">conditions</span><span class="o">=</span><span class="n">conditions</span><span class="p">,</span><span class="n">bFillValues</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+        <span class="n">calibration</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">calibration</span><span class="p">,</span> <span class="o">**</span><span class="n">mapCalibration</span><span class="p">}</span>
+        <span class="c1"># Set default values for missing calibration parameters</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+                <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span><span class="n">variables_values</span><span class="p">):</span>
+            <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            
+        <span class="c1"># Set default values for missing starting values of endogenous variables</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+                <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                
+        <span class="c1"># Variables labels</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+            <span class="n">var_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">var</span><span class="p">,</span><span class="n">lbl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span><span class="n">labels</span><span class="p">):</span>
+                <span class="n">var_labels</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">lbl</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">var_labels</span> <span class="o">=</span> <span class="p">{}</span>
+            
+        <span class="n">interface</span> <span class="o">=</span> <span class="n">getModel</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">eqs</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span><span class="n">parameters</span><span class="o">=</span><span class="n">params</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">,</span>
+                          <span class="n">shocks_file_path</span><span class="o">=</span><span class="n">shocks_file_path</span><span class="p">,</span><span class="n">calibration</span><span class="o">=</span><span class="n">calibration</span><span class="p">,</span><span class="n">var_labels</span><span class="o">=</span><span class="n">var_labels</span><span class="p">,</span>
+                          <span class="n">return_interface</span><span class="o">=</span><span class="n">return_interface</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span><span class="n">infos</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span>
+        
+        
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.model&quot;</span><span class="p">:</span>    <span class="c1"># Iris model file</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.utils.getIrisData</span> <span class="kn">import</span> <span class="n">readIrisModelFile</span>
+        
+        <span class="n">eqs</span><span class="p">,</span><span class="n">measEqs</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">variables</span><span class="p">,</span><span class="n">measVar</span><span class="p">,</span><span class="n">measEqs</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">measShocks</span><span class="p">,</span><span class="n">ss</span><span class="p">,</span><span class="n">labels</span> <span class="o">=</span> \
+            <span class="n">readIrisModelFile</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">fname</span><span class="p">,</span><span class="n">bFillValues</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                              <span class="n">strVariables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;!variables&quot;</span><span class="p">,</span><span class="s2">&quot;!transition_variables&quot;</span><span class="p">],</span><span class="n">strShocks</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;!shocks&quot;</span><span class="p">,</span><span class="s2">&quot;!transition_shocks&quot;</span><span class="p">],</span>
+                              <span class="n">strParameters</span> <span class="o">=</span> <span class="s2">&quot;!parameters&quot;</span><span class="p">,</span><span class="n">strEquations</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;!equations&quot;</span><span class="p">,</span><span class="s2">&quot;!transition_equations&quot;</span><span class="p">],</span>
+                              <span class="n">strMeasurementVariables</span><span class="o">=</span><span class="s2">&quot;!measurement_variables&quot;</span><span class="p">,</span>
+                              <span class="n">strMeasurementEquations</span><span class="o">=</span><span class="s2">&quot;!measurement_equations&quot;</span><span class="p">,</span>
+                              <span class="n">strMeasuarementShocks</span><span class="o">=</span><span class="s2">&quot;!measurement_shocks&quot;</span><span class="p">)</span>  
+        
+        <span class="c1"># Set default values for missing calibration parameters</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">calibration</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]):</span>
+                <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            
+        <span class="c1"># Set default values for missing starting values of endogenous variables</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+                <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            
+        <span class="n">var_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">var</span><span class="p">,</span><span class="n">lbl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span><span class="n">labels</span><span class="p">):</span>
+            <span class="n">var_labels</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">lbl</span>
+            
+        <span class="n">interface</span> <span class="o">=</span> <span class="n">getModel</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">eqs</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">meas_eqs</span><span class="o">=</span><span class="n">measEqs</span><span class="p">,</span><span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span>
+                         <span class="n">parameters</span><span class="o">=</span><span class="n">params</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">,</span><span class="n">meas_shocks</span><span class="o">=</span><span class="n">measShocks</span><span class="p">,</span>
+                         <span class="n">shocks_file_path</span><span class="o">=</span><span class="n">shocks_file_path</span><span class="p">,</span><span class="n">meas_variables</span><span class="o">=</span><span class="n">measVar</span><span class="p">,</span>
+                         <span class="n">calibration</span><span class="o">=</span><span class="n">calibration</span><span class="p">,</span><span class="n">var_labels</span><span class="o">=</span><span class="n">var_labels</span><span class="p">,</span>
+                         <span class="n">return_interface</span><span class="o">=</span><span class="n">return_interface</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span><span class="n">infos</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span>
+            
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.xml&quot;</span><span class="p">:</span>      <span class="c1"># Sirius model file</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.utils.getXmlData</span> <span class="kn">import</span> <span class="n">readXmlModelFile</span>
+        
+        <span class="n">eqs</span><span class="p">,</span><span class="n">variables</span><span class="p">,</span><span class="n">variables_values</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">params_values</span><span class="p">,</span><span class="n">mapCalibration</span><span class="p">,</span><span class="n">labels</span><span class="p">,</span><span class="n">freq</span> <span class="o">=</span> <span class="n">readXmlModelFile</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">fname</span><span class="p">,</span><span class="n">bFillValues</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">options</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">freq</span>
+        
+        <span class="n">calibration</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">calibration</span><span class="p">,</span> <span class="o">**</span><span class="n">mapCalibration</span><span class="p">}</span>
+        
+        <span class="c1"># Set default values for missing starting values of endogenous variables</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+                <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                
+        <span class="n">var_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">var</span><span class="p">,</span><span class="n">lbl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span><span class="n">labels</span><span class="p">):</span>
+            <span class="n">var_labels</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">lbl</span>
+                
+        <span class="n">interface</span> <span class="o">=</span> <span class="n">getModel</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">eqs</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span><span class="n">parameters</span><span class="o">=</span><span class="n">params</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">,</span>
+                         <span class="n">shocks_file_path</span><span class="o">=</span><span class="n">shocks_file_path</span><span class="p">,</span><span class="n">calibration</span><span class="o">=</span><span class="n">calibration</span><span class="p">,</span><span class="n">var_labels</span><span class="o">=</span><span class="n">var_labels</span><span class="p">,</span>
+                         <span class="n">return_interface</span><span class="o">=</span><span class="n">return_interface</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span><span class="n">infos</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span>
+        
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.inp&quot;</span><span class="p">:</span>      <span class="c1"># Troll model file</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.utils.getTrollData</span> <span class="kn">import</span> <span class="n">readTrollModelFile</span>
+        
+        <span class="n">eqs</span><span class="p">,</span><span class="n">variables</span><span class="p">,</span><span class="n">variables_values</span><span class="p">,</span><span class="n">exogVars</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">param_names</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">labels</span><span class="p">,</span><span class="n">eqLabels</span><span class="p">,</span><span class="n">comments</span><span class="p">,</span><span class="n">mapCalibration</span><span class="p">,</span><span class="n">undefinedParameters</span> \
+                    <span class="o">=</span> <span class="n">readTrollModelFile</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">fname</span><span class="p">,</span><span class="n">bFillValues</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>         
+        <span class="n">calibration</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">calibration</span><span class="p">,</span> <span class="o">**</span><span class="n">mapCalibration</span><span class="p">}</span>
+        
+        <span class="c1"># Set default values for missing starting values of endogenous variables</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">calibration</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]):</span>
+                <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                
+        <span class="n">interface</span> <span class="o">=</span> <span class="n">getModel</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">eqs</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span><span class="n">parameters</span><span class="o">=</span><span class="n">params</span><span class="p">,</span><span class="n">shocks</span><span class="o">=</span><span class="n">shocks</span><span class="p">,</span>
+                             <span class="n">shocks_file_path</span><span class="o">=</span><span class="n">shocks_file_path</span><span class="p">,</span><span class="n">calibration</span><span class="o">=</span><span class="n">calibration</span><span class="p">,</span>
+                             <span class="n">return_interface</span><span class="o">=</span><span class="n">return_interface</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span><span class="n">infos</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span>
+        
+        <span class="n">interface</span><span class="o">.</span><span class="n">eqLabels</span> <span class="o">=</span> <span class="n">eqLabels</span>
+        
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">:</span>     <span class="c1"># YAML model file</span>
+        <span class="n">txt</span><span class="p">,</span><span class="n">labels</span> <span class="o">=</span> <span class="n">read_file_or_url</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span><span class="n">conditions</span><span class="o">=</span><span class="n">conditions</span><span class="p">)</span>
+        
+        <span class="c1"># if not calibration_file_path is None and os.path.exists(calibration_file_path):</span>
+        <span class="c1">#     txt2 = txt + &quot;\ncalibration:\n&quot;</span>
+        <span class="c1">#     with open(calibration_file_path) as f:</span>
+        <span class="c1">#        for line in f:</span>
+        <span class="c1">#            txt2 += &quot;  &quot; + line.strip() + &quot;\n&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;file&quot;</span> <span class="ow">in</span> <span class="n">txt</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">txt2</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+                    <span class="n">txt2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="s2">&quot;file&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="n">ind</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">)</span>
+                    <span class="n">ln</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">4</span><span class="p">:]</span>
+                    <span class="k">if</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">ln</span><span class="p">:</span>
+                        <span class="n">ind</span> <span class="o">=</span> <span class="n">ln</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+                        <span class="n">fn</span> <span class="o">=</span> <span class="n">ln</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span><span class="n">fn</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+                            <span class="n">incl</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">read_file_or_url</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+                            <span class="n">txt2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">incl</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">txt2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">txt2</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">txt2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">txt2</span> <span class="o">=</span> <span class="n">txt</span>
+            
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,,&quot;</span><span class="p">,</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="o">+</span><span class="s2">&quot;.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+            
+       
+        <span class="k">if</span> <span class="n">check</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">snowdrop.src.misc.linter</span> <span class="kn">import</span> <span class="n">lint</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">lint</span><span class="p">(</span><span class="n">txt2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Model file exceptions:&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Model file exception.&quot;</span><span class="p">)</span>
+                
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="s1">&#39;**&#39;</span><span class="p">)</span>
+     
+        <span class="n">interface</span> <span class="o">=</span> <span class="n">instantiate_model</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="n">txt</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="n">return_interface</span><span class="o">=</span><span class="n">return_interface</span><span class="p">,</span>
+                                      <span class="n">filename</span><span class="o">=</span><span class="n">fname</span><span class="p">,</span><span class="n">hist</span><span class="o">=</span><span class="n">hist</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">calibration</span><span class="o">=</span><span class="n">calibration</span><span class="p">,</span>
+                                      <span class="n">boundary_conditions_path</span><span class="o">=</span><span class="n">boundary_conditions_path</span><span class="p">,</span>
+                                      <span class="n">exogenous</span><span class="o">=</span><span class="n">exogenous</span><span class="p">,</span><span class="n">shocks_file_path</span><span class="o">=</span><span class="n">shocks_file_path</span><span class="p">,</span>
+                                      <span class="n">steady_state_file_path</span><span class="o">=</span><span class="n">steady_state_file_path</span><span class="p">,</span>
+                                      <span class="n">calibration_file_path</span><span class="o">=</span><span class="n">calibration_file_path</span><span class="p">,</span>
+                                      <span class="n">measurement_file_path</span><span class="o">=</span><span class="n">measurement_file_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">interface</span></div>
+
+
+
+<div class="viewcode-block" id="instantiate_model">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.factory.instantiate_model">[docs]</a>
+<span class="k">def</span> <span class="nf">instantiate_model</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">exog_data</span><span class="o">=</span><span class="p">{},</span><span class="n">return_interface</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">hist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">boundary_conditions_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">exogenous</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">calibration</span><span class="o">=</span><span class="p">{},</span><span class="n">shocks_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">exog_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">steady_state_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">calibration_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="p">{},</span>
+                      <span class="n">measurement_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">infos</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse a model file and create an instance of a  model.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param txt: Content of model file.</span>
+<span class="sd">        :type txt: str.</span>
+<span class="sd">        :param order: Approximation order of solution of the non-linear system of equations.</span>
+<span class="sd">        :type order: int.</span>
+<span class="sd">        :param data: Dictionary of model file.</span>
+<span class="sd">        :type data: dict.</span>
+<span class="sd">        :param exog_data: Exogenous time series.</span>
+<span class="sd">        :type exog_data: dict.</span>
+<span class="sd">        :param return_interface: If True returns `Interface&#39; object.</span>
+<span class="sd">        :type return_interface: bool.</span>
+<span class="sd">        :param filename: Model file name.</span>
+<span class="sd">        :type filename: str.</span>
+<span class="sd">        :param hist: Path to history file.</span>
+<span class="sd">        :type hist: str.</span>
+<span class="sd">        :param boundary_conditions_path: Path to the boundary conditions excel file.  This file contains initial and terminal conditions.</span>
+<span class="sd">        :type boundary_conditions_path: str.</span>
+<span class="sd">        :param exogenous: Exogenous variables list.</span>
+<span class="sd">        :type exogenous: list.</span>
+<span class="sd">        :param shocks_file_path: Path to shock file.</span>
+<span class="sd">        :type shocks_file_path: str.</span>
+<span class="sd">        :param exog_file_path: Path to exogenous series data file.</span>
+<span class="sd">        :type exog_file_path: str.</span>
+<span class="sd">        :param steady_state_file_path: Path to a steady-state file.</span>
+<span class="sd">        :type steady_state_file_path: str.</span>
+<span class="sd">        :param measurement_file_path: Path to a file with measurement data.</span>
+<span class="sd">        :type measurement_file_path: str.</span>
+<span class="sd">        :param calibration_file_path: Path to calibration files.</span>
+<span class="sd">        :type calibration_file_path: list.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        model : Model.</span>
+<span class="sd">            Model object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.utils.equations</span> <span class="kn">import</span> <span class="n">fixEquations</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.utils.equations</span> <span class="kn">import</span> <span class="n">get_steady_state_equations</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.utils.load</span> <span class="kn">import</span> <span class="n">loadYaml</span><span class="p">,</span><span class="n">loadFile</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.misc.termcolor</span> <span class="kn">import</span> <span class="n">cprint</span>
+    <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span>
+    <span class="kn">import</span> <span class="nn">warnings</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">)</span>
+ 
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">loadYaml</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span><span class="n">txt</span><span class="p">)</span>
+        
+    <span class="n">symbols</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span> 
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">exogenous</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;exogenous&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">exogenous</span>
+    <span class="k">elif</span> <span class="s1">&#39;exogenous&#39;</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;exogenous&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;exogenous&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;exogenous&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s1">&#39;endogenous&#39;</span> <span class="ow">in</span> <span class="n">symbols</span> <span class="ow">and</span> <span class="ow">not</span> <span class="s1">&#39;variables&#39;</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;endogenous&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;log_variables&#39;</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="n">log_variables</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;log_variables&#39;</span><span class="p">]</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">log_variables</span> 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log_variables</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;shocks&#39;</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s1">&#39;steady_state&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">steady_state</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;steady_state&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">steady_state</span> <span class="o">=</span> <span class="kc">None</span>  
+    <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;parameters&#39;</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;measurement_parameters&#39;</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;measurement_parameters&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s2">&quot;labels&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;variables_labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">labels</span><span class="p">,</span><span class="o">**</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;variables_labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">labels</span>
+    <span class="k">if</span> <span class="s2">&quot;eqComments&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">eqs_comments</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;eqComments&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">eqs_comments</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+    <span class="c1"># Get definitions, parameters, and options</span>
+    <span class="n">eqs</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;equations&quot;</span><span class="p">]</span>
+    <span class="n">endog</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;endogenous&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">endog</span>
+    <span class="n">definitions</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;definitions&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">calibration</span><span class="p">):</span>
+        <span class="n">calibration</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;calibration&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">param_names</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;options&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">data_sources</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_sources&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    
+    <span class="k">if</span> <span class="s1">&#39;file&#39;</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">]:</span> 
+        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;shock_values&#39;</span><span class="p">],</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;periods&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loadFile</span><span class="p">(</span><span class="n">model_path</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="o">+</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">][</span><span class="s1">&#39;file&#39;</span><span class="p">],</span><span class="n">calibration</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">],</span><span class="n">bShocks</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">shocks_file_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;shock_values&#39;</span><span class="p">],</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;periods&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loadFile</span><span class="p">(</span><span class="n">shocks_file_path</span><span class="p">,</span><span class="n">calibration</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">],</span><span class="n">bShocks</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">calibration_file_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_file_path</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">calibration</span> <span class="o">=</span> <span class="n">loadFile</span><span class="p">(</span><span class="n">calibration_file_path</span><span class="p">,</span><span class="n">calibration</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_file_path</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">calibration_file_path</span><span class="p">:</span>
+                <span class="n">calibration</span> <span class="o">=</span> <span class="n">loadFile</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">calibration</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">])</span>
+
+        
+    <span class="k">if</span> <span class="s1">&#39;file&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span> 
+        <span class="n">options</span> <span class="o">=</span> <span class="n">loadFile</span><span class="p">(</span><span class="n">model_path</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;file&#39;</span><span class="p">),</span><span class="n">options</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">exo</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;exogenous&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">exo</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+            <span class="n">ser</span> <span class="o">=</span> <span class="n">calibration</span><span class="p">[</span><span class="n">exo</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ser</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+                <span class="n">ser</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">ser</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ser</span><span class="p">))])</span>
+            <span class="n">exog_data</span><span class="p">[</span><span class="n">exo</span><span class="p">]</span> <span class="o">=</span> <span class="n">ser</span>
+            <span class="k">del</span> <span class="n">calibration</span><span class="p">[</span><span class="n">exo</span><span class="p">]</span>
+        
+    <span class="c1"># Extract equation labels</span>
+    <span class="n">new_eqs</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">eqs_labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">eq</span> <span class="ow">in</span> <span class="n">eqs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">eq</span><span class="p">:</span>
+                <span class="n">new_eqs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eq</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">eqs_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
+                <span class="k">else</span><span class="p">:</span>    
+                    <span class="n">eqs_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_eqs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+            
+            
+    <span class="c1"># Build steady state equations</span>
+    <span class="n">ss_equations</span> <span class="o">=</span> <span class="n">get_steady_state_equations</span><span class="p">(</span><span class="n">new_eqs</span><span class="p">,</span><span class="n">endog</span><span class="p">,</span><span class="n">param_names</span><span class="p">,</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;shocks&quot;</span><span class="p">],</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;exogenous&#39;</span><span class="p">])</span>
+        
+    <span class="c1">#Add new equations and new variables if variables leads/lags greater than one.</span>
+    <span class="n">map_new_endog</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">num_new_eqs</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="s1">&#39;variables&#39;</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parameters&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">mod_eqs</span><span class="p">,</span> <span class="n">new_endog</span><span class="p">,</span> <span class="n">map_new_endog</span><span class="p">,</span> <span class="n">leads</span><span class="p">,</span> <span class="n">lags</span> <span class="o">=</span> <span class="n">fixEquations</span><span class="p">(</span><span class="n">eqs</span><span class="o">=</span><span class="n">new_eqs</span><span class="p">,</span><span class="n">endog</span><span class="o">=</span><span class="n">endog</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span><span class="n">tagBeg</span><span class="o">=</span><span class="s1">&#39;(&#39;</span><span class="p">,</span><span class="n">tagEnd</span><span class="o">=</span><span class="s1">&#39;)&#39;</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_endog</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">num_new_eqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mod_eqs</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_eqs</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mod_eqs</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">endog</span> <span class="o">+</span> <span class="n">new_endog</span><span class="p">))</span>
+            <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;new_variables&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_endog</span>
+            <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_eqs</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_eqs</span>
+ 
+    <span class="n">name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;equations&#39;</span><span class="p">]</span>
+    
+    <span class="n">delimiters</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span>
+    <span class="n">regexPattern</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">,</span> <span class="n">delimiters</span><span class="p">))</span>
+    
+    <span class="c1"># Build equations labels</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="p">{};</span> <span class="n">mm</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">eqs_labels</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">equations</span><span class="p">)):</span>
+        <span class="n">eq</span>  <span class="o">=</span> <span class="n">equations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> 
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">regexPattern</span><span class="p">,</span><span class="n">eq</span><span class="p">)</span>
+        <span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arr</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">endog</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">eq</span><span class="p">:</span>
+            <span class="n">ind</span>  <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">eq</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+            <span class="n">mm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">eq</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">ind</span><span class="p">:]</span>
+            <span class="n">arr2</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">regexPattern</span><span class="p">,</span><span class="n">left</span><span class="p">)</span>
+            <span class="n">arr2</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arr2</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">endog</span><span class="p">]</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">arr2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="c1"># if not &quot;_minus_&quot; in label and not &quot;_plus_&quot; in label:</span>
+            <span class="c1">#     arr2 = [x for x in arr2 if x in endog]</span>
+            <span class="c1">#     label = arr2[0].strip() if len(arr2) &gt; 0 else str(i)</span>
+            <span class="c1"># if len(arr2) &gt; 1:</span>
+            <span class="c1">#     eqs_labels.append(str(i))</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">eqs_labels</span><span class="p">:</span>
+                <span class="n">eqs_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">eqs_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eqs_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">eq</span>
+            
+    <span class="n">undefined</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eqs_labels</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()]</span>
+        
+    <span class="c1"># Check if equations labels are unique</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">undefined</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>    
+        <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+        <span class="kn">from</span> <span class="nn">networkx.algorithms</span> <span class="kn">import</span> <span class="n">bipartite</span>
+        
+        <span class="n">lbls</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">eqs_labels</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">undefined</span><span class="p">]</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="n">m</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">m</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">undefined</span><span class="p">}</span>
+        <span class="n">top_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  
+        <span class="n">bottom_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">endog</span><span class="p">)</span><span class="o">-</span><span class="nb">set</span><span class="p">(</span><span class="n">lbls</span><span class="p">))</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>           
+        <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">top_nodes</span><span class="p">,</span> <span class="n">bipartite</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">bottom_nodes</span><span class="p">,</span> <span class="n">bipartite</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">m</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k2</span> <span class="ow">in</span> <span class="n">m</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">k2</span> <span class="ow">in</span> <span class="n">bottom_nodes</span><span class="p">:</span>
+                    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">k2</span><span class="p">)</span>
+     
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Obtain the minimum weight full matching (aka equations to variables perfect matching)</span>
+                <span class="n">matching</span> <span class="o">=</span> <span class="n">bipartite</span><span class="o">.</span><span class="n">matching</span><span class="o">.</span><span class="n">minimum_weight_full_matching</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">top_nodes</span><span class="p">,</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">top_nodes</span><span class="p">:</span>
+                    <span class="n">eqs_labels</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">matching</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                        
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">equations</span><span class="p">)):</span>
+                    <span class="n">eq</span>  <span class="o">=</span> <span class="n">equations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> 
+                    <span class="n">arr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">regexPattern</span><span class="p">,</span><span class="n">eq</span><span class="p">)</span>
+                    <span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arr</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">endog</span><span class="p">]</span>
+                    
+                <span class="n">top_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  
+                <span class="n">bottom_nodes</span> <span class="o">=</span> <span class="n">endog</span>
+                <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>           
+                <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">top_nodes</span><span class="p">,</span> <span class="n">bipartite</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">bottom_nodes</span><span class="p">,</span> <span class="n">bipartite</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">m</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">k2</span> <span class="ow">in</span> <span class="n">m</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="n">k2</span> <span class="ow">in</span> <span class="n">bottom_nodes</span><span class="p">:</span>
+                            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">k2</span><span class="p">)</span>
+                <span class="c1"># Obtain the minimum weight full matching (aka equations to variables perfect matching)</span>
+                <span class="n">matching</span> <span class="o">=</span> <span class="n">bipartite</span><span class="o">.</span><span class="n">matching</span><span class="o">.</span><span class="n">minimum_weight_full_matching</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">top_nodes</span><span class="p">,</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">top_nodes</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">matching</span><span class="p">:</span>
+                        <span class="n">eqs_labels</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">matching</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1">#cprint(f&quot;Label for equation {k} is missing&quot;,&quot;red&quot;)</span>
+                        <span class="n">eqs_labels</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;Unable to match variables to equations&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+                
+    <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;equations_comments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eqs_comments</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">steady_state_file_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ms</span> <span class="o">=</span> <span class="n">loadFile</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">steady_state_file_path</span><span class="p">,</span><span class="n">names</span><span class="o">=</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">])</span>
+        <span class="n">steady_state</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">ms</span><span class="p">:</span>
+                <span class="n">steady_state</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">ms</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">steady_state</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">if</span> <span class="s1">&#39;measurement_equations&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">meas_eqs</span> <span class="o">=</span> <span class="n">measurement_equations</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;measurement_equations&#39;</span><span class="p">]</span>
+        <span class="n">meas_params</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measurement_parameters&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">delimiters</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;^&quot;</span><span class="p">,</span> <span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;}&quot;</span><span class="p">,</span> <span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span>
+        <span class="n">regexPattern</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">,</span> <span class="n">delimiters</span><span class="p">))</span>        
+        <span class="c1"># Re-arrange measurement variables order according to equations </span>
+        <span class="k">if</span> <span class="s1">&#39;measurement_variables&#39;</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span> 
+            <span class="n">vm</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;measurement_variables&#39;</span><span class="p">]</span>
+            <span class="n">meas_var</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">eq</span> <span class="ow">in</span> <span class="n">meas_eqs</span><span class="p">:</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">regexPattern</span><span class="p">,</span><span class="n">eq</span><span class="p">)</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">arr</span><span class="p">))</span>
+                <span class="n">bExist</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vm</span><span class="o">+</span><span class="n">meas_params</span><span class="p">:</span>
+                        <span class="n">meas_var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+                        <span class="n">bExist</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">bExist</span><span class="p">:</span>
+                    <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;Variable </span><span class="si">{0}</span><span class="s2"> is not present in the list of measurement variables or parameters. Please correct measurement variables.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">),</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    
+            <span class="c1">### Filter out extra observation variables and measurement equations.</span>
+            <span class="c1"># We check if observations are available in a data file and if not we apply filter.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">measurement_file_path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">measurement_file_path</span><span class="p">):</span>
+                <span class="n">ext</span> <span class="o">=</span> <span class="n">measurement_file_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;xlsx&#39;</span> <span class="ow">or</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;xls&#39;</span><span class="p">:</span>
+                    <span class="n">meas_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">measurement_file_path</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">meas_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath_or_buffer</span><span class="o">=</span><span class="n">measurement_file_path</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">infer_datetime_format</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                
+                <span class="n">meas_var</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">meas_var</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">meas_df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+                <span class="n">measurement_equations</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">eq</span> <span class="ow">in</span> <span class="n">meas_eqs</span><span class="p">:</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">regexPattern</span><span class="p">,</span><span class="n">eq</span><span class="p">)</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">arr</span><span class="p">))</span>
+                    <span class="n">b_meas_eq</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">meas_var</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                            <span class="c1">#print(v,&quot;: &quot;,eq)</span>
+                            <span class="n">b_meas_eq</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">if</span> <span class="n">b_meas_eq</span><span class="p">:</span>
+                        <span class="n">measurement_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span> 
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">measurement_equations</span><span class="p">):</span>
+                    <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;None of the observations is available in a data file.  Please update list of measurement variables.&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    
+            <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;measurement_variables&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meas_var</span>
+            <span class="c1"># Assign measurement variables to zero</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vm</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;obs_&quot;</span><span class="p">):</span>
+                        <span class="n">vname</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span>
+                        <span class="n">calibration</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">vname</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_meas&quot;</span><span class="p">):</span>
+                        <span class="n">vname</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+                        <span class="n">calibration</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">vname</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">calibration</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                
+        <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;measurement_parameters&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">meas_params</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">measurement_equations</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">meas_params</span> <span class="o">=</span> <span class="p">[]</span>
+  
+    <span class="c1"># Build a list of variables in each of the equations</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.symbolic</span> <span class="kn">import</span> <span class="n">stringify</span>
+    <span class="n">delimiters</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span>
+    <span class="n">regexPattern</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">,</span> <span class="n">delimiters</span><span class="p">))</span>
+    <span class="n">symb</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">]</span>
+    <span class="n">eq_vars</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">equations</span><span class="p">):</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">regexPattern</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">arr</span><span class="p">))</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">):]</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">symb</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;(&#39;</span><span class="p">:</span>
+                    <span class="n">ind2</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">ind2</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">lead_lag</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">ind2</span><span class="p">]</span>
+                        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[-+]?\d+&quot;</span><span class="p">,</span><span class="n">lead_lag</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="n">i_lead_lag</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lead_lag</span><span class="p">)</span>
+                                <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stringify</span><span class="p">((</span><span class="n">v</span><span class="p">,</span><span class="n">i_lead_lag</span><span class="p">)))</span>
+                            <span class="k">except</span><span class="p">:</span>
+                                <span class="k">pass</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">+</span><span class="s1">&#39;__&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">+</span><span class="s1">&#39;__&#39;</span><span class="p">)</span>
+        <span class="n">eq_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> 
+        
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">infos</span><span class="p">):</span>
+        <span class="n">infos</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="n">filename</span><span class="p">,</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
+ 
+    <span class="c1"># all symbols are initialized to nan</span>
+    <span class="c1"># except shocks and values which are initialized to 0</span>
+    <span class="n">initial_values</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;shocks&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;measurement_shocks&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;expectations&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;new_variables&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;states&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+    <span class="p">}</span>
+ 
+    <span class="c1"># variables defined by a model equation default to using these definitions</span>
+    <span class="n">initialized_from_model</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;variables&#39;</span><span class="p">:</span> <span class="s1">&#39;variables&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;shocks&#39;</span><span class="p">:</span> <span class="s1">&#39;shocks&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;parameters&#39;</span><span class="p">:</span> <span class="s1">&#39;parameters&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;measurement_parameters&#39;</span><span class="p">:</span> <span class="s1">&#39;measurement_parameters&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;variables_labels&#39;</span><span class="p">:</span> <span class="s1">&#39;variables_labels&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;endogenous&#39;</span> <span class="p">:</span> <span class="s1">&#39;endogenous&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;shock_values&#39;</span><span class="p">:</span> <span class="s1">&#39;shock_values&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;equations_comments&#39;</span><span class="p">:</span> <span class="s1">&#39;equations_comments&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;equations_labels&#39;</span><span class="p">:</span> <span class="s1">&#39;equations_labels&#39;</span>     
+    <span class="p">}</span>
+ 
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;shocks&#39;</span><span class="p">]:</span>
+        <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">log_variables</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+            <span class="n">calibration</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">calibration</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+        
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">definitions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+            <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+ 
+    <span class="k">for</span> <span class="n">symbol_group</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">symbol_group</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">initialized_from_model</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">symbol_group</span> <span class="ow">in</span> <span class="n">initial_values</span><span class="p">:</span>
+                <span class="n">default</span> <span class="o">=</span> <span class="n">initial_values</span><span class="p">[</span><span class="n">symbol_group</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">default</span> <span class="o">=</span>  <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">[</span><span class="n">symbol_group</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+                    <span class="c1">#print(symbol_group,default)</span>
+                    <span class="n">calibration</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">default</span>
+           
+    <span class="c1"># Assign starting values for new variables</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">map_new_endog</span><span class="p">:</span>
+        <span class="n">new_vars</span> <span class="o">=</span>  <span class="n">map_new_endog</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">new_var</span> <span class="ow">in</span> <span class="n">new_vars</span><span class="p">:</span>
+                <span class="n">calibration</span><span class="p">[</span><span class="n">new_var</span><span class="p">]</span> <span class="o">=</span> <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> 
+                
+    <span class="c1"># Set starting and terminal values from a history file</span>
+    <span class="c1"># The first line of this file contains starting values </span>
+    <span class="c1"># and the last - terminal values</span>
+    <span class="n">term_values</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">boundary_conditions_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">boundary_conditions_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">boundary_conditions_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">header</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">start_values</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                <span class="n">final_values</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                
+        <span class="k">elif</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.xlsx&quot;</span> <span class="ow">or</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.xls&quot;</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">boundary_conditions_path</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
+            <span class="n">header</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">start_values</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">final_values</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">.</span><span class="n">values</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cprint</span><span class="p">(</span><span class="s2">&quot;Only files with extension csv, xls and xlsx are supprted for history&quot;</span><span class="p">,</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">term_values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">start_values</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">val</span><span class="o">.</span><span class="n">upper</span> <span class="o">==</span> <span class="s2">&quot;NONE&quot;</span><span class="p">:</span>
+                    <span class="n">calibration</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                    <span class="n">ls</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="s2">&quot;_m_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="s2">&quot;_p_&quot;</span><span class="p">)]</span>
+                    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ls</span><span class="p">:</span>
+                        <span class="n">calibration</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">final_values</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">val</span><span class="o">.</span><span class="n">upper</span> <span class="o">==</span> <span class="s2">&quot;NONE&quot;</span><span class="p">:</span>
+                    <span class="n">term_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                    <span class="n">ls</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="s2">&quot;_m_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="s2">&quot;_p_&quot;</span><span class="p">)]</span>
+                    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ls</span><span class="p">:</span>
+                        <span class="n">term_values</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>                   
+                                
+    <span class="c1"># Read exogenous values</span>
+    <span class="n">param_names</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parameters&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">exog_file_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">exog_file_path</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">infer_datetime_format</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">column_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">column_names</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">param_names</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+            <span class="n">calibration</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+            
+    <span class="c1"># Read parameter prior distribution</span>
+    <span class="n">priors</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s1">&#39;estimated_parameters&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">priors</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">est_params</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;estimated_parameters&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">est_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">est_params</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;#&quot;</span> <span class="ow">in</span> <span class="n">p</span><span class="p">:</span>
+                    <span class="n">ind</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">)</span>
+                    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+                <span class="n">n</span><span class="p">,</span><span class="n">initial</span><span class="p">,</span><span class="n">lower</span><span class="p">,</span><span class="n">upper</span><span class="p">,</span><span class="n">distr</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[:</span><span class="mi">5</span><span class="p">]</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial</span><span class="p">,</span><span class="n">lower</span><span class="p">,</span><span class="n">upper</span><span class="p">]</span><span class="o">+</span><span class="n">arr</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">params</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+                <span class="n">priors</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;distribution&#39;</span><span class="p">:</span> <span class="n">distr</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="s1">&#39;parameters&#39;</span><span class="p">:</span> <span class="n">params</span><span class="p">}</span>
+            
+            
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">hist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">snowdrop.src.model.util</span> <span class="kn">import</span> <span class="n">getStartingValues</span>
+        <span class="n">var_names</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+        <span class="n">var_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">calibration</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">var_names</span><span class="p">]</span>
+        <span class="n">var_values</span><span class="p">,</span><span class="n">calib</span><span class="p">,</span><span class="n">missing</span> <span class="o">=</span> <span class="n">getStartingValues</span><span class="p">(</span><span class="n">hist</span><span class="o">=</span><span class="n">hist</span><span class="p">,</span><span class="n">var_names</span><span class="o">=</span><span class="n">var_names</span><span class="p">,</span><span class="n">orig_var_values</span><span class="o">=</span><span class="n">var_values</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">calibration</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">calibration</span><span class="p">,</span> <span class="o">**</span><span class="n">calib</span><span class="p">}</span>
+                
+    <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>    
+    <span class="n">be</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bellman_equation&#39;</span><span class="p">,</span> <span class="p">{})</span> 
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">be</span><span class="p">):</span>
+        <span class="n">be_eqs</span> <span class="o">=</span> <span class="n">be</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;equations&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">utilities</span> <span class="o">=</span> <span class="n">be</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;utilities&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">value_functions</span> <span class="o">=</span> <span class="n">be</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value_functions&quot;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">control_variables</span> <span class="o">=</span> <span class="n">be</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;control_variables&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">lower_boundary</span> <span class="o">=</span> <span class="n">be</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lower_boundary&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">upper_boundary</span> <span class="o">=</span> <span class="n">be</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;upper_boundary&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;utilities&quot;</span><span class="p">:</span><span class="n">utilities</span><span class="p">,</span> 
+             <span class="s2">&quot;equations&quot;</span><span class="p">:</span><span class="n">be_eqs</span><span class="p">,</span>
+             <span class="s2">&quot;value_functions&quot;</span><span class="p">:</span><span class="n">value_functions</span><span class="p">,</span>
+             <span class="s2">&quot;control_variables&quot;</span><span class="p">:</span><span class="n">control_variables</span><span class="p">,</span> 
+             <span class="s2">&quot;lower_boundary&quot;</span><span class="p">:</span><span class="n">lower_boundary</span><span class="p">,</span> 
+             <span class="s2">&quot;upper_boundary&quot;</span><span class="p">:</span><span class="n">upper_boundary</span>
+             <span class="p">}</span>
+        <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            
+    <span class="n">bellman</span> <span class="o">=</span> <span class="n">arr</span> <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+            
+        
+    <span class="n">interface</span> <span class="o">=</span> <span class="n">Interface</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">symbols</span><span class="p">,</span><span class="n">equations</span><span class="p">,</span><span class="n">ss_equations</span><span class="p">,</span><span class="n">calibration</span><span class="p">,</span><span class="n">exog_data</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="n">eq_vars</span><span class="o">=</span><span class="n">eq_vars</span><span class="p">,</span>
+                          <span class="n">steady_state</span><span class="o">=</span><span class="n">steady_state</span><span class="p">,</span><span class="n">measurement_equations</span><span class="o">=</span><span class="n">measurement_equations</span><span class="p">,</span><span class="n">bellman</span><span class="o">=</span><span class="n">bellman</span><span class="p">,</span>
+                          <span class="n">terminal_values</span><span class="o">=</span><span class="n">term_values</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span><span class="n">data_sources</span><span class="o">=</span><span class="n">data_sources</span><span class="p">,</span>
+                          <span class="n">measurement_file_path</span><span class="o">=</span><span class="n">measurement_file_path</span><span class="p">,</span><span class="n">definitions</span><span class="o">=</span><span class="n">definitions</span><span class="p">,</span><span class="n">priors</span><span class="o">=</span><span class="n">priors</span><span class="p">)</span>
+ 
+    <span class="n">interface</span><span class="o">.</span><span class="n">eqLabels</span> <span class="o">=</span> <span class="n">eqs_labels</span>
+    <span class="n">interface</span><span class="o">.</span><span class="n">numberOfNewEqs</span> <span class="o">=</span> <span class="n">num_new_eqs</span>
+    
+    <span class="k">if</span> <span class="n">return_interface</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">interface</span>
+ 
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="n">infos</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span>
+    
+    
+    <span class="k">return</span> <span class="n">model</span></div>
+
+ 
+    
+<div class="viewcode-block" id="getModel">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.model.html#snowdrop.src.model.factory.getModel">[docs]</a>
+<span class="k">def</span> <span class="nf">getModel</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">eqs</span><span class="p">,</span><span class="n">variables</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">exogenous</span><span class="o">=</span><span class="p">[],</span><span class="n">exog_data</span><span class="o">=</span><span class="p">{},</span><span class="n">shocks_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">Solver</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">ss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">meas_eqs</span><span class="o">=</span><span class="p">[],</span><span class="n">meas_variables</span><span class="o">=</span><span class="p">[],</span><span class="n">var_labels</span><span class="o">=</span><span class="p">{},</span><span class="n">meas_shocks</span><span class="o">=</span><span class="p">[],</span>
+             <span class="n">meas_parameters</span><span class="o">=</span><span class="p">[],</span><span class="n">options</span><span class="o">=</span><span class="p">{},</span><span class="n">eqs_labels</span><span class="o">=</span><span class="p">[],</span><span class="n">calibration</span><span class="o">=</span><span class="p">{},</span><span class="n">return_interface</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="n">infos</span><span class="o">=</span><span class="p">{},</span><span class="n">definitions</span><span class="o">=</span><span class="p">{},</span><span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">bCompileAll</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Instantiate a model object based on passed parameters and calibration dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        :param name: Model name.</span>
+<span class="sd">        :type name:  str.</span>
+<span class="sd">        :param eqs: Transition equations.</span>
+<span class="sd">        :type eqs:  list.</span>
+<span class="sd">        :param variables:  Endogenous variables.</span>
+<span class="sd">        :type variables:  list.</span>
+<span class="sd">        :param parameters: Model parameters.</span>
+<span class="sd">        :type parameters:  list.</span>
+<span class="sd">        :param shocks: Shock names.</span>
+<span class="sd">        :type shocks:  list.</span>
+<span class="sd">        :param exogenous:  Exogenous variables.</span>
+<span class="sd">        :type exogenous:  list.</span>
+<span class="sd">        :param exog_data:  Exogenous data.</span>
+<span class="sd">        :type exog_data:  dict.</span>
+<span class="sd">        :param shocks_file_path: Path to shock file.</span>
+<span class="sd">        :type shocks_file_path: str.</span>
+<span class="sd">        :param Sover: Solver name.</span>
+<span class="sd">        :type Silver:  str.</span>
+<span class="sd">        :param ss: Map with variables names as a key and steady states as values.</span>
+<span class="sd">        :type ss: dict.</span>
+<span class="sd">        :param meas_eqs: Measurement equations.</span>
+<span class="sd">        :type meas_eqs:  list.</span>
+<span class="sd">        :param meas_variables: Measurement variables. The default is an empty list.</span>
+<span class="sd">        :type meas_variables:  list.</span>
+<span class="sd">        :param var_labels: Labels of endogenous variables. The default is an empty dict.</span>
+<span class="sd">        :type var_labels:  dict.</span>
+<span class="sd">        :param meas_shocks: Measurement shocks. The default is an empty list.</span>
+<span class="sd">        :type meas_shocks:  list.</span>
+<span class="sd">        :param meas_parameters: Measurement parameters. The default is an empty list.</span>
+<span class="sd">        :type meas_parameters:  list.</span>
+<span class="sd">        :param options: Model options.</span>
+<span class="sd">        :type options:  dict.</span>
+<span class="sd">        :param eqs_labels: Equation labels. The default is an empty list.</span>
+<span class="sd">        :type eqs_labels:  list.</span>
+<span class="sd">        :param calibration: Calibration values. The default is an empty dictionary.</span>
+<span class="sd">        :type calibration:  dict, optional.</span>
+<span class="sd">        :param return_interface: if True returns `Interface&#39; object.</span>
+<span class="sd">        :type return_interface: bool.</span>
+<span class="sd">        :param infos: Brief information on model. The default is an empty dictionary.</span>
+<span class="sd">        :type infos:  dict, optional.</span>
+<span class="sd">        :param definitions: Variables definitions. The default is an empty dictionary.</span>
+<span class="sd">        :type definitions:  dict, optional.</span>
+<span class="sd">        :param check: If True checks for errors of passed parameters. The default is False.</span>
+<span class="sd">        :type check:  bool, optional.</span>
+<span class="sd">        :param bCompileAll: If True compiles all functions source code.</span>
+<span class="sd">        :type bCompileAll:  bool, optional.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        `Interface` object.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.utils.equations</span> <span class="kn">import</span> <span class="n">fixEquations</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.utils.equations</span> <span class="kn">import</span> <span class="n">get_steady_state_equations</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.model.settings</span> <span class="kn">import</span> <span class="n">SolverMethod</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">eqs_labels</span><span class="p">):</span>
+        <span class="n">eqs_labels</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">eqs</span><span class="p">))]</span>
+        
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">infos</span><span class="p">):</span>
+        <span class="n">infos</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span><span class="s1">&#39;filename&#39;</span> <span class="p">:</span> <span class="n">name</span><span class="p">}</span>   
+        
+    <span class="n">n_eqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">eqs</span><span class="p">)</span>
+    <span class="n">n_meas_eqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">meas_eqs</span><span class="p">)</span>
+    <span class="n">n_var</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+    <span class="n">n_meas_var</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">meas_variables</span><span class="p">)</span>
+    <span class="c1"># # Add measurement variables and equations.</span>
+    <span class="c1"># eqs       += meas_eqs    </span>
+    <span class="c1"># variables += meas_variables  </span>
+   
+    <span class="k">if</span> <span class="n">check</span><span class="p">:</span> <span class="c1"># Check syntax of model parameters.</span>
+        
+        <span class="kn">from</span> <span class="nn">snowdrop.src.misc.linter</span> <span class="kn">import</span> <span class="n">check_all</span>
+        <span class="n">symbols</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;variables&quot;</span><span class="p">:</span><span class="n">variables</span><span class="p">,</span><span class="s2">&quot;parameters&quot;</span><span class="p">:</span><span class="n">parameters</span><span class="p">,</span><span class="s2">&quot;shocks&quot;</span><span class="p">:</span><span class="n">shocks</span><span class="p">,</span><span class="s2">&quot;exogenous&quot;</span><span class="p">:</span><span class="n">exogenous</span><span class="p">}</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="n">name</span><span class="p">,</span><span class="s2">&quot;equations&quot;</span><span class="p">:</span><span class="n">eqs</span><span class="p">,</span><span class="s2">&quot;symbols&quot;</span><span class="p">:</span><span class="n">symbols</span><span class="p">,</span><span class="s2">&quot;options&quot;</span><span class="p">:</span><span class="n">options</span><span class="p">,</span><span class="s2">&quot;definitions&quot;</span><span class="p">:</span><span class="n">definitions</span><span class="p">}</span>
+        <span class="n">check_all</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">interface</span> <span class="o">=</span> <span class="n">instantiate_model</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span><span class="n">exog_data</span><span class="o">=</span><span class="n">exog_data</span><span class="p">,</span><span class="n">return_interface</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">calibration</span><span class="o">=</span><span class="n">calibration</span><span class="p">,</span><span class="n">shocks_file_path</span><span class="o">=</span><span class="n">shocks_file_path</span><span class="p">,</span><span class="n">infos</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span>
+        
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># No check assumes that all passed parameters are valid...  Do it on your own risk!</span>
+        
+        <span class="c1"># Build steady state equations</span>
+        <span class="n">ss_eqs</span> <span class="o">=</span> <span class="n">get_steady_state_equations</span><span class="p">(</span><span class="n">eqs</span><span class="p">,</span><span class="n">variables</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">shocks</span><span class="p">,</span><span class="n">exogenous</span><span class="p">)</span>
+        <span class="n">ss_variables</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+         <span class="c1">#Adds new equations and new variables if variables leads/lags greater than one.</span>
+        <span class="n">mod_eqs</span><span class="p">,</span> <span class="n">new_variables</span><span class="p">,</span> <span class="n">map_new_variables</span><span class="p">,</span> <span class="n">leads</span><span class="p">,</span> <span class="n">lags</span> <span class="o">=</span> <span class="n">fixEquations</span><span class="p">(</span><span class="n">eqs</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">endog</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span><span class="n">tagBeg</span><span class="o">=</span><span class="s1">&#39;(&#39;</span><span class="p">,</span><span class="n">tagEnd</span><span class="o">=</span><span class="s1">&#39;)&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_variables</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">num_new_eqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mod_eqs</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">eqs</span><span class="p">)</span>
+            <span class="n">eqs</span> <span class="o">=</span> <span class="n">mod_eqs</span>
+            <span class="n">variables</span> <span class="o">+=</span> <span class="n">new_variables</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_variables</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;_minus_&quot;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="n">ind</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;_minus_&quot;</span><span class="p">)</span>
+                    <span class="n">vv</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+                       <span class="n">calibration</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">calibration</span><span class="p">[</span><span class="n">vv</span><span class="p">]</span> 
+                <span class="k">elif</span> <span class="s2">&quot;_plus_&quot;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="n">ind</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;_plus_&quot;</span><span class="p">)</span>
+                    <span class="n">vv</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">calibration</span><span class="p">:</span>
+                       <span class="n">calibration</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">calibration</span><span class="p">[</span><span class="n">vv</span><span class="p">]</span> 
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">calibration</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">num_new_eqs</span> <span class="o">=</span> <span class="mi">0</span>
+            
+        <span class="n">symbols</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;parameters&quot;</span><span class="p">:</span><span class="n">parameters</span><span class="p">,</span><span class="s2">&quot;variables&quot;</span><span class="p">:</span><span class="n">variables</span><span class="p">,</span><span class="s2">&quot;endogenous&quot;</span><span class="p">:</span><span class="n">ss_variables</span><span class="p">,</span><span class="s2">&quot;new_variables&quot;</span><span class="p">:</span><span class="n">new_variables</span><span class="p">,</span>
+                   <span class="s2">&quot;exogenous&quot;</span><span class="p">:</span><span class="n">exogenous</span><span class="p">,</span><span class="s2">&quot;measurement_variables&quot;</span><span class="p">:</span><span class="n">meas_variables</span><span class="p">,</span><span class="s2">&quot;variables_labels&quot;</span><span class="p">:</span><span class="n">var_labels</span><span class="p">,</span><span class="s2">&quot;shocks&quot;</span><span class="p">:</span><span class="n">shocks</span><span class="p">,</span> 
+                   <span class="s2">&quot;measurement_shocks&quot;</span><span class="p">:</span><span class="n">meas_shocks</span><span class="p">,</span><span class="s2">&quot;measurement_parameters&quot;</span><span class="p">:</span><span class="n">meas_parameters</span><span class="p">,</span>
+                   <span class="s2">&quot;equations_labels&quot;</span><span class="p">:</span><span class="n">eqs_labels</span><span class="p">}</span>
+        
+        
+        <span class="kn">from</span> <span class="nn">snowdrop.src.preprocessor.symbolic</span> <span class="kn">import</span> <span class="n">stringify</span>
+        <span class="n">delimiters</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span>
+        <span class="n">regexPattern</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">,</span> <span class="n">delimiters</span><span class="p">))</span>
+        <span class="n">eq_vars</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">symb</span> <span class="o">=</span> <span class="n">variables</span> <span class="o">+</span> <span class="n">shocks</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">eqs</span><span class="p">):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">regexPattern</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">arr</span><span class="p">))</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">:</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">):]</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">symb</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;(&#39;</span><span class="p">:</span>
+                        <span class="n">ind2</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">ind2</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">lead_lag</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">ind2</span><span class="p">]</span>
+                            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[-+]?\d+&quot;</span><span class="p">,</span><span class="n">lead_lag</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="k">try</span><span class="p">:</span>
+                                    <span class="n">i_lead_lag</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lead_lag</span><span class="p">)</span>
+                                    <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stringify</span><span class="p">((</span><span class="n">v</span><span class="p">,</span><span class="n">i_lead_lag</span><span class="p">)))</span>
+                                <span class="k">except</span><span class="p">:</span>
+                                    <span class="k">pass</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">+</span><span class="s1">&#39;__&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">+</span><span class="s1">&#39;__&#39;</span><span class="p">)</span>
+            <span class="n">eq_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> 
+            
+            
+        <span class="n">interface</span> <span class="o">=</span> <span class="n">Interface</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">symbols</span><span class="o">=</span><span class="n">symbols</span><span class="p">,</span><span class="n">equations</span><span class="o">=</span><span class="n">eqs</span><span class="p">,</span><span class="n">ss_equations</span><span class="o">=</span><span class="n">ss_eqs</span><span class="p">,</span><span class="n">calibration</span><span class="o">=</span><span class="n">calibration</span><span class="p">,</span><span class="n">ss</span><span class="o">=</span><span class="n">ss</span><span class="p">,</span><span class="n">exogenous</span><span class="o">=</span><span class="n">exogenous</span><span class="p">,</span> 
+                              <span class="n">exog_data</span><span class="o">=</span><span class="n">exog_data</span><span class="p">,</span><span class="n">eq_vars</span><span class="o">=</span><span class="n">eq_vars</span><span class="p">,</span><span class="n">measurement_equations</span><span class="o">=</span><span class="n">meas_eqs</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span><span class="n">definitions</span><span class="o">=</span><span class="n">definitions</span><span class="p">)</span>  
+        <span class="n">interface</span><span class="o">.</span><span class="n">numberOfNewEqs</span> <span class="o">=</span> <span class="n">num_new_eqs</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">bellman</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">n_eqs</span><span class="o">==</span><span class="n">n_var</span><span class="p">),</span><span class="s2">&quot;Number of transient equations </span><span class="si">{0}</span><span class="s2"> and number of endogenous variables </span><span class="si">{1}</span><span class="s2"> is different!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_eqs</span><span class="p">,</span><span class="n">n_var</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">n_meas_eqs</span><span class="o">==</span><span class="n">n_meas_var</span><span class="p">),</span><span class="s2">&quot;Number of measurement equations </span><span class="si">{0}</span><span class="s2"> and number of measurement variables </span><span class="si">{1}</span><span class="s2"> is different!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_meas_eqs</span><span class="p">,</span><span class="n">n_meas_var</span><span class="p">)</span>
+
+    <span class="n">interface</span><span class="o">.</span><span class="n">eqLabels</span> <span class="o">=</span> <span class="n">eqs_labels</span>
+    
+    <span class="k">if</span> <span class="n">Solver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">LBJ</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;SIMS&quot;</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">Sims</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;VILLEMOT&quot;</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">Villemot</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;KLEIN&quot;</span><span class="p">:</span>
+       <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">Klein</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;ANDERSONMOORE&quot;</span><span class="p">:</span>
+       <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">AndersonMoore</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;BINDERPESARAN&quot;</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">BinderPesaran</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;BENES&quot;</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">Klein</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;LBJ&quot;</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">LBJ</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;LBJAX&quot;</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">LBJax</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;ABLR&quot;</span><span class="p">:</span>
+       <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">ABLR</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;FAIRTAYLOR&quot;</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">FairTaylor</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;BLOCK&quot;</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">Block</span>
+    <span class="k">elif</span> <span class="n">Solver</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;GMRES&quot;</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">GMRes</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">interface</span><span class="o">.</span><span class="n">SOLVER</span> <span class="o">=</span> <span class="n">SolverMethod</span><span class="o">.</span><span class="n">LBJ</span>
+    
+    <span class="k">if</span> <span class="n">return_interface</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">interface</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="n">infos</span><span class="o">=</span><span class="n">infos</span><span class="p">,</span> <span class="n">bCompileAll</span><span class="o">=</span><span class="n">bCompileAll</span><span class="p">)</span>
+        <span class="c1"># if not &quot;shock_values&quot; in model.options or len(model.options[&quot;shock_values&quot;])==0:</span>
+        <span class="c1">#     model.options[&quot;shock_values&quot;] = np.zeros(len(model.symbols[&quot;shocks&quot;]))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s2">&quot;shocks&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s2">&quot;shocks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&quot;shocks&quot;</span><span class="p">]))</span>
+        
+        <span class="k">return</span> <span class="n">model</span></div>
+
+
+ 
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main entry point.&quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.driver</span> <span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">simulate</span>
+    
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>    
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="s1">&#39;../../models/FPAS/model.model&#39;</span><span class="p">))</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+ 
+    <span class="n">interface</span> <span class="o">=</span> <span class="n">import_model</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span><span class="n">return_interface</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>        
+    <span class="n">infos</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span> <span class="p">:</span> <span class="n">name</span><span class="p">,</span><span class="s1">&#39;filename&#39;</span> <span class="p">:</span> <span class="n">file_path</span><span class="p">}</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">interface</span><span class="p">,</span> <span class="n">infos</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Variables:&#39;</span><span class="p">)</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="n">var_values</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;variables&#39;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Parameters:&#39;</span><span class="p">)</span>
+    <span class="n">par_names</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+    <span class="n">par_values</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+    <span class="n">pv</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="s2">&quot;=&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">par_names</span><span class="p">,</span><span class="n">par_values</span><span class="p">)]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pv</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    
+    <span class="n">simulate</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">Plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    
+    
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

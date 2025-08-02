@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snowdrop.src.samples.makedata &#8212; Python Platform 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for snowdrop.src.samples.makedata</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Apr 23 14:12:20 2019</span>
+
+<span class="sd">@author: Alexei Goumilevski</span>
+
+<span class="sd"> Reproduces results of  https://www.edx.org Monetary Policy Analysis and Forecasting course.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">ceil</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt</span>
+<span class="kn">import</span> <span class="nn">ruamel.yaml</span> <span class="k">as</span> <span class="nn">yaml</span>
+
+<span class="n">working_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span><span class="s2">&quot;../../..&quot;</span><span class="p">))</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">working_dir</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.filters.filters</span> <span class="kn">import</span> <span class="n">HPF</span> <span class="k">as</span> <span class="n">hpf</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.filters.filters</span> <span class="kn">import</span> <span class="n">BPASS</span> <span class="k">as</span> <span class="n">bpass</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.filters.filters</span> <span class="kn">import</span> <span class="n">LRXfilter</span> <span class="k">as</span> <span class="n">lrx</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.numeric.sa.x13</span> <span class="kn">import</span> <span class="n">x13</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.graphs.util</span> <span class="kn">import</span> <span class="n">plotTimeSeries</span>
+<span class="kn">from</span> <span class="nn">snowdrop.src.utils.load</span> <span class="kn">import</span> <span class="n">read_file_or_url</span>
+ 
+
+<span class="n">bin_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s2">&quot;bin&quot;</span><span class="p">))</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">bin_dir</span><span class="p">):</span>
+    <span class="n">sys_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">]</span> 
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">bin_dir</span> <span class="ow">in</span> <span class="n">sys_path</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">bin_dir</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;X13PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bin_dir</span>
+
+    
+<div class="viewcode-block" id="makedata">
+<a class="viewcode-back" href="../../../../source/snowdrop.src.samples.html#snowdrop.src.samples.makedata.makedata">[docs]</a>
+<span class="k">def</span> <span class="nf">makedata</span><span class="p">(</span><span class="n">Plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prepares data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    
+    <span class="n">path_to_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s2">&quot;graphs&quot;</span><span class="p">))</span>
+    
+    <span class="c1">## Load quarterly data</span>
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span> <span class="s2">&quot;supplements/data/MPAF/data.csv&quot;</span><span class="p">))</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath_or_buffer</span><span class="o">=</span><span class="n">file_path</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">infer_datetime_format</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;#Q&quot;</span><span class="p">)</span>  <span class="c1"># Quartely data frequency</span>
+    
+    <span class="c1"># Load quarterly data</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span> 
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+          
+    <span class="c1">## Seasonal adjustment</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;_U&#39;</span> <span class="o">==</span> <span class="n">name</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]:</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">series</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+                <span class="n">df_adj</span> <span class="o">=</span> <span class="n">x13</span><span class="p">(</span><span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">,</span><span class="n">freq</span><span class="o">=</span><span class="s1">&#39;Q&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="n">df_adj</span><span class="p">[</span><span class="s2">&quot;Adjusted&quot;</span><span class="p">]</span>
+                <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">series</span><span class="p">,</span><span class="n">df_adj</span><span class="p">))</span>
+                
+    <span class="c1"># GDP,_ = hpf(data=d[&quot;GDP&quot;], lmbd=10)</span>
+    <span class="c1"># d[&quot;GDP&quot;] = pd.Series(GDP,d[&quot;GDP&quot;].index)</span>
+    
+    <span class="c1">## Make log of variables</span>
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;RS&#39;</span><span class="p">,</span><span class="s1">&#39;RS_RW&#39;</span><span class="p">,</span><span class="s1">&#39;D4L_CPI_TAR&#39;</span><span class="p">]</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">exceptions</span><span class="p">:</span>
+            <span class="n">m</span><span class="p">[</span><span class="s1">&#39;L_&#39;</span><span class="o">+</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">m</span><span class="p">}</span>
+
+    <span class="c1">##  Define the real exchange rate</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_Z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_S&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_CPI_RW&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_CPI&quot;</span><span class="p">]</span>
+
+    <span class="c1">## Growth rate qoq, yoy</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;L_&#39;</span><span class="p">):</span>
+            <span class="n">m</span><span class="p">[</span><span class="s1">&#39;DLA_&#39;</span><span class="o">+</span><span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">:]]</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">m</span><span class="p">[</span><span class="s1">&#39;D4L_&#39;</span><span class="o">+</span><span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">:]]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">periods</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">m</span><span class="p">}</span>
+
+    <span class="c1">##  Real variables</span>
+    <span class="c1">##  Domestic real interest rate</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;RR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;RS&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;D4L_CPI&quot;</span><span class="p">]</span>
+
+    <span class="c1">##Foreign real interest rate</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;RR_RW&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;RS_RW&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;D4L_CPI_RW&quot;</span><span class="p">]</span>
+
+    <span class="c1">## Trends and Gaps - Hodrick-Prescott filter</span>
+    <span class="c1">## Even seasonally adjusted HDP is very volatile</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;RR&#39;</span><span class="p">,</span><span class="s1">&#39;L_Z&#39;</span><span class="p">,</span><span class="s1">&#39;RR_RW&#39;</span><span class="p">];</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">var</span><span class="p">:</span>
+        <span class="n">m</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="s1">&#39;_BAR&#39;</span><span class="p">],</span><span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="s1">&#39;_GAP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hpf</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">lmbd</span><span class="o">=</span><span class="mi">1600</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">m</span><span class="p">}</span>
+        
+    <span class="c1">## Trend and Gap for Output - Band-pass filterP_GAP_HP&#39;] = d[&#39;L_GDP_GAP&#39;]      </span>
+    <span class="c1">#  Band-pass</span>
+    <span class="n">d</span><span class="p">[</span><span class="s1">&#39;L_GDP_GAP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bpass</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;L_GDP&#39;</span><span class="p">],</span><span class="mf">6.0</span><span class="p">,</span><span class="mf">32.0</span><span class="p">)</span> 
+    <span class="n">d</span><span class="p">[</span><span class="s1">&#39;L_GDP_BAR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;L_GDP&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;L_GDP_GAP&#39;</span><span class="p">]</span>
+    <span class="n">d</span><span class="p">[</span><span class="s1">&#39;DLA_GDP_BAR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;L_GDP_BAR&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span>
+    
+    <span class="c1">## Foreign Output gap - HP filter with judgements</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_RW_BAR_PURE&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_RW_GAP_PURE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hpf</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_RW&quot;</span><span class="p">],</span><span class="n">lmbd</span><span class="o">=</span><span class="mi">1600</span><span class="p">)</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;DLA_Z_BAR&quot;</span><span class="p">],</span> <span class="n">_</span> <span class="o">=</span> <span class="n">hpf</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;DLA_Z&quot;</span><span class="p">],</span><span class="n">lmbd</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+    
+    <span class="c1">## Expert judgement on the foreign output gap</span>
+    <span class="c1"># Make sure that the last 5-6 observations by the HP filter correspond  </span>
+    <span class="c1"># to World Economic Outlook (WEO) etc. &quot;Bad&quot; values will compromise the kalman filter results.</span>
+    <span class="c1"># Override if necessary using WEO, and so on:</span>
+    
+    <span class="n">start</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="s2">&quot;2011-1-1&quot;</span><span class="p">,</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="s2">&quot;2013-12-1&quot;</span><span class="p">,</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span><span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">,</span><span class="n">freq</span><span class="o">=</span><span class="s1">&#39;QS&#39;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mf">0.9</span><span class="p">,</span><span class="o">-</span><span class="mf">1.3</span><span class="p">,</span><span class="o">-</span><span class="mf">1.6</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mf">2.1</span><span class="p">,</span><span class="o">-</span><span class="mf">2.3</span><span class="p">,</span><span class="o">-</span><span class="mf">2.7</span><span class="p">,</span><span class="o">-</span><span class="mi">3</span> <span class="p">,</span><span class="o">-</span><span class="mf">3.2</span><span class="p">,</span><span class="o">-</span><span class="mf">3.4</span><span class="p">,</span><span class="o">-</span><span class="mf">3.6</span><span class="p">]</span>
+    <span class="n">JUDGEMENT</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+    <span class="n">prior</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_RW&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+    <span class="n">prior</span><span class="p">[</span><span class="n">rng</span><span class="p">]</span> <span class="o">-=</span> <span class="n">JUDGEMENT</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_RW_BAR&quot;</span><span class="p">],</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_RW_GAP&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lrx</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_RW&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">(),</span><span class="n">lmbd</span><span class="o">=</span><span class="mi">1600</span><span class="p">,</span><span class="n">w3</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">)</span>
+    
+    
+    <span class="c1">### Read model file</span>
+    <span class="n">fmodel</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s2">&quot;supplements/models/MPAF/model.yaml&quot;</span><span class="p">))</span> 
+     
+    <span class="n">txt</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">read_file_or_url</span><span class="p">(</span><span class="n">fmodel</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">RoundTripLoader</span><span class="p">)</span>
+    <span class="n">mv</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;symbols&quot;</span><span class="p">][</span><span class="s2">&quot;measurement_variables&quot;</span><span class="p">]</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">mv</span><span class="p">]</span> 
+    
+    <span class="c1">## Save the database</span>
+    <span class="kn">from</span> <span class="nn">snowdrop.src.utils.util</span> <span class="kn">import</span> <span class="n">saveTimeSeries</span> <span class="k">as</span> <span class="n">dbsave</span>
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s2">&quot;supplements/data/MPAF/history_new.csv&quot;</span><span class="p">))</span>
+    <span class="n">dbsave</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">file_path</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">,</span><span class="n">variables</span><span class="o">=</span><span class="n">var</span><span class="p">,</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;OBS_&quot;</span><span class="p">)</span> 
+
+    <span class="c1"># # Compare</span>
+    <span class="c1"># df1 = pd.read_csv(file_path.replace(&quot;_new.csv&quot;, &quot;.csv&quot;))</span>
+    <span class="c1"># df2 = pd.read_csv(file_path)</span>
+    <span class="c1"># for col in df1.columns:</span>
+    <span class="c1">#     if col in df2.columns:</span>
+    <span class="c1">#         series = [[df1[col], df2[col]]]</span>
+    <span class="c1">#         labels = [[&quot;original&quot;, &quot;new&quot;]]</span>
+    <span class="c1">#         plotTimeSeries(path_to_dir=path_to_dir, header=None, titles=[</span>
+    <span class="c1">#                        col], labels=labels, series=series, sizes=[1, 1], fig_sizes=(8, 6), save=False)</span>
+    <span class="c1">#     else:</span>
+    <span class="c1">#         print(col)</span>
+            
+    <span class="c1">## Take time slice of data</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s1">&#39;1997-1-1&#39;</span><span class="p">:</span><span class="s1">&#39;2013-1-1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+
+
+    <span class="k">if</span> <span class="n">Plot</span><span class="p">:</span>
+        
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">count</span><span class="o">/</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;_U&#39;</span> <span class="o">==</span> <span class="n">name</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]:</span>
+                    <span class="p">(</span><span class="n">series</span><span class="p">,</span><span class="n">df_adj</span><span class="p">)</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span><span class="n">columns</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df_adj</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">df_adj</span><span class="p">[</span><span class="s2">&quot;Adjusted&quot;</span><span class="p">],</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Seasonally Adjusted&quot;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">series</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;yellow&#39;</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Actual&quot;</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;Seasonal Adjustment&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_dir</span><span class="p">,</span><span class="s2">&quot;SeasonallyAdjusted.pdf&quot;</span><span class="p">))</span>
+    
+    
+        <span class="c1">## Plot results</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="s1">&#39;Nominal Variables&#39;</span>
+        <span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Headline Inflation (%)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Foreign Inflation (%)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Nominal Exchange Rate: LCY per 1 FCY&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Nominal Exchange Rate (%)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Nom. Interest Rate (% p.a.)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Foreign Nom. Interest Rate (% p.a.)&#39;</span>
+                 <span class="p">]</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="p">[[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;DLA_CPI&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;D4L_CPI&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;DLA_CPI_RW&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;D4L_CPI_RW&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;S&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;DLA_S&quot;</span><span class="p">],</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;D4L_S&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;RS&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;RS_RW&quot;</span><span class="p">]]</span>
+                 <span class="p">]</span>
+        <span class="n">labels</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;q-o-q&#39;</span><span class="p">,</span><span class="s1">&#39;y-o-y&#39;</span><span class="p">],[</span><span class="s1">&#39;q-o-q&#39;</span><span class="p">,</span><span class="s1">&#39;y-o-y&#39;</span><span class="p">],[],[</span><span class="s1">&#39;q-o-q&#39;</span><span class="p">,</span><span class="s1">&#39;y-o-y&#39;</span><span class="p">]]</span>
+        <span class="n">plotTimeSeries</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span><span class="n">titles</span><span class="o">=</span><span class="n">titles</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">,</span><span class="n">sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+
+
+        <span class="n">header</span> <span class="o">=</span> <span class="s1">&#39;Real Variables&#39;</span>
+        <span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GDP Growth (%)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;GDP (100*log)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Real Interest Rate (% p.a.)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Real Exchange Rate (100*log)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Foreign GDP (100*log)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Foreign Real Interest Rate (% p.a.)&#39;</span><span class="p">]</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="p">[[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;DLA_GDP&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;D4L_GDP&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_BAR&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;RR&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;RR_BAR&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_Z&quot;</span><span class="p">],</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_Z_BAR&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_RW&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_RW_BAR&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;RR_RW&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;RR_RW_BAR&quot;</span><span class="p">]]</span>
+                 <span class="p">]</span>
+        <span class="n">labels</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;q-o-q&#39;</span><span class="p">,</span><span class="s1">&#39;y-o-y&#39;</span><span class="p">],[</span><span class="s1">&#39;level&#39;</span><span class="p">,</span><span class="s1">&#39;trend&#39;</span><span class="p">]]</span>
+        <span class="n">plotTimeSeries</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span><span class="n">titles</span><span class="o">=</span><span class="n">titles</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">,</span><span class="n">sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+
+        <span class="n">header</span> <span class="o">=</span> <span class="s1">&#39;Gaps&#39;</span>
+        <span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GDP Gap (%)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Foreign GDP Gap (%)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Real Interest Rate Gap (p.p. p.a.)&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;RER Gap (%)&#39;</span><span class="p">]</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="p">[[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_GAP&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_GDP_RW_GAP&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;RR_GAP&quot;</span><span class="p">]],</span>
+                  <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;L_Z_GAP&quot;</span><span class="p">]]</span>
+                 <span class="p">]</span>
+        <span class="n">labels</span><span class="o">=</span><span class="p">[[]]</span>
+        <span class="n">plotTimeSeries</span><span class="p">(</span><span class="n">path_to_dir</span><span class="o">=</span><span class="n">path_to_dir</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span><span class="n">titles</span><span class="o">=</span><span class="n">titles</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">series</span><span class="o">=</span><span class="n">series</span><span class="p">,</span><span class="n">sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">snowdrop.src.utils.merge</span> <span class="kn">import</span> <span class="n">merge</span>
+            <span class="c1"># imagelist is the list with all image filenames</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SeasonallyAdjusted&quot;</span><span class="p">,</span><span class="s2">&quot;Nominal Variables&quot;</span><span class="p">,</span><span class="s2">&quot;Real Variables&quot;</span><span class="p">,</span><span class="s2">&quot;Gaps&quot;</span><span class="p">]</span>
+            <span class="n">outputFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">working_dir</span><span class="p">,</span><span class="s2">&quot;results/MPAF_Stylized_facts.pdf&quot;</span><span class="p">))</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+                <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">working_dir</span><span class="o">+</span><span class="s2">&quot;/graphs/&quot;</span><span class="o">+</span><span class="n">f</span><span class="o">+</span><span class="s2">&quot;.pdf&quot;</span><span class="p">)</span>
+            <span class="n">merge</span><span class="p">(</span><span class="n">outputFile</span><span class="p">,</span><span class="n">files</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Done with makedata script !!!&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">d</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main program</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">makedata</span><span class="p">(</span><span class="n">Plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">save</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Python Platform</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/modules.html">snowdrop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../info.html">Python Platform</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Alexei Goumilevski.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
