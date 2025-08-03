@@ -64,7 +64,7 @@ Below are useful resources to help you understand the structure and usage of the
 * User guide (PDF): [`supplements/docs/UserGuide.pdf`](./supplements/docs/UserGuide.pdf)
   The user guide contains detailed instructions on how to configure models, run simulations, and interpret outputs. It also describes supported YAML fields and Python options.
 
-* API documentation: Open [`supplements/api_docs/_build/html/index.html`](./supplements/api_docs/_build/html/index.html) in your web browser
+* API documentation: Open [`supplements/api_docs/_build/html/index.html`](./supplements/api_docs/_build/html/index.html) in your web browser.
   This HTML-based API reference provides an overview of the module structure, key functions, and their expected inputs/outputs.
 
 
