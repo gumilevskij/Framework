@@ -13,8 +13,9 @@ Users are advised to create a **virtual environment** in Python to isolate this 
 
 This method gives you full access to the source code and examples, including automated tests. It also allows for easy updates via `git pull`.
 
-```bash
-cd your_working_directory  
+cd your_working_directory
+
+```bash 
 git clone https://github.com/gumilevskij/Framework.git  
 python -m venv env  
 source env/bin/activate  
@@ -85,5 +86,7 @@ Below are useful resources to help you understand the structure and usage of the
 
 ## DISCLAIMERS:
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
+
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.08197/status.svg)](https://doi.org/10.21105/joss.08197)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16730040.svg)](https://doi.org/10.5281/zenodo.16730040)
