@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """ 
-This is the Python translation of Mathematica code written by Marco Pani to determine what 
+This is the Python translation of Mathematica code to determine what 
 final equilibrium would arise from a lattice of possible couples of parameters defining 
 the initial decisions by merchants (pic and pid). The code considers all possible 
 couples for values of each parameters between 0 and 1, with a step width of 0.01 between 
@@ -457,3 +457,4 @@ with open(fpath, 'w') as file:
 # print()
 # print(brief)
 # print(breve)
+
