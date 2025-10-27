@@ -41,6 +41,7 @@ pip install pysnowdrop --upgrade
 
 ## Quick Start
 
+* Python version <= 3.13
 * Create or modify a YAML model file in the [`supplements/models`](./supplements/models) folder.
 * Open [`tests/test_toy_models.py`](./tests/test_toy_models.py) and set the variable `fname` to the name of your model file.
 * Run simulations using the **Spyder IDE** by clicking the Run button, or execute the script from the command line:
