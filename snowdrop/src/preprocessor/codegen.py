@@ -406,8 +406,11 @@ class SourceGenerator(NodeVisitor):
     def visit_Bytes(self, node):
         self.write(repr(node.s))
 
-    def visit_Num(self, node):
-        self.write(repr(node.n))
+    #def visit_Num(self, node):
+    #    self.write(repr(node.n)) 
+        
+    def visit_Constant(self, node):
+        self.write(repr(node.value))
 
     def visit_Tuple(self, node):
         self.write('(')
