@@ -45,7 +45,7 @@ def findVar(txt,line,shocks=[]):
     return None,None,False
     
     
-def replaceEq(eq,arr,var,old_var,new_var):
+def replaceEq(eq,arr,old_var,new_var):
     """
     Replace variables in equation.
     
@@ -54,8 +54,6 @@ def replaceEq(eq,arr,var,old_var,new_var):
         :type eq: str.
         :param arr: Symbols of an equation.
         :type arr: list.
-        :param var: Variable name.
-        :type var: str.
         :param old_var: Old variable name.
         :type old_var: str.
         :param new_var: New variable name.
@@ -313,12 +311,12 @@ def fixEquations(eqs,endog,params=None,tagBeg="(",tagEnd=")",b=False):
                 old_var = k + "(+" + str(j) + ")"
                 arr = re.split(regexPattern,eq)
                 arr = list(filter(None,arr))
-                eq = replaceEq(eq,arr,var=k,old_var=old_var,new_var=new_var)
+                eq = replaceEq(eq,arr,old_var=old_var,new_var=new_var)
                 old_var = k + "(" + str(j) + ")"  
                 #eq = eq.replace(old_var,new_var) 
                 arr = re.split(regexPattern,eq)
                 arr = list(filter(None,arr))
-                eq = replaceEq(eq,arr,var=k,old_var=old_var,new_var=new_var)
+                eq = replaceEq(eq,arr,old_var=old_var,new_var=new_var)
         if i in eq_lags:
             for x in eq_lags[i]:
                 k,j = x  
@@ -326,7 +324,7 @@ def fixEquations(eqs,endog,params=None,tagBeg="(",tagEnd=")",b=False):
                 old_var = k + "(-" + str(-j) + ")"
                 arr = re.split(regexPattern,eq)
                 arr = list(filter(None,arr))
-                eq = replaceEq(eq,arr,var=k,old_var=old_var,new_var=new_var)
+                eq = replaceEq(eq,arr,old_var=old_var,new_var=new_var)
         
         # Make sure parameters don't have leads/lags
         if i in par_leads:
@@ -336,12 +334,12 @@ def fixEquations(eqs,endog,params=None,tagBeg="(",tagEnd=")",b=False):
                 old_var = k + "(+" + str(j) + ")"
                 arr = re.split(regexPattern,eq)
                 arr = list(filter(None,arr))
-                eq = replaceEq(eq,arr,var=k,old_var=old_var,new_var=new_var)
+                eq = replaceEq(eq,arr,old_var=old_var,new_var=new_var)
                 old_var = k + "(" + str(j) + ")"  
                 #eq = eq.replace(old_var,new_var) 
                 arr = re.split(regexPattern,eq)
                 arr = list(filter(None,arr))
-                eq = replaceEq(eq,arr,var=k,old_var=old_var,new_var=new_var)
+                eq = replaceEq(eq,arr,old_var=old_var,new_var=new_var)
         if i in par_lags:
             for x in par_lags[i]:
                 k,j = x  
@@ -349,7 +347,7 @@ def fixEquations(eqs,endog,params=None,tagBeg="(",tagEnd=")",b=False):
                 old_var = k + "(-" + str(-j) + ")"
                 arr = re.split(regexPattern,eq)
                 arr = list(filter(None,arr))
-                eq = replaceEq(eq,arr,var=k,old_var=old_var,new_var=new_var)
+                eq = replaceEq(eq,arr,old_var=old_var,new_var=new_var)
             
         mod_eqs.append(eq)
 
@@ -442,7 +440,7 @@ def modifyEquations(eqs,variables):
                     if old_var in new_eq:
                         arr = re.split(regexPattern,new_eq)
                         arr = list(filter(None,arr))
-                        new_eq = replaceEq(new_eq,arr,v,old_var,new_var)
+                        new_eq = replaceEq(new_eq,arr,old_var,new_var)
                         
             # Replace variables that are not leads/lags variables
             for v in arr:  
@@ -1533,7 +1531,7 @@ def getRHS(eqs,variables,eqLabels=None,b=True,debug=False):
     else:
                 
         from snowdrop.src.preprocessor.symbolic import stringify
-        from snowdrop.src.preprocessor.function_compiler_sympy import normalize_equations
+        from snowdrop.src.preprocessor.function_compiler import normalize_equations
         
         lst_eqs = []
         for eq in eqs:
@@ -1725,57 +1723,60 @@ def get_steady_state_equations(eqs,endog,params,shocks=[],exog=[]):
     return ss_equations
         
  
-def aggregateEqs(variables,aggregation,freq,aggr_freq,m_aggr):
+def aggregateEqs(variables,freq,aggr_freq,m_aggr):
     """Build aggregated equations and endogenous variables for M/Q/A frequencies."""
-    new_eqs = []; new_vars = []; new_exog_vars = []
+    new_eqs = []; new_exog_vars = []
             
     # Add aggregation equations
-    for v,aggr in zip(variables,aggregation): 
+    for v in variables: 
         if v in m_aggr:
+            aggr = m_aggr[v]
+            newEq = None
             if freq == "monthly" and aggr_freq == "quarterly":
                 if aggr == "sum":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - ({v}[max(0,t-1)]+{v}[max(0,t-2)]+{v}[max(0,t-3)])"
+                    newEq = f"{v}=(v[0]+v[1]+v[2])"
                 elif aggr == "mean":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - ({v}[max(0,t-1)]+{v}[max(0,t-2)]+{v}[max(0,t-3)])/3"
+                    newEq = f"{v}=(v[0]+v[1]+v[2])/3"
                 elif aggr == "geomean":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - ({v}[max(0,t-1)]*{v}[max(0,t-2)]*{v}[max(0,t-3)])**(1/3.)"
+                    newEq = f"{v}=(v[0]*v[1]*v[2])**(1/3.)"
                 elif aggr == "first":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - {v}[max(0,t-3)]"
+                    newEq = f"{v}=(v[0])"
                 elif aggr == "last":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - {v}[max(0,t-1)]"
+                    newEq = f"{v}=(v[2])"
             elif freq == "quarterly" and aggr_freq == "annual":
                 if aggr == "sum":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - ({v}[max(0,t-1)]+{v}[max(0,t-2)]+{v}[max(0,t-3)]+{v}[max(0,t-4)])"
+                    newEq = f"{v}=(v[0]+v[1]+v[2]+v[3])"
                 elif aggr == "mean":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - ({v}[max(0,t-1)]+{v}[max(0,t-2)]+{v}[max(0,t-3)]+{v}[max(0,t-4)])/4"
+                    newEq = f"{v}=(v[0]+v[1]+v[2]+v[3])/4"
                 elif aggr == "geomean":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - ({v}[max(0,t-1)]*{v}[max(0,t-2)]*{v}[max(0,t-3)]*{v}[max(0,t-4)])**(1/4.)"
+                    newEq = f"{v}=(v[0]*v[1]*v[2]*v[3])**(1/4.)"
                 elif aggr == "first":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - {v}[max(0,t-4)]"
+                    newEq = f"{v}=(v[0])"
                 elif aggr == "last":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] = {v}[max(0,t-1)]"
+                    newEq = f"{v}=(v[3])"
             elif freq == "monthly" and aggr_freq == "annual":
                 if aggr == "sum":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - ({v}[max(0,t-1)]+{v}[max(0,t-2)]+{v}[max(0,t-3)]+{v}[max(0,t-4)]+{v}[max(0,t-5)]+{v}[max(0,t-6)]+{v}[max(0,t-7)]+{v}[max(0,t-8)]+{v}[max(0,t-9)]+{v}[max(0,t-10)]+{v}[max(0,t-11)]+{v}[max(0,t-12)])"
+                    newEq = f"{v}=(v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6]+v[7]+v[8]+v[9]+v[10]+v[11)"
                 elif aggr == "mean":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - ({v}[max(0,t-1)]+{v}[max(0,t-2)]+{v}[max(0,t-3)]+{v}[max(0,t-4)]+{v}[max(0,t-5)]+{v}[max(0,t-6)]+{v}[max(0,t-7)]+{v}[max(0,t-8)]+{v}[max(0,t-9)]+{v}[max(0,t-10)]+{v}[max(0,t-11)]+{v}[max(0,t-12)])/12"
+                    newEq = f"{v}=(v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6]+v[7]+v[8]+v[9]+v[10]+v[11)/12"
                 elif aggr == "geomean":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - ({v}[max(0,t-1)]*{v}[max(0,t-2)]*{v}[max(0,t-3)]*{v}[max(0,t-4)]*{v}[max(0,t-5)]*{v}[max(0,t-6)]*{v}[max(0,t-7)]*{v}[max(0,t-8)]*{v}[max(0,t-9)]*{v}[max(0,t-10)]*{v}[max(0,t-11)]*{v}[max(0,t-12)])**(1/12.)"
+                    newEq = f"{v}=(v[0]*v[1]*v[2]*v[3]*v[4]*v[5]*v[6]*v[7]*v[8]*v[9]*v[10]*v[11])**(1/12.)"
                 elif aggr == "first":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - {v}[max(0,t-12)]"
+                    newEq = f"{v}=(v[0])"
                 elif aggr == "last":
-                    newEq = f"SHK_{v}[t] = {v}_AGGREGATED[t] - {v}[max(0,t-1)]"
-            new_eqs.append(newEq)
-            new_vars.append(f"SHK_{v}[t]")
-            new_exog_vars.append(f"{v}_AGGREGATED")
+                    newEq = f"{v}=(v[11])"
+            
+            if not newEq is None:
+                new_eqs.append(newEq)
+                new_exog_vars.append(f"{v}")
                     
-    return new_eqs,new_vars,new_exog_vars 
+    return new_eqs,new_exog_vars
             
        
 def processFormulas(v,formulas):
     for formula in formulas:
         if formula == "pch" or formula == "pchy":
-            return f"100*({v}/{v}(-1)-1)"
+            return f"100*({v}/{v}[t-1]-1)"
     return v
 
 
@@ -2054,6 +2055,28 @@ def getExogMatrix(eqs,exog):
                 W[i,j] = 1 
                 
     return W
+
+def getExogVarLeadsLags(eqs,exogenous):
+    extra = []
+    
+    for eq in eqs:
+        eq = eq.replace(" ","");
+        ind = 0
+        arr = re.split(regexPattern,eq)
+        arr = list(filter(None,arr))
+        for v in arr:
+            if v in exogenous and v+"(" in eq[ind:]:
+                ind = eq.find(v+"(",ind)
+                ind2 = eq.find(")",ind+len(v))
+                lead_lag = eq[1+len(v)+ind:ind2]
+                i = int(lead_lag)
+                if i > 0:
+                    extra.append(f"{v}__p{i}_")
+                elif i < 0:
+                    extra.append(f"{v}__m{-i}_")
+                ind += 2+len(v)
+        
+    return extra
                 
 if __name__ == '__main__':
     """Main entry point."""
@@ -2158,5 +2181,3 @@ if __name__ == '__main__':
             
     # print(m[x])
     
-        
-        
