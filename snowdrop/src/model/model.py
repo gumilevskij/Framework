@@ -185,6 +185,7 @@ class Model:
             from snowdrop.src.preprocessor.eval_solver import evaluate
             from snowdrop.src.preprocessor.symbolic_eval import NumericEval
             
+            x=dict(self.symbolic.calibration_dict)
             self.calibration_dict = evaluate(self.symbolic.calibration_dict)
     
             calib = calibration_to_vector(self.symbols,self.calibration_dict)
@@ -277,11 +278,11 @@ class Model:
             :type self: Model.
             :returns:  List of functions.
         """ 
-        from snowdrop.src.preprocessor.function_compiler_sympy import compile_higher_order_function
-        from snowdrop.src.preprocessor.function_compiler_sympy import compile_function
-        from snowdrop.src.preprocessor.function_compiler_sympy import compile_jacobian
+        from snowdrop.src.preprocessor.function_compiler import compile_higher_order_function
+        from snowdrop.src.preprocessor.function_compiler import compile_function
+        from snowdrop.src.preprocessor.function_compiler import compile_jacobian
         from snowdrop.src.utils.equations import getRHS
-        import snowdrop.src.preprocessor.function_compiler_sympy as fc
+        import snowdrop.src.preprocessor.function_compiler as fc
         
         func = f_jacob = f_hessian = f_tensor = src_dynamic = src_sparse = None
         
@@ -425,7 +426,7 @@ class Model:
             f_dynamic = f_steady = f_sparse = txt_sparse = src_ss = src_ss_jacob = None
             
             if self.bSparse:
-                from snowdrop.src.preprocessor.function_compiler_sympy import get_indices
+                from snowdrop.src.preprocessor.function_compiler import get_indices
                 from snowdrop.src.numeric.solver import LBJax
                 #ind = get_indices(eqs,syms=endog)
                 LBJax.row_ind, LBJax.col_ind = get_indices(eqs,syms=endog)
