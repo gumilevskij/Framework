@@ -140,7 +140,7 @@ def HPfilter(data, lmbd=1600):
         
     .. math::
         
-        \min_{T_{t}}[ \sum_{t=0}((X_{t} - T_{t})^2 + \lambda*((T_{t+1} - T_{t}) - (T_{t} - T_{t-1}))^2) ]
+        \\min_{T_{t}}[ \\sum_{t=0}((X_{t} - T_{t})^2 + \\lambda*((T_{t+1} - T_{t}) - (T_{t} - T_{t-1}))^2) ]
 
 
     Args:
@@ -1588,4 +1588,5 @@ if __name__ == '__main__':
     plt.legend(fontsize = 15)
     plt.grid(True)
     plt.show()
+
     
