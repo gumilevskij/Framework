@@ -26,7 +26,7 @@ pip install -r Framework/requirements.txt
 The repository includes a pre-built `.whl` (wheel) file in the folder Framework/dist. By copying this file to your local disk, you can install this package directly:
 
 ```bash
-pip install snowdrop-1.0.9-py3-none-any.whl --user
+pip install snowdrop-1.0.*-py3-none-any.whl --user
 ```
 
 This method is useful if you want a simple install from a local file without pulling from PyPI.
