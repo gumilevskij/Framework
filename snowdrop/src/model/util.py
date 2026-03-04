@@ -704,40 +704,44 @@ def print_path_solution_status(status):
     elif status == 10:
         cprint("An internal error occurred in the algorithm.","red")  
    
-def firstNonZero(vals):
+def firstNotNone(values,series=None,mask=False):
     """
-    Return first non-zero value.
+    Return first not none value.
     
     Args:
-        vals : list
+        values : list
             List of values.
 
     Returns:
         First non nan occurence of an element in a list.
     """
-    for i,v in enumerate(vals):
-        if v is None or np.isnan(v):
-            continue
-        else:
-            return i,v
-        
-    return -1,np.nan     
+    if np.any(mask) == True:
+        for i,v in enumerate(values):
+            if v is None or np.isnan(v):
+                continue
+            else:
+                return i,v
+        return 0,series[0]
+    else:
+        return 0,series[0]
 
-def lastNonZero(vals):
+def lastNotNone(values,series=None,mask=False):
     """
-    Return last nonzero value.
+    Return last not none value.
     
     Args:
-        vals : list
+        values : list
             List of values.
 
     Returns:
         Last non nan occurence of an element in a list.
     """
-    i,v = firstNonZero(vals[::-1])
-    k = len(vals) - i - 1
-    
-    return k,v 
+    if np.any(mask) == True:
+        i,v = firstNotNone(values[::-1],mask=mask)
+        k = len(values) - i - 1
+        return k,v 
+    else:
+        return 0,series[-1]
 
 def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=False):
     """    
@@ -774,14 +778,17 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
         df = df.iloc[~b]
         df = df.astype(float)
         df.index = pd.to_datetime(df.index)
+    elif isinstance(hist,pd.DataFrame):
+        df = hist
     else:
         df = pd.DataFrame(hist)
 
     missing = []
     if "range" in options:
         start,end = options["range"]
-        start = getDate(start)
-        end = getDate(end)
+        start = getDate(start); end = getDate(end)
+        # start = pd.to_datetime(start)
+        # end = pd.to_datetime(end)
         if "frequency" in options:
             freq = options["frequency"]
         else:
@@ -821,10 +828,10 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
                             calib[var] = val
                             bSet = True
                         else:
-                            mask1  = df.index >= t
-                            mask2  = df.index <= start
-                            mask   = mask1 & mask2
-                            k,val = firstNonZero(values[mask])
+                            mask1 = df.index >= t
+                            mask2 = df.index <= start
+                            mask  = mask1 & mask2
+                            k,val = firstNotNone(values=values,series=values,mask=mask)
                             if not np.isnan(val):
                                 calib[var] = val
                                 bSet = True
@@ -833,7 +840,7 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
                         mask1  = df.index >= t
                         mask2  = df.index <= start
                         mask   = mask1 & mask2
-                        k,val = firstNonZero(values[mask])
+                        k,val  = firstNotNone(values=values,series=values,mask=mask)
                         # Check time difference between the start date and the data latest available date
                         t_delta = (start - values.index[k]).days
                         b = False
@@ -882,17 +889,17 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
                             calib[var] = val
                             bSet = True
                         else:
-                            mask1  = df.index >= start
-                            mask2  = df.index <= t
-                            mask   = mask1 & mask2
-                            k,val = lastNonZero(values[mask])
+                            mask1 = df.index >= start
+                            mask2 = df.index <= t
+                            mask  = mask1 & mask2
+                            k,val = lastNotNone(values=values,series=values,mask=mask)
                             if not np.isnan(val):
                                 calib[var] = val
                                 bSet = True
                     else:
                         values = df[vname]
                         mask   = df.index <= t
-                        k,val  = lastNonZero(values[mask])
+                        k,val  = lastNotNone(values=values,series=values,mask=mask)
                         # Check time difference between the start date and the data latest available date
                         t_delta = (t - values.index[k]).days
                         b = False
@@ -914,6 +921,8 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
             else:
                 if var in df.columns:
                     vname = var
+                elif "obs_" + var in df.columns:
+                    vname = "obs_" + var
                 elif "OBS_" + var in df.columns:
                     vname = "OBS_" + var
                 elif var + "_meas" in df.columns:
@@ -927,10 +936,10 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
                             calib[var] = val
                             bSet = True
                     else:
-                        values  = df[vname]
-                        mask    = df.index <= start
-                        k,val = lastNonZero(values[mask])
-                        val     = values.iloc[k]
+                        values = df[vname]
+                        mask   = df.index <= start
+                        k,val  = lastNotNone(values=values,series=values,mask=mask)
+                        val    = values.iloc[k]
                         t_delta = (start - values.index[-1]).days
                         # Check time difference between the start date and the data latest available date
                         b = False
@@ -955,13 +964,17 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
                     vname = var
                 elif "OBS_" + var in df.columns:
                     vname = "OBS_" + var
+                elif "obs_" + var in df.columns:
+                    vname = "obs_" + var
                 elif var + "_meas" in df.columns:
                     vname = var + "_meas"
                 else:
                     vname = None
                 if vname in df.columns:
-                    values = df[vname][start:]
-                    k,val = firstNonZero(values)
+                    ser = df[vname]
+                    mask = ser.index >= start
+                    values = ser[start:]
+                    k,val = lastNotNone(values=values,series=ser,mask=mask)
                     if not np.isnan(val):
                         calib[var] = val
                         bSet = True
@@ -984,7 +997,7 @@ def getStartingValues(hist,var_names,orig_var_values,options,skip_rows=0,debug=F
                     print(f'Variable "{var}" was not set from historical data - keeping original value {var_values[ind]}')
 
         # Reset missing starting values of lead and lag variables
-        for i,var in enumerate(missing): #missing var_names
+        for i,var in enumerate(missing):
             if '_minus_' in var:
                 ind = var.index('_minus')
                 v = var[:ind]

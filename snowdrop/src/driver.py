@@ -1081,23 +1081,23 @@ def run(fname=None,model=None,y0=None,order=1,T=-1,Tmax=1.e6,irf=False,prefix=No
         measurement_variables = None
         Q = None; H = None
   
-    if not model.steady_state is None and model.count == 1:
-        err = util.checkSteadyState(model,variables)
-        err2 = np.nansum(err*err)
-        if err2 > 1.e-10:
-            if opt_ss_continue:
-                model.steady_state = None
-                cprint("Incorrect steady state: the sum of the equations squared residuals is, {0:.1e}.\n".format(err2),'red')
-            else:
-                from snowdrop.src.gui.dialog import showDialog 
-                msg = "  The sum of the equations squared residuals is: {0:.1e}. \nDo you want to continue?".format(err2)
-                yes_no = showDialog(msg=msg,title="Incorrect steady state")
-                if yes_no == "yes":
-                    model.steady_state = None
-                elif yes_no == "no":   
-                    y = None
-                    cprint("Incorrect steady state: the sum of the squared equations residuals is, err={0:.1e}.\nExitting ...".format(err2),'red')
-                    return y,dates,variables,rng,periods,model
+    # if not model.steady_state is None and model.count == 1:
+    #     err = util.checkSteadyState(model,variables)
+    #     err2 = np.nansum(err*err)
+    #     if err2 > 1.e-10:
+    #         if opt_ss_continue:
+    #             model.steady_state = None
+    #             cprint("Incorrect steady state: the sum of the equations squared residuals is, {0:.1e}.\n".format(err2),'red')
+    #         else:
+    #             from snowdrop.src.gui.dialog import showDialog 
+    #             msg = "  The sum of the equations squared residuals is: {0:.1e}. \nDo you want to continue?".format(err2)
+    #             yes_no = showDialog(msg=msg,title="Incorrect steady state")
+    #             if yes_no == "yes":
+    #                 model.steady_state = None
+    #             elif yes_no == "no":   
+    #                 y = None
+    #                 cprint("Incorrect steady state: the sum of the squared equations residuals is, err={0:.1e}.\nExitting ...".format(err2),'red')
+    #                 return y,dates,variables,rng,periods,model
                 
     ss = None; ev = []
     if not bool(model.symbolic.bellman):
@@ -1242,43 +1242,32 @@ def run(fname=None,model=None,y0=None,order=1,T=-1,Tmax=1.e6,irf=False,prefix=No
                 linear_solver.solve(model=model)
                 orthogonalize_shocks(model)
                 
-            iterations,y,yIter,max_f,elapsed = \
+            iterations,y,max_f,elapsed = \
                 linear_solver.simulate(model=model,T=T,periods=periods,
                                        steady_state=ss,y0=y0,Npaths=Npaths)
         else:
             iterations,y,yIter,max_f,elapsed = \
                 nonlinear_solver.simulate(model=model,T=T,periods=periods,
                                           steady_state=ss,y0=y0,Npaths=Npaths,MULT=MULT)
-        
+
         if irf:
-            if model.steady_state is None:
-                # Set shocks to zero
-                if 'shock_values' in model.options:
-                    orig_shock_values = model.options.get('shock_values')
-                    model.options['shock_values'] = orig_shock_values*0
-                    
-                # Solve equations
-                if model.isLinear:     
-                    iterations_ss,y_ss,yIter_ss,max_f_ss,elapsed_ss = \
-                        linear_solver.simulate(model=model,T=T,periods=periods,
-                                               steady_state=ss,y0=y0,Npaths=Npaths)
-                else:
-                    iterations_ss,y_ss,yIter_ss,max_f_ss,elapsed_ss = \
-                        nonlinear_solver.simulate(model=model,T=T,periods=periods,
-                                                  y0=y0,Npaths=Npaths,MULT=MULT)
+            # Set shocks to zero
+            if 'shock_values' in model.options:
+                orig_shock_values = model.options.get('shock_values')
+                model.options['shock_values'] = orig_shock_values*0
                 
-                if 'shock_values' in model.options:
-                    model.options['shock_values'] = orig_shock_values
-                
+            # Solve equations
+            if model.isLinear:     
+                iterations_ss,y_ss,max_f_ss,elapsed_ss = \
+                    linear_solver.simulate(model=model,T=T,periods=periods,
+                                           steady_state=ss,y0=y0,Npaths=Npaths)
             else:
-                if isinstance(model.steady_state,dict):
-                    steady_state = []
-                    for k in variables:
-                        steady_state.append(model.steady_state[k])
-                else:
-                    steady_state = model.steady_state
-                        
-                y_ss = np.tile(steady_state,T).reshape(T,-1)
+                iterations_ss,y_ss,max_f_ss,elapsed_ss = \
+                    nonlinear_solver.simulate(model=model,T=T,periods=periods,
+                                              y0=y0,Npaths=Npaths,MULT=MULT)
+            
+            if 'shock_values' in model.options:
+                model.options['shock_values'] = orig_shock_values
              
             # Compute difference
             y = [a-b for a,b in zip(y,y_ss)]

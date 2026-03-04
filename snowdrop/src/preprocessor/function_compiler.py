@@ -260,7 +260,7 @@ def compile_higher_order_function(equations,syms,params,syms_exog=[],eq_vars=[],
     # Higher order derivatives are used in nonlinear rational expectations models.
     
     from scipy.special import lambertw as LambertW
-    from snowdrop.src.preprocessor.functions import Heaviside,Max,Min,Abs,DiracDelta
+    from snowdrop.src.preprocessor.functions import Heaviside,Max,Min,Abs,DiracDelta,re,im,Derivative
     from snowdrop.src.preprocessor.condition import IfThenElse,IfThen,Derivative,Subs,Positive,Negative,myzif
 """.format(model_name=model_name)
 
@@ -644,7 +644,7 @@ Parameters:
     
     from sympy import DiracDelta
     from snowdrop.src.preprocessor.condition import IfThenElse,IfThen,Derivative,Subs,Positive,Negative,myzif
-    from snowdrop.src.preprocessor.functions import Heaviside
+    from snowdrop.src.preprocessor.functions import Heaviside,Max,Min,Abs,DiracDelta,re,im,Derivative
 """.format(model_name=model_name)
   
     if b:
@@ -1042,3 +1042,5 @@ if __name__ == '__main__':
 #    #print(series)
 #    elapsed = time() - t0
 #    print(elapsed,len(series))
+
+    

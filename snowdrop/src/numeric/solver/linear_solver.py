@@ -81,8 +81,9 @@ def simulate(model,T,periods,y0,steady_state,parameters=None,Npaths=1):
     from snowdrop.src.numeric.solver.tunes import hasImaginaryShocks,hasImaginaryValues,forecast_with_tunes
             
     t0 = time()
-    n = len(y0)
     M = None
+    if steady_state is None:
+        steady_state = model.steady_state
                 
     shock_var = model.symbols['shocks']
     n_shocks = len(shock_var)
@@ -92,7 +93,7 @@ def simulate(model,T,periods,y0,steady_state,parameters=None,Npaths=1):
     #print(all_shocks)
     
     # Solve linear model at steady state
-    solve(model=model,p=parameters,steady_state=np.zeros(n))
+    solve(model=model,p=parameters,steady_state=steady_state)
     # State transition matrix
     F = np.real(model.linear_model["A"])
     # Array of constants
@@ -141,9 +142,9 @@ def simulate(model,T,periods,y0,steady_state,parameters=None,Npaths=1):
             lst_exog.append(x)
 
     ### Find solution.
+    yIter = []
     y = np.zeros((T+2,N))
     for path in range(Npaths):
-        yIter = []
         shocks = np.array(all_shocks[path])
         temp = np.copy(y0)
         y[0] = temp
@@ -178,16 +179,14 @@ def simulate(model,T,periods,y0,steady_state,parameters=None,Npaths=1):
                     for j in range(t+1,T+1):
                         y[t+1] += M[j-t] @ shocks[j]
             
-        sol = y[:,:n]
-        y = sol
+        yIter.append(np.copy(y)) 
     
-    model.y = y;
-    yIter.append(np.copy(y))    
+    model.y = y;   
     elapsed = time() - t0
     count = 1
     max_f = 0
     
-    return (count,y,yIter,max_f,elapsed)
+    return (count,yIter,max_f,elapsed)
 
     
 def find_steady_state(model,method="iterative",debug=False):
@@ -243,7 +242,7 @@ def find_steady_state(model,method="iterative",debug=False):
             for j in range(1000):
                 zn = T @ z + K
                 #Stop if growth of endogenous variables is constant.
-                if abs(la.norm(zn-2*z+zprev)) < 1.e-15:
+                if abs(la.norm(zn-2*z+zprev)) < 1.e-10:
                     break
                 zprev = np.copy(z)
                 z = np.copy(zn)
@@ -252,6 +251,8 @@ def find_steady_state(model,method="iterative",debug=False):
             growth = [growth[i] if abs(growth[i])>1.e-10 else 0 for i in range(n)]
             steady_state = [zn[i] if growth[i]==0 else 0 for i in range(n)]
             steady_state = np.round(steady_state,10)
+            # m1 = dict(zip(var,steady_state))
+            # m2 = dict(zip(var,growth))
         
         elif method=="root":
             from scipy.optimize import root
@@ -270,7 +271,7 @@ def find_steady_state(model,method="iterative",debug=False):
                 # Jacobian is constant for linear models.
                 return T_stable
             
-            f_dynamic = model.functions["f_dynamic"]
+            f_dynamic = model.functions["f_dynamic"].py_func
             x0 = np.zeros(len(colStable))
             p = getParameters(model=model)
             e = np.zeros(n)
@@ -286,6 +287,7 @@ def find_steady_state(model,method="iterative",debug=False):
             sol = la.pinv(np.eye(n_stable)-T_stable) @ K_stable
             steady_state[rowStable] = sol
             growth = (T-I)@steady_state + K
+                  
             
     # # Write the steady-state equations at two different times: t and t+d.
     # d    = 10
@@ -329,4 +331,84 @@ def find_steady_state(model,method="iterative",debug=False):
             steady_state[i] = steady_state[k]
                 
     return steady_state, growth
+
+
+def stochastic_simulations(model,var_name,hist,fcast_range,Npaths=1000,quantiles=None):
+    """  
+    Return quantiles of forecasts with stochastic shocks.
+    
+    Parameters:
+        :param model: Model object.
+        :type model: `Model'.
+        :param var_name: Variable name.
+        :type var_name: str.
+        :param hist: Path to historic data excel file.
+        :type hist: str.
+        :param fcast_range: Forecast range.
+        :type fcast_range: Pandas date_range
+        :param Npaths: Number of draws.
+        :type Npaths: int
+        :param quantiles: Quantiles.
+        :type quantiles: numpy.ndarray
+        
+        :returns: Quantiles of forecasts with stochastic shocks.
+    """
+    
+    import pandas as pd
+    from snowdrop.src.preprocessor.objects import MvNormal
+
+    if quantiles is None:
+        quantiles = [0,0.05,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.95]
+    
+    if "periods" in model.options: 
+        del model.options["periods"]
+    
+    T = len(fcast_range)
+    model.options["T"] = T+2
+    
+    var_names = model.symbols["variables"]
+    shock_names = model.symbols["shocks"]
+    ind = var_names.index(var_name)
+    
+    # Assign starting values
+    y0 = model.calibration['variables']
+    steady_state = np.zeros(len(y0))
+    
+    df = pd.read_csv(hist,header=0,index_col=0,parse_dates=True)
+    columns = [c.lower() for c in df.columns]
+    
+    shk_mean = []; shk_cov = []
+    for shk in shock_names:
+        if "_" in shk:
+            shk = shk[1+shk.index("_"):]
+        v = "obs_" + shk.lower()
+        if v in columns:
+            ind = columns.index(v)
+            column = df.columns[ind]
+            shk_mean.append(np.mean(df[column]))
+            shk_cov.append(np.std(df[column]))
+        else:
+            shk_mean.append(0)
+            shk_cov.append(0)
+            
+    model.options['distribution'] = MvNormal(mean=shk_mean,cov=np.diag(shk_cov))
+
+    # Run forecast for stochastic shocks with multivariat normal distribution
+    results = []
+    for k in range(Npaths):
+        count,yIter,max_f,elapsed = simulate(model=model,T=T+2,periods=None,y0=y0,steady_state=steady_state)
+        y = yIter[-1]
+        results.append(y[:,ind])
+    results = np.array(results)
+
+    series = []
+    for q in quantiles:
+        qnt = []
+        for t in range(len(fcast_range)):
+            quantile = np.quantile(results[:,t],q)
+            qnt.append(quantile)
+        ts = pd.Series(qnt, fcast_range)
+        series.append(ts)
+        
+    return series
     

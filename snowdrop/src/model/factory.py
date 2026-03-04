@@ -92,21 +92,21 @@ def import_model(fname,order=1,return_interface=True,check=True,hist=None,bounda
                 
         # Variables labels
         if bool(labels):
-            var_labels = dict()
+            variable_labels = dict()
             for var,lbl in zip(variables,labels):
-                var_labels[var] = lbl
+                variable_labels[var] = lbl
         else:
             var_labels = {}
             
         interface = getModel(name=name,eqs=eqs,variables=variables,parameters=params,shocks=shocks,
-                          shocks_file_path=shocks_file_path,calibration=calibration,var_labels=var_labels,
+                          shocks_file_path=shocks_file_path,calibration=calibration,var_labels=variable_labels,
                           return_interface=return_interface,options=options,infos=infos)
         
         
     elif ext == ".model":    # Iris model file
         from snowdrop.src.utils.getIrisData import readIrisModelFile
         
-        eqs,measEqs,params,variables,measVar,measEqs,shocks,measShocks,ss,labels = \
+        eqs,measEqs,params,variables,measVar,measEqs,shocks,measShocks,ss,var_labels,meas_labels,shock_labels,param_labels = \
             readIrisModelFile(file_path=fname,bFillValues=False,
                               strVariables=["!variables","!transition_variables"],strShocks =  ["!shocks","!transition_shocks"],
                               strParameters = "!parameters",strEquations = ["!equations","!transition_equations"],
@@ -124,14 +124,19 @@ def import_model(fname,order=1,return_interface=True,check=True,hist=None,bounda
             if not k in calibration:
                 calibration[k] = 0.0
             
-        var_labels = dict()
-        for var,lbl in zip(variables,labels):
-            var_labels[var] = lbl
+        variable_labels = dict()
+        for var,lbl in zip(variables,var_labels):
+            variable_labels[var] = lbl
+            
+        
+        shocks_labels = dict()
+        for shk,lbl in zip(shocks,shock_labels):
+            shocks_labels[shk] = lbl
             
         interface = getModel(name=name,eqs=eqs,meas_eqs=measEqs,variables=variables,
                          parameters=params,shocks=shocks,meas_shocks=measShocks,
                          shocks_file_path=shocks_file_path,meas_variables=measVar,
-                         calibration=calibration,var_labels=var_labels,
+                         calibration=calibration,var_labels=variable_labels,shock_labels=shocks_labels,
                          return_interface=return_interface,options=options,infos=infos)
             
     elif ext == ".xml":      # Sirius model file
@@ -238,7 +243,7 @@ def import_model(fname,order=1,return_interface=True,check=True,hist=None,bounda
 def instantiate_model(txt='',order=1,data=None,exog_data={},return_interface=False,filename='',hist=None,
                       boundary_conditions_path=None,exogenous=None,calibration={},shocks_file_path=None,
                       exog_file_path=None,steady_state_file_path=None,calibration_file_path=None,labels={},
-                      measurement_file_path=None,infos={}):
+                      shock_labels={},measurement_file_path=None,infos={}):
     """
     Parse a model file and create an instance of a  model.
     
@@ -316,6 +321,10 @@ def instantiate_model(txt='',order=1,data=None,exog_data={},return_interface=Fal
         symbols["variables_labels"] = {**labels,**data["labels"]}
     else:
         symbols["variables_labels"] = labels
+    if "shock_labels" in data:
+        symbols["shock_labels"] = data["shock_labels"]
+    else:
+        symbols["shock_labels"] = shock_labels
     if "eqComments" in data:
         eqs_comments = data["eqComments"]
     else:
@@ -765,7 +774,7 @@ def instantiate_model(txt='',order=1,data=None,exog_data={},return_interface=Fal
  
     
 def getModel(name,eqs,variables,parameters,shocks,exogenous=[],exog_data={},shocks_file_path=None,
-             Solver=None,ss=None,meas_eqs=[],meas_variables=[],var_labels={},meas_shocks=[],
+             Solver=None,ss=None,meas_eqs=[],meas_variables=[],var_labels={},shock_labels={},meas_shocks=[],
              meas_parameters=[],options={},eqs_labels=[],calibration={},return_interface=False,
              infos={},definitions={},check=True,bCompileAll=True):
     """
@@ -789,7 +798,7 @@ def getModel(name,eqs,variables,parameters,shocks,exogenous=[],exog_data={},shoc
         :param shocks_file_path: Path to shock file.
         :type shocks_file_path: str.
         :param Sover: Solver name.
-        :type Silver:  str.
+        :type Solver:  str.
         :param ss: Map with variables names as a key and steady states as values.
         :type ss: dict.
         :param meas_eqs: Measurement equations.
@@ -798,6 +807,8 @@ def getModel(name,eqs,variables,parameters,shocks,exogenous=[],exog_data={},shoc
         :type meas_variables:  list.
         :param var_labels: Labels of endogenous variables. The default is an empty dict.
         :type var_labels:  dict.
+        :param shock_labels: Labels of endogenous variables. The default is an empty dict.
+        :type shock_labels:  dict.
         :param meas_shocks: Measurement shocks. The default is an empty list.
         :type meas_shocks:  list.
         :param meas_parameters: Measurement parameters. The default is an empty list.
@@ -837,15 +848,12 @@ def getModel(name,eqs,variables,parameters,shocks,exogenous=[],exog_data={},shoc
     n_meas_eqs = len(meas_eqs)
     n_var = len(variables)
     n_meas_var = len(meas_variables)
-    # # Add measurement variables and equations.
-    # eqs       += meas_eqs    
-    # variables += meas_variables  
    
     if check: # Check syntax of model parameters.
         
         from snowdrop.src.misc.linter import check_all
-        symbols = {"variables":variables,"parameters":parameters,"shocks":shocks,"exogenous":exogenous}
-        data = {"name":name,"equations":eqs,"symbols":symbols,"options":options,"definitions":definitions}
+        symbols = {"variables":variables,"parameters":parameters,"shocks":shocks,"exogenous":exogenous,"measurement_variables":meas_variables,"measurement_shocks":meas_shocks}
+        data = {"name":name,"equations":eqs,"measurement_equations":meas_eqs,"symbols":symbols,"options":options,"definitions":definitions,"labels":var_labels,"shock_labels":shock_labels}
         check_all(data)
         interface = instantiate_model(data=data,exog_data=exog_data,return_interface=True,calibration=calibration,shocks_file_path=shocks_file_path,infos=infos)
         

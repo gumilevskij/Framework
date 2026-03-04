@@ -820,94 +820,196 @@ def get_steady_state(model,x0,ss_variables=None,p=None,e=None):
     #cprint(f"<--- Elapsed time {elapsed:.2f} (sec.), Iterations {itr}, Error {err:.4e}\n","blue")                    
     return x,err
 
-def predict(model:Model,T:int,y:np.array,params:list=None,shocks:list=None,debug=False) -> np.array:
+def predict(model:Model=None,models:list=None,T:int=0,y0:np.array=None,agg_eqs:list=[],numv:list=[],frequencies:list=[],debug=False) -> np.array:
     """
     Solve backward looking nonlinear model equations.
 
     .. note::
-        This code was developed to solve IMFE aplication.  It doesn't
-        have lead variables nor shocks.
+        This code was developed to solve IMFE aplication.  It doesn't apply
+        if variables have leads nor in the presence of shocks.
     
     Parameters:
         :param model: Model object.
         :type model: Model.
+            :param model: Model object.
+            :type model: Model.
         :param T: Time span.
         :type T: int.
         :param n: Number of endogenous variables.
         :type n: int.
-        :param y: Array of values of endogenous variables for current iteration.
-        :type y: numpy.ndarray.
-        :param params: Array of parameters.
-        :type params: numpy.ndarray.
-        :param shock: Array of shock values.
-        :type shocks: numpy.ndarray.
+        :param y0: Array of values of endogenous variables for current iteration.
+        :type y0: numpy.ndarray.
+        :param agg_eqs: List of aggregate equations.
+        :type agg_eqs: list.
+        :param numv: List of the number of models variables.
+        :type numv: list.
+        :param frequencies: List of model frequencies.
+        :type frequencies: list.
         :returns: Numerical solution.
-        
-    
     """ 
     from snowdrop.src.numeric.solver.util import getExogenousData
-    global itr
+    global itr, n, jacob
 
     t0 = time()
-    n = y.shape[1]
-    n_shk = len(model.symbols['shocks'])
-    nd = np.ndim(params) 
+    y = y0
+    n = y.shape[1]; neqs = []
+    shk = []; formulas = {}
     if debug:    
-        from snowdrop.src.preprocessor.f_dynamic import f_dynamic as f
+        from snowdrop.src.preprocessor.f_dynamic import f_dynamic as fn
     else:
-        f = model.functions["f_dynamic"]
-    bHasAttr  = hasattr(f,"py_func")
+        if not models is None:
+            nm = len(models)
+            bHasAttr  = hasattr(models[0].functions["f_dynamic"],"py_func")
+            Ts = [int(np.ceil(models[i].T/models[0].T)) for i in range(nm)]
+            lhs = []
+            for i in range(nm):
+                eqs = models[i].symbolic.equations
+                v = [eq.split("=")[0].strip() for eq in eqs]
+                lhs.append(v)
+                neqs.append(len(eqs))
+            for k in agg_eqs:
+                k1,k2 = k.split(",")
+                k1 = int(k1); k2 = int(k2)
+                for rhs in agg_eqs[k]:
+                    v,formula = rhs.split("=")
+                    if v in lhs[k1] and v in lhs[k2]:
+                        ind1 = lhs[k1].index(v)
+                        ind2 = lhs[k2].index(v)
+                        if not v in formulas:
+                            formulas[v] = []
+                        formulas[v].append((k1,k2,ind1,ind2,formula))
+        else:
+            fn = model.functions["f_dynamic"]
+            bHasAttr = hasattr(fn,"py_func")
+            Ts = [1]
+            nm = 1;          
+        
     itr0 = itr
     
     # Define objective function
-    def f_jac(x):
-        global itr
+    def func_obj(x):
+        global itr, n, jacob
         itr += 1
+        try:
+            func = []; nv = 0
+            for i in range(nm):
+                if numv[i] > 0:
+                    fn = models[i].functions["f_dynamic"]
+                    params = models[i].calibration["parameters"]
+                    nd = np.ndim(params)
+                    par =  params if nd == 1 else params[:,min(t,params.shape[1]-1)]                    
+                    exog = getExogenousData(models[i],tp)
+                    #eqs = models[i].symbolic.equations
+                    jac = np.zeros((numv[i],numv[i]))
+                    for j in range(Ts[i]):
+                        rng = [j+nv for j in range(0,numv[i],Ts[i])]
+                        if j == 0:
+                            y_cur = x[rng] 
+                            y_prev = y[tm1,rng]
+                        else:
+                            y_cur = x[rng] 
+                        z = np.concatenate([y[tp1,rng],y_cur,y_prev,shk]) 
+                        y_prev = y_cur
+                        if bHasAttr:
+                            fnc,jac_ = fn.py_func(z,par,exog)
+                        else:
+                            fnc,jac_ = fn(z,par,exog)
+                        func += list(fnc)
+                        m = len(fnc)
+                        rng_ = [k+j*m for k in range(m)]
+                        jac[np.ix_(rng_,rng_)] = jac_[:,m:2*m]
+                    if i == 0:
+                        jacob = jac
+                    else:
+                        jacob = la.block_diag(jacob,jac)
+                    nv += numv[i]
+                    
+            nmv = np.cumsum([0]+numv)
+            for v in formulas:
+                sign = 1; nv = 0
+                for expr in formulas[v]:
+                    k1,k2,ind1,ind2,formula = expr
+                    index1 = nmv[k1] + ind1
+                    index1_ = [nmv[k1]+i+ind1 for i in range(0,numv[k1],neqs[k1])]
+                    index2 = nmv[k2] + ind2
+                    index2_ = [nmv[k2]+i+ind2 for i in range(0,numv[k2],neqs[k2])]
+                    v1 = x[index1]
+                    v = x[index2_]
+                    error = abs(v1-eval(formula))
+                    func[index1] += error
+                    func[index2] += error
+                   
+                
+                        
+        except ValueError:
+            func = np.zeros(len(x)) + 1.e10 + itr
+        return func
+    
+    def fobj(x):
+        global itr, jacob
+        itr += 1
+        par = model.calibration["parameters"]
+        fn = model.functions["f_dynamic"]
         try:
             z = np.concatenate([y[tp1],x,y[tm1],shk])
             if bHasAttr:
-                func,jacob = f.py_func(z,par,exog)
+                fnc,jac = fn.py_func(z,par,exog)
             else:
-                func,jacob = f(z,par,exog)
+                fnc,jac = fn(z,par,exog)
+            jacob = jac[:,n:2*n]
         except ValueError:
-            func = np.zeros(len(x)) + 1.e10 + itr
-        return func,jacob
-    
-    def fobj(x):
-        func,_ = f_jac(x)
-        return func
+            fnc = np.zeros(len(x)) + 1.e10 + itr
+        return fnc
     
     def fjac(x):
-        _,jacob = f_jac(x)
-        return jacob[:,n:2*n]
+        global jacob
+        return jacob
     
     err = np.zeros(T)
-
-    for t in range(-2,T+1):
-        tp = max(0,t); tp1 = max(0,t+1); tm1 = max(0,t-1)
-        shk = shocks[tm1] if not shocks is None and tp <= len(shocks) else np.zeros(n_shk)
-        par = params if nd == 1 else params[:,min(t,params.shape[1]-1)]
-        exog = getExogenousData(model,tp)
-        # Find root
-        try:
-            sol = root(fobj,x0=y[tm1],jac=fjac,method='lm',tol=TOLERANCE,options={"maxiter":10*NITERATIONS})    
-            y[tp] = sol.x
+    if models is None:
+        for t in range(-1,T):
+            tp = max(0,t); tp1 = min(T-1,max(0,t+1)); tm1 = max(0,t-1)
+            exog = getExogenousData(model,tp)
+            # Find root
+            sol = root(fobj,x0=y[tm1],jac=fjac,method='lm',tol=TOLERANCE,options={"maxiter":NITERATIONS})    
+            y[tp1] = sol.x
             fun = sol.fun
             fun[np.isnan(fun)] = 0
-            err[t] = la.norm(fun)/la.norm(sol.x)
-        except:
-            pass
-    
-    # Impose continuity of slope or value.
-    if len(y) > 1:
-        y[-1] = y[-2]
-    # if len(y) > 2:
-    #     y[-1] = 2*y[-2]-y[-3]
+            err[t] = la.norm(fun)/max(1.e-10,la.norm(sol.x))
+
+    else:
+        for t in range(-1,T):
+            tp = max(0,t); tp1 = min(T-1,max(0,t+1)); tm1 = max(0,t-1)
+            # Find root
+            #sol = root(func_obj,x0=y[tm1],method='df-sane',tol=TOLERANCE)
+            sol = root(func_obj,x0=y[tm1],jac=fjac,method='lm',tol=TOLERANCE,options={"maxiter":NITERATIONS})    
+            y[tp1] = sol.x
+            fun = sol.fun
+            fun[np.isnan(fun)] = 0
+            err[t] = la.norm(fun)/max(1.e-10,la.norm(sol.x))
+        
+        # Recover solution at different frequencies
+        nv = 0; lst = []
+        for i in range(nm):
+            x = []
+            for t in range(T):
+                u = y[t][nv:nv+numv[i]]
+                shape = Ts[i], int(numv[i]/Ts[i])
+                v = np.reshape(u,shape)
+                x.extend(v)
+            x = np.array(x)
+            lst.append(x)
+            nv += numv[i]
+        y = lst
         
     if debug:
-        var = model.symbols["variables"]
-        mv = dict(zip(var,y.T))
-        
+        mv = dict()
+        for i in range(nm):
+            if not models is None:
+                mv[frequencies[i]] = dict(zip(models[i].symbols['variables'],y[i].T))
+            elif not model is None:
+                mv[frequencies[i]] = dict(zip(model.symbols['variables'],y[i].T))
+                  
     err[np.isnan(err)] = 0
     elapsed = time()-t0
     print(f"Elapsed time: {elapsed:.2f} (sec.), total # of iterations: {1+itr-itr0}, Error: {np.sum(err)/T:.1e}")
@@ -916,7 +1018,7 @@ def predict(model:Model,T:int,y:np.array,params:list=None,shocks:list=None,debug
 
 
 if __name__ == '__main__':
-    """ Formulas for second derivatives."""
+    """ Formulas for second order derivatives."""
     from sympy import symbols,Function,simplify,latex
     from IPython.display import display, Math
     

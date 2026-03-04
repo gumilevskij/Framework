@@ -46,8 +46,8 @@ def in_sample(Plot=False,save=True):
     
     ## Database preparation
     # Load quarterly data
-    skip_rows = 6
-    file_path = os.path.abspath(os.path.join(working_dir,"supplements/data/MPAF/kalm_his_new.csv"))
+    skip_rows = 1
+    file_path = os.path.abspath(os.path.join(working_dir,"output/data/MPAF/kalm_hist.csv"))
     df = pd.read_csv(filepath_or_buffer=file_path,sep=',',header=0,index_col=0,parse_dates=True,infer_datetime_format=True)
     df = df.iloc[skip_rows:].astype(float)
     df.index = pd.to_datetime(df.index)  # Quartely data frequency
@@ -81,7 +81,7 @@ def in_sample(Plot=False,save=True):
         model.options['shock_values'] = [[0]*n_shocks]
         
         # Set starting values
-        model.setStartingValues(hist=file_path,skip_rows=skip_rows)
+        model.setStartingValues(hist=file_path,skip_rows=skip_rows,TreatMissingObs=False)
 
         start = date(year=t.year, month=t.month, day=t.day)  + rd.relativedelta(months=3)
         end   = date(year=f_time.year, month=f_time.month, day=f_time.day)
@@ -146,12 +146,11 @@ def in_sample(Plot=False,save=True):
             series = all_data[n]
             titles = [list_headers[i]]*len(series)
             labels = None
-            plotTimeSeries(path_to_dir=path_to_dir,header=header,titles=titles,labels=labels,series=series,save=save)
+            plotTimeSeries(path_to_dir=path_to_dir,header=header,titles=titles,labels=labels,series=series,fig_sizes=(6,4),save=save)
             
     
     if save:
         from snowdrop.src.utils.merge import merge
-        # imagelist is the list with all image filenames
         outputFile = os.path.abspath(os.path.join(working_dir,"results/MPAF_in_sample.pdf"))
         files = []
         for f in list_xnames:

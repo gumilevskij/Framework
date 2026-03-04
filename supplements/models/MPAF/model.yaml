@@ -59,7 +59,7 @@ name:   Basic Quarterly Projection Model (QPM)
 #   Shock: Foreign output gap                                        SHK_L_GDP_RW_GAP 
 #   Shock: Foreign nominal interest rate                             SHK_RS_RW 
 #   Shock: Foreign inflation                                         SHK_DLA_CPI_RW 
-#   Shock: Foreign real interest rate                                
+#   Shock: Foreign real interest rate                                SHK_RR_RW_BAR
 
 # -------------------------------------------------------------------------------      #
 symbols: 
@@ -263,39 +263,39 @@ calibration:
 
 
      # Starting values for endogenous variables
-     L_GDP:    1330.5932
-     L_GDP_BAR:    1330.1723
-     L_GDP_GAP:    0.42099
-     DLA_GDP:    -1.7414
-     D4L_GDP:    -0.13198
+     L_GDP:         1330.5932
+     L_GDP_BAR:     1330.1723
+     L_GDP_GAP:     0.42099
+     DLA_GDP:       -1.7414
+     D4L_GDP:       -0.13198
      DLA_GDP_BAR:    2.6068
-     MCI:    4.5267
-     L_CPI:    421.2768
-     DLA_CPI:    7.2507
-     E_DLA_CPI:    5.6414
-     D4L_CPI:    8.4965
+     MCI:           4.5267
+     L_CPI:         421.2768
+     DLA_CPI:       7.2507
+     E_DLA_CPI:     5.6414
+     D4L_CPI:       8.4965
      D4L_CPI_TAR:    7.62
-     RMC:    0.17682
-     L_S:    359.2644
-     DLA_S:    28.3137
-     D4L_S:    3.2891
-     PREM:    3.3091
-     RS:    16.01
-     RR:    8.4612
-     RR_BAR:    2.1628
-     RR_GAP:    6.2984
-     RSNEUTRAL:    9.7116
-     L_Z:    -19.0973
-     L_Z_BAR:    -18.7044
-     L_Z_GAP:    -0.3929
-     DLA_Z:    21.433
+     RMC:           0.17682
+     L_S:           359.2644
+     DLA_S:         28.3137
+     D4L_S:         3.2891
+     PREM:          3.3091
+     RS:            16.01
+     RR:            8.4612
+     RR_BAR:        2.1628
+     RR_GAP:        6.2984
+     RSNEUTRAL:     9.7116
+     L_Z:           -19.0973
+     L_Z_BAR:       -18.7044
+     L_Z_GAP:       -0.3929
+     DLA_Z:         21.433
      DLA_Z_BAR:    -1.3491
-     L_GDP_RW_GAP:    -0.019949
-     RS_RW:    4.2
-     RR_RW:    3.8301
-     RR_RW_BAR:    0.23286
-     RR_RW_GAP:    3.5972
-     L_CPI_RW:    42.9151
+     L_GDP_RW_GAP: -0.019949
+     RS_RW:         4.2
+     RR_RW:         3.8301
+     RR_RW_BAR:     0.23286
+     RR_RW_GAP:     3.5972
+     L_CPI_RW:      42.9151
      DLA_CPI_RW:    0.3699
 
 
@@ -327,6 +327,54 @@ options:
      # std_SHK_OBS_DLA_CPI_RW     : 0
      # std_SHK_OBS_RS_RW          : 0
 
+labels:
+   L_GDP:       Real GDP (100*log)
+   L_GDP_BAR:   Trend in Real GDP (100*log)
+   L_GDP_GAP:   Output Gap (in pa)
+   DLA_GDP:     Quarterly Growth in Real GDP(in pa))
+   D4L_GDP:     Real GDP Growth YoY (in pa))
+   DLA_GDP_BAR:   Real GDP Trend Growth QoQ annualized (in pa))
+   MCI:         Real Monetary Condition Index (in pa))
+   L_CPI:       CPI (level, 100*log)
+   DLA_CPI:     CPI Inflation QoQ annualized (in pa))
+   E_DLA_CPI:   Expected CPI Inflation QoQ annualized (in pa))
+   D4L_CPI:     CPI Inflation YoY (in pa))
+   D4L_CPI_TAR:   Inflation Target (in pa))
+   RMC:         Real Marginal Cost  (in pa)
+   L_S:         Nominal Exchange Rate (LCY/FCY, 100*log)
+   DLA_S:       Nominal Exch. Rate Depreciation QoQ annualized (in pa))
+   D4L_S:       Nominal Exch. Rate Depreciation YoY (in pa))
+   PREM:        Country Risk Premium (in pa))
+   RS:          Nominal Policy Interest Rate (in pa))
+   RR:          Real Interest Rate (in pa))
+   RR_BAR:      Trend Real Interest Rate (in pa))
+   RR_GAP:      Real Interest Rate Gap (in pa)
+   RSNEUTRAL:   Nominal Policy Neutral Interest Rate (in pa))
+   L_Z:         Real Exchange Rate (level, 100*log)
+   L_Z_BAR:     Trend Real Exchange Rate (level, 100*log)
+   L_Z_GAP:     Real Exchange Rate Gap (in pa)
+   DLA_Z:       Real Exchange Rate Depreciation QoQ annualized (in pa))
+   DLA_Z_BAR:   Trend Real Exchange Rate Depreciation QoQ annualized(in pa)
+   L_GDP_RW_GAP:   Foreign Output Gap (in pa)
+   RS_RW:       Foreign Nominal Interest Rate (in pa)
+   RR_RW:       Foreign Real Interest Rate (in pa))
+   RR_RW_BAR:   Foreign Real Interest Rate Trend (in pa)
+   RR_RW_GAP:   Foreign Real Interest Rate Gap (in pa)
+   L_CPI_RW:    Foreign CPI (level, 100*log)
+   DLA_CPI_RW:   Foreign Inflation QoQ annualized (in pa))
+   SHK_L_GDP_GAP: Output gap (demand)                                       
+   SHK_DLA_CPI:  CPI inflation (cost-push)                                 
+   SHK_L_S:     Exchange rate (UIP)                                       
+   SHK_RS:      Interest rate (monetary policy)                           
+   SHK_D4L_CPI_TAR: Inflation target                                          
+   SHK_RR_BAR:   Real interest rate                                         
+   SHK_DLA_Z_BAR: Real exchange rate depreciation                           
+   SHK_DLA_GDP_BAR: Potential GDP growth  
+   SHK_L_GDP_RW_GAP: Foreign output gap                                         
+   SHK_RS_RW:   Foreign nominal interest rate                             
+   SHK_DLA_CPI_RW:  Foreign inflation                                         
+   SHK_RR_RW_BAR: Foreign real interest rate  
+   
 # -------------------------------------------------------------------------------
 # Legend
 #     _GAP        cyclical deviation from a trend

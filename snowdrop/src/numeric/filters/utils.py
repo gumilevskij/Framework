@@ -249,7 +249,7 @@ def getSteadyStateCovarianceMatrix(T,R,Qm,Hm,Z,n,Nd,n_shocks):
 
     return P
             
-def getMissingInitialVariables(model,ind,x0):
+def getMissingVariablesInitialValues(model,ind,x0):
     """
     Return initial values of endogenous variables satisfying model equations.
     Parameters:
@@ -298,7 +298,7 @@ def getMissingInitialVariables(model,ind,x0):
         ind_max = sol.fun.argmax()
         ind = ind_min if abs(sol.fun[ind_min]) > abs(sol.fun[ind_max]) else ind_max
         err = la.norm(sol.fun)
-        cprint(f"filters.itils.getInitialVariables:\n   Root solver failed: Number of iterations {itr}, Error {err:.3e}","yellow")
+        cprint(f"filters.utils.getMissingVariablesInitialValues:\n   Root solver failed: Number of iterations {itr}, Error {err:.3e}","yellow")
         cprint(f"   The following equation has the largest residual of {sol.fun[ind]:.2e},","yellow")
         cprint("      "+model.symbolic.equations[ind],"yellow")
         print()
@@ -375,6 +375,84 @@ def getEndogVarInMeasEqs(variables, measurement_equations):
     return ind_var,var_meas
     
     
+def historic_decomposition(model,filtered,residiuals,start,end):
+    """
+    Performs historic decomposition of endogeneous variables.  Finds contribution of
+    initial conditions and shocks.
+    
+    Parameters
+    ----------
+    model : `Model'
+        Model object.
+    filtered : ndarray
+        Results of Kalman filter fitering or smoothing.
+    residiuals : ndarray
+        Residuals of Kalman filter.
+    start : string
+        Start date of decomposition.
+    end : string
+        End date of decomposition.
+        .
+
+    Returns
+    -------
+    contributions : dict
+        Dictionary with shocks names as keys where each entry is another dictionary
+        with names of endogeneous variables as key and time series as values.
+
+    """
+    
+    import pandas as pd
+    from snowdrop.src.driver import run
+    
+    options = None
+    try:
+        options = model.options.copy()
+        var_names = model.symbols["variables"]
+        shock_names = model.symbols["shocks"]
+        nv = len(var_names)
+        n_shk = len(shock_names)
+    
+        model.options["periods"] = None
+        contributions = {}; init_conditions = {}
+        
+        # Initial conditions
+        model.options["shock_values"] = np.zeros(n_shk)
+        model.calibration['variables'] = filtered[1]
+        
+        # Find solution
+        results,dates = run(model=model)
+        
+        for v in var_names:
+            k = var_names.index(v)
+            data = results[:,k] 
+            ts = pd.Series(data[1:-1], dates)
+            init_conditions[v] = ts[start:end] 
+        
+        # Shocks
+        for i in range(n_shk):
+            shock_name = shock_names[i]
+            ind = shock_names.index(shock_name)
+            shock_values = np.zeros((len(residiuals),n_shk))
+            shock_values[:,ind] = residiuals[:,i]
+            model.options["shock_values"] = shock_values
+            model.calibration['variables'] = np.zeros(nv)
+            
+            # Find solution
+            results,dates = run(model=model)
+            series = {}
+            for k,v in enumerate(var_names):
+                data = results[:,k] 
+                ts = pd.Series(data[1:-1], dates)
+                series[v] = ts[start:end] 
+            contributions[shock_name] = series
+            
+    finally:        
+        model.options = options
+        
+    return init_conditions,contributions
+        
+        
 if __name__ == "__main__":
     """Main entry point."""
     from mat4py import loadmat
