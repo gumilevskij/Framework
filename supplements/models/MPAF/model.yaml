@@ -2,64 +2,64 @@ name:   Basic Quarterly Projection Model (QPM)
 
 #Definitions:
 #   Transition_variables
-#   Real GDP (100*log)                                               L_GDP
-#   Trend in Real GDP (100*log)                                      L_GDP_BAR
-#   Output Gap (in      #)                                           L_GDP_GAP
-#   Quarterly Growth in Real GDP(in      # pa)                       DLA_GDP
-#   Real GDP Growth YoY (in      # pa)                               D4L_GDP
-#   Real GDP Trend Growth QoQ annualized (in      # pa)              DLA_GDP_BAR
+#   Real GDP (100*log)                                        L_GDP
+#   Trend in Real GDP (100*log)                               L_GDP_BAR
+#   Output Gap (in pp)                                        L_GDP_GAP
+#   Quarterly Growth in Real GDP(in pp)                       DLA_GDP
+#   Real GDP Growth YoY (in pp)                               D4L_GDP
+#   Real GDP Trend Growth QoQ annualized (in pp)              DLA_GDP_BAR
 
-#   Real Monetary Condition Index (in      # pa)                     MCI
+#   Real Monetary Condition Index (in pp)                     MCI
 
-#   CPI (level, 100*log)                                             L_CPI
-#   CPI Inflation QoQ annualized (in      # pa)                      DLA_CPI
-#   Expected CPI Inflation QoQ annualized (in      # pa)             E_DLA_CPI
-#   CPI Inflation YoY (in      # pa)                                 D4L_CPI
-#   Inflation Target (in      # pa)                                  D4L_CPI_TAR
+#   CPI (level, 100*log)                                      L_CPI
+#   CPI Inflation QoQ annualized (in pp)                      DLA_CPI
+#   Expected CPI Inflation QoQ annualized (in pp)             E_DLA_CPI
+#   CPI Inflation YoY (in pp)                                 D4L_CPI
+#   Inflation Target (in pp)                                  D4L_CPI_TAR
 
-#   Real Marginal Cost  (in      #)                                  RMC
+#   Real Marginal Cost  (in pp)                               RMC
 
-#   Nominal Exchange Rate (LCY/FCY, 100*log)                         L_S
-#   Nominal Exch. Rate Depreciation QoQ annualized (in      # pa)    DLA_S
-#   Nominal Exch. Rate Depreciation YoY (in      # pa)               D4L_S
-#   Country Risk Premium (in      # pa)                              PREM
+#   Nominal Exchange Rate (LCY/FCY, 100*log)                  L_S
+#   Nominal Exch. Rate Depreciation QoQ annualized (in pp)    DLA_S
+#   Nominal Exch. Rate Depreciation YoY (in pp)               D4L_S
+#   Country Risk Premium (in pp)                              PREM
 
-#   Nominal Policy Interest Rate (in      # pa)                      RS
-#   Real Interest Rate (in      # pa)                                RR
-#   Trend Real Interest Rate (in      # pa)                          RR_BAR
-#   Real Interest Rate Gap (in      #)                               RR_GAP
-#   Nominal Policy Neutral Interest Rate (in      # pa)              RSNEUTRAL
+#   Nominal Policy Interest Rate (in pp)                      RS
+#   Real Interest Rate (in pp)                                RR
+#   Trend Real Interest Rate (in pp)                          RR_BAR
+#   Real Interest Rate Gap (in pp)                            RR_GAP
+#   Nominal Policy Neutral Interest Rate (in pp)              RSNEUTRAL
 
-#   Real Exchange Rate (level, 100*log)                              L_Z
-#   Trend Real Exchange Rate (level, 100*log)                        L_Z_BAR
-#   Real Exchange Rate Gap (in      #)                               L_Z_GAP
-#   Real Exchange Rate Depreciation QoQ annualized (in      # pa)    DLA_Z
+#   Real Exchange Rate (level, 100*log)                       L_Z
+#   Trend Real Exchange Rate (level, 100*log)                 L_Z_BAR
+#   Real Exchange Rate Gap (in pp)                            L_Z_GAP
+#   Real Exchange Rate Depreciation QoQ annualized (in pp)    DLA_Z
 #   Trend Real Exchange Rate Depreciation QoQ annualized(in # pa)    DLA_Z_BAR
 
-#   Foreign Output Gap (in      #)                                   L_GDP_RW_GAP
-#   Foreign Nominal Interest Rate (in      # pa)                     RS_RW
-#   Foreign Real Interest Rate (in      # pa)                        RR_RW 
-#   Foreign Real Interest Rate Trend (in      # pa)                  RR_RW_BAR
-#   Foreign Real Interest Rate Gap (in      #)                       RR_RW_GAP
-#   Foreign CPI (level, 100*log)                                     L_CPI_RW
-#   Foreign Inflation QoQ annualized (in      # pa)                  DLA_CPI_RW
+#   Foreign Output Gap (in pp)                                L_GDP_RW_GAP
+#   Foreign Nominal Interest Rate (in pp)                     RS_RW
+#   Foreign Real Interest Rate (in pp)                        RR_RW 
+#   Foreign Real Interest Rate Trend (in pp)                  RR_RW_BAR
+#   Foreign Real Interest Rate Gap (in pp)                    RR_RW_GAP
+#   Foreign CPI (level, 100*log)                              L_CPI_RW
+#   Foreign Inflation QoQ annualized (in pp)                  DLA_CPI_RW
 
 # -------------------------------------------------------------------------------      #
 #   Transition_shocks
-#   Shock: Output gap (demand)                                       SHK_L_GDP_GAP
-#   Shock: CPI inflation (cost-push)                                 SHK_DLA_CPI 
-#   Shock: Exchange rate (UIP)                                       SHK_L_S 
-#   Shock: Interest rate (monetary policy)                           SHK_RS 
-#   Shock: Inflation target                                          SHK_D4L_CPI_TAR
+#   Shock: Output gap (demand)                                SHK_L_GDP_GAP
+#   Shock: CPI inflation (cost-push)                          SHK_DLA_CPI 
+#   Shock: Exchange rate (UIP)                                SHK_L_S 
+#   Shock: Interest rate (monetary policy)                    SHK_RS 
+#   Shock: Inflation target                                   SHK_D4L_CPI_TAR
 
-#   Shock: Real interest rate                                        SHK_RR_BAR 
-#   Shock: Real exchange rate depreciation                           SHK_DLA_Z_BAR 
-#   Shock: Potential GDP growth                                      SHK_DLA_GDP_BAR
+#   Shock: Real interest rate                                 SHK_RR_BAR 
+#   Shock: Real exchange rate depreciation                    SHK_DLA_Z_BAR 
+#   Shock: Potential GDP growth                               SHK_DLA_GDP_BAR
 
-#   Shock: Foreign output gap                                        SHK_L_GDP_RW_GAP 
-#   Shock: Foreign nominal interest rate                             SHK_RS_RW 
-#   Shock: Foreign inflation                                         SHK_DLA_CPI_RW 
-#   Shock: Foreign real interest rate                                SHK_RR_RW_BAR
+#   Shock: Foreign output gap                                 SHK_L_GDP_RW_GAP 
+#   Shock: Foreign nominal interest rate                      SHK_RS_RW 
+#   Shock: Foreign inflation                                  SHK_DLA_CPI_RW 
+#   Shock: Foreign real interest rate                         SHK_RR_RW_BAR
 
 # -------------------------------------------------------------------------------      #
 symbols: 
@@ -72,10 +72,10 @@ symbols:
    measurement_variables: [OBS_L_GDP,OBS_L_CPI,OBS_RS,OBS_L_S,OBS_D4L_CPI_TAR,OBS_L_GDP_RW_GAP,OBS_DLA_CPI_RW,OBS_RS_RW]
 
    shocks: [SHK_L_GDP_GAP, SHK_DLA_CPI, SHK_L_S, SHK_RS, SHK_D4L_CPI_TAR, SHK_RR_BAR, SHK_DLA_Z_BAR,
-            SHK_DLA_GDP_BAR, SHK_L_GDP_RW_GAP, SHK_RS_RW, SHK_DLA_CPI_RW, SHK_RR_RW_BAR]
+     SHK_DLA_GDP_BAR, SHK_L_GDP_RW_GAP, SHK_RS_RW, SHK_DLA_CPI_RW, SHK_RR_RW_BAR]
             
    measurement_shocks: [SHK_OBS_L_GDP,SHK_OBS_L_CPI,SHK_OBS_RS,SHK_OBS_L_S,SHK_OBS_D4L_CPI_TAR,
-                        SHK_OBS_L_GDP_RW_GAP,SHK_OBS_DLA_CPI_RW, SHK_OBS_RS_RW]
+                 SHK_OBS_L_GDP_RW_GAP,SHK_OBS_DLA_CPI_RW, SHK_OBS_RS_RW]
 
    parameters: [b1,b2,b3,b4,a1,a2,a3,e1,g1,g2,g3,rho_D4L_CPI_TAR,rho_RR_RW_BAR,
                 rho_DLA_Z_BAR,rho_RR_BAR,rho_DLA_GDP_BAR,rho_L_GDP_RW_GAP,
@@ -331,39 +331,39 @@ labels:
    L_GDP:       Real GDP (100*log)
    L_GDP_BAR:   Trend in Real GDP (100*log)
    L_GDP_GAP:   Output Gap (in pa)
-   DLA_GDP:     Quarterly Growth in Real GDP(in pa))
-   D4L_GDP:     Real GDP Growth YoY (in pa))
-   DLA_GDP_BAR:   Real GDP Trend Growth QoQ annualized (in pa))
-   MCI:         Real Monetary Condition Index (in pa))
+   DLA_GDP:     Quarterly Growth in Real GDP  (%)
+   D4L_GDP:     Real GDP Growth YoY  (%)
+   DLA_GDP_BAR: Real GDP Trend Growth QoQ annualized  (%)
+   MCI:         Real Monetary Condition Index  (%)
    L_CPI:       CPI (level, 100*log)
-   DLA_CPI:     CPI Inflation QoQ annualized (in pa))
-   E_DLA_CPI:   Expected CPI Inflation QoQ annualized (in pa))
-   D4L_CPI:     CPI Inflation YoY (in pa))
-   D4L_CPI_TAR:   Inflation Target (in pa))
+   DLA_CPI:     CPI Inflation QoQ annualized  (%)
+   E_DLA_CPI:   Expected CPI Inflation QoQ annualized  (%)
+   D4L_CPI:     CPI Inflation YoY  (%)
+   D4L_CPI_TAR: Inflation Target  (%)
    RMC:         Real Marginal Cost  (in pa)
    L_S:         Nominal Exchange Rate (LCY/FCY, 100*log)
-   DLA_S:       Nominal Exch. Rate Depreciation QoQ annualized (in pa))
-   D4L_S:       Nominal Exch. Rate Depreciation YoY (in pa))
-   PREM:        Country Risk Premium (in pa))
-   RS:          Nominal Policy Interest Rate (in pa))
-   RR:          Real Interest Rate (in pa))
-   RR_BAR:      Trend Real Interest Rate (in pa))
+   DLA_S:       Nominal Exch. Rate Depreciation QoQ annualized  (%)
+   D4L_S:       Nominal Exch. Rate Depreciation YoY  (%)
+   PREM:        Country Risk Premium  (%)
+   RS:          Nominal Policy Interest Rate  (%)
+   RR:          Real Interest Rate  (%)
+   RR_BAR:      Trend Real Interest Rate  (%)
    RR_GAP:      Real Interest Rate Gap (in pa)
-   RSNEUTRAL:   Nominal Policy Neutral Interest Rate (in pa))
+   RSNEUTRAL:   Nominal Policy Neutral Interest Rate  (%)
    L_Z:         Real Exchange Rate (level, 100*log)
    L_Z_BAR:     Trend Real Exchange Rate (level, 100*log)
    L_Z_GAP:     Real Exchange Rate Gap (in pa)
-   DLA_Z:       Real Exchange Rate Depreciation QoQ annualized (in pa))
+   DLA_Z:       Real Exchange Rate Depreciation QoQ annualized  (%)
    DLA_Z_BAR:   Trend Real Exchange Rate Depreciation QoQ annualized(in pa)
    L_GDP_RW_GAP:   Foreign Output Gap (in pa)
    RS_RW:       Foreign Nominal Interest Rate (in pa)
-   RR_RW:       Foreign Real Interest Rate (in pa))
+   RR_RW:       Foreign Real Interest Rate  (%)
    RR_RW_BAR:   Foreign Real Interest Rate Trend (in pa)
    RR_RW_GAP:   Foreign Real Interest Rate Gap (in pa)
    L_CPI_RW:    Foreign CPI (level, 100*log)
-   DLA_CPI_RW:   Foreign Inflation QoQ annualized (in pa))
+   DLA_CPI_RW:  Foreign Inflation QoQ annualized  (%)
    SHK_L_GDP_GAP: Output gap (demand)                                       
-   SHK_DLA_CPI:  CPI inflation (cost-push)                                 
+   SHK_DLA_CPI: CPI inflation (cost-push)                                 
    SHK_L_S:     Exchange rate (UIP)                                       
    SHK_RS:      Interest rate (monetary policy)                           
    SHK_D4L_CPI_TAR: Inflation target                                          

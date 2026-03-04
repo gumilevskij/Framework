@@ -345,11 +345,11 @@ def stochastic_simulations(model,var_name,hist,fcast_range,Npaths=1000,quantiles
         :param hist: Path to historic data excel file.
         :type hist: str.
         :param fcast_range: Forecast range.
-        :type fcast_range: Pandas date_range
+        :type fcast_range: Pandas date_range.
         :param Npaths: Number of draws.
         :type Npaths: int
         :param quantiles: Quantiles.
-        :type quantiles: numpy.ndarray
+        :type quantiles: numpy.ndarray.
         
         :returns: Quantiles of forecasts with stochastic shocks.
     """
