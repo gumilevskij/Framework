@@ -392,7 +392,7 @@ def stochastic_simulations(model,var_name,hist,fcast_range,Npaths=1000,quantiles
             if v in columns:
                 ind = columns.index(v)
                 column = df.columns[ind]
-                shk_mean.append(np.mean(df[column]))
+                shk_mean.append(0)
                 shk_cov.append(np.std(df[column]))
             else:
                 shk_mean.append(0)
