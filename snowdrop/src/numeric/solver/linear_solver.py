@@ -368,7 +368,7 @@ def stochastic_simulations(model,var_name,hist,fcast_range,Npaths=1000,quantiles
     
     var_names = model.symbols["variables"]
     shock_names = model.symbols["shocks"]
-    ind = var_names.index(var_name)
+    index = var_names.index(var_name)
     
     # Assign starting values
     y0 = model.calibration['variables']
@@ -379,18 +379,25 @@ def stochastic_simulations(model,var_name,hist,fcast_range,Npaths=1000,quantiles
     
     shk_mean = []; shk_cov = []
     for shk in shock_names:
-        if "_" in shk:
-            shk = shk[1+shk.index("_"):]
-        v = "obs_" + shk.lower()
+        v = shk.lower() 
         if v in columns:
             ind = columns.index(v)
             column = df.columns[ind]
             shk_mean.append(np.mean(df[column]))
             shk_cov.append(np.std(df[column]))
         else:
-            shk_mean.append(0)
-            shk_cov.append(0)
-            
+            if "_" in shk:
+                shk = shk[1+shk.index("_"):]
+            v = "obs_" + shk.lower()
+            if v in columns:
+                ind = columns.index(v)
+                column = df.columns[ind]
+                shk_mean.append(np.mean(df[column]))
+                shk_cov.append(np.std(df[column]))
+            else:
+                shk_mean.append(0)
+                shk_cov.append(0)
+                
     model.options['distribution'] = MvNormal(mean=shk_mean,cov=np.diag(shk_cov))
 
     # Run forecast for stochastic shocks with multivariat normal distribution
@@ -398,7 +405,7 @@ def stochastic_simulations(model,var_name,hist,fcast_range,Npaths=1000,quantiles
     for k in range(Npaths):
         count,yIter,max_f,elapsed = simulate(model=model,T=T+2,periods=None,y0=y0,steady_state=steady_state)
         y = yIter[-1]
-        results.append(y[:,ind])
+        results.append(y[:,index])
     results = np.array(results)
 
     series = []
@@ -411,4 +418,3 @@ def stochastic_simulations(model,var_name,hist,fcast_range,Npaths=1000,quantiles
         series.append(ts)
         
     return series
-    

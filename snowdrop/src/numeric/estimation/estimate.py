@@ -29,7 +29,7 @@ from snowdrop.src.utils.prettyTable import PrettyTable
  
 it = 0; itr = 0 
 F,B,R,Q,Qm_,Hm_ = None,None,None,None,None,None 
-LARGE_NUMBER = 1e6
+LARGE_NUMBER = 1.e8
 est_shocks_names = [] 
  
 ESTIMATE_PARAMETERS_STDS = True 
@@ -90,6 +90,9 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
     else: 
         meas_shocks = [] 
         n_meas_shocks = 0 
+        
+    if steady_state is None:
+        steady_state = np.zeros(n)
          
     # Get reference to measurement function 
     f_measurement = model.functions['f_measurement'] 
@@ -202,7 +205,7 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
             # Solve linear model 
             try: 
                 model.solved=False 
-                ls.solve(model=model,p=parameters,steady_state=np.zeros(n),suppress_warnings=True) 
+                ls.solve(model=model,p=parameters,steady_state=steady_state,suppress_warnings=True) 
                 # State transition matrix 
                 F = np.copy(model.linear_model["A"]) 
                 F1 = F[:n,:n] 
@@ -463,10 +466,10 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
     with warnings.catch_warnings(): 
         warnings.simplefilter("ignore") 
          
-        # METHODS :'SLSQP','Powell','CG','BFGS','Newton-CG' ,'L-BFGS-B','TNC','COBYLA','trust-constr','dogleg','trust-ncg','trust-exact','trust-krylov' 
+        # METHODS :'SLSQP','Powell','CG','BFGS',L-BFGS-B','TNC','COBYLA','trust-constr','dogleg','trust-ncg','trust-exact','trust-krylov' 
         # Bounds on variables are available for: Nelder-Mead, L-BFGS-B, TNC, SLSQP, Powell, and trust-constr methods 
         if ESTIMATE_PARAMETERS_STDS: 
-            calibration_results = minimize(fun=fobj,x0=initial_values,method="L-BFGS-B",bounds=bounds,tol=1.e-7,options={'disp':False,'maxiter':100000}) 
+            calibration_results = minimize(fun=fobj,x0=initial_values,method=algorithm,bounds=bounds,tol=1.e-7,options={'disp':False,'maxiter':100000}) 
             # if hasattr(calibration_results,"hess_inv"):
             #     hess_inv = calibration_results.hess_inv.todense() 
             #     if not np.all(np.linalg.eigvals(hess_inv) > 0):
@@ -477,13 +480,15 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
             nc = len(calibration_results.x)
             hess = np.zeros(nc)
             f = np.zeros(3)
-            delta = 1.e-4
+            delta = 1.e-5
             for i in range(nc):
-                x = np.copy(calibration_results.x)
+                x0 = np.copy(calibration_results.x)
+                x = np.copy(x0)
                 for m in range(3):
-                    x[i] += delta*(m-1)
+                    x[i] = x0[i] + delta*(m-1)
                     f[m] = fobj(x)
                 hess[i] = (f[2]-2*f[1]+f[0])/delta**2
+                
             params_std = [1./np.sqrt(abs(x)) if not x == 0 else np.nan for x in hess]     
                   
         else: 
@@ -513,7 +518,7 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
     else: 
         header = ['Name','Starting Value','Estimate','Std.']     
     pTable = PrettyTable(header) 
-    pTable.float_format = '7.5' 
+    pTable.float_format = '7.4' 
      
     # Estimated parameters 
     def_params = dict(zip([x for i,x in enumerate(param_names) if i in param_index],initial_values[:len(param_index)]))     
