@@ -430,7 +430,7 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
      
     ### Get covariance matrices 
     model.solved=False 
-    ls.solve(model=model,p=params,steady_state=np.zeros(n),suppress_warnings=True) 
+    ls.solve(model=model,p=params,steady_state=steady_state,suppress_warnings=True) 
     # State transition matrix 
     F = np.copy(model.linear_model["A"]) 
     F1 = F[:n,:n] 
