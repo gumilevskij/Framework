@@ -38,7 +38,7 @@ ESTIMATE_PARAMETERS_STDS = True
 def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
         ind_non_missing=None,fit_data_only=False,
         estimate_Posterior=True,estimate_ML=False,
-        algorithm="SLSQP",linearized=True): 
+        algorithm="SLSQP",linearized=True,debug=False): 
     """ 
     Estimates linear/nonlinear model parameters given measurement data. 
      
@@ -74,6 +74,7 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
      
     t0 = time()  
     var = model.calibration['variables'] 
+    var_names = model.symbols['variables'] 
     n, = var.shape 
     shocks = model.symbols['shocks'] 
     n_shocks = len(shocks) 
@@ -142,7 +143,7 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
                  
      
     ################################################### LINEAR MODEL 
-    if model.isLinear: 
+    if model.isLinear or linearized: 
  
         # Define objective function 
         def fobj(obj_parameters): 
@@ -269,8 +270,7 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
          
         # Define objective function 
         def fobj(obj_parameters): 
-            global it,F,C,R,Q 
-            global it, est_shocks_names 
+            global it,F,C,R,Q,est_shocks_names 
             it += 1 
             K=None; S=None; Sinv=None 
             # Initialize log-likelihood 
@@ -327,7 +327,7 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
                 return (LARGE_NUMBER + it) 
              
             count = 0; max_f = 1.0; bUnivariate = False 
-            TOLERANCE = 1.e-6; NITERATIONS = 1 if linearized else 100 
+            TOLERANCE = 1.e-6; NITERATIONS = 10
             y = np.zeros((T+2,n))
             y[:] = y0; yprev = np.copy(y) 
              
@@ -338,8 +338,9 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
                     # Initialize covariance matrix 
                     P = np.copy(Pstar) 
                     for t in range(nt): 
-                        if t==0 or not linearized: 
+                        if t==0: 
                             F,C,R = getMatrices(model=model,n=n,y=y0) 
+                            F1 = F[:n,:n] 
                             Q = 0 
                             for i in range(1+model.max_lead_shock-model.min_lag_shock): 
                                 R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
@@ -389,18 +390,7 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
                 return (LARGE_NUMBER + it) 
           
     print("\nEstimating model parameters...") 
-     
-    if linearized and not model.isLinear: 
-        from snowdrop.src.numeric.solver.BinderPesaran import getMatrices
-        global F,C,R,Q 
-        ss = model.steady_state if bool(model.steady_state) else model.calibration["variables"]
-        F,C,R = getMatrices(model=model,n=n,y=ss) 
-        Q = 0 
-        for i in range(1+model.max_lead_shock-model.min_lag_shock): 
-            R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
-            Q += R1 @ Qm @ R1.T 
-    all_parameters = np.copy(params) 
-     
+
     # Find parameters bounds 
     lower = []; upper = []; initial_values = []; mp = {}
     for i,index in enumerate(param_index): 
@@ -428,26 +418,35 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
     upper = np.array(upper) 
     bounds = Bounds(lower,upper) 
      
-    ### Get covariance matrices 
-    model.solved=False 
-    ls.solve(model=model,p=params,steady_state=steady_state,suppress_warnings=True) 
-    # State transition matrix 
-    F = np.copy(model.linear_model["A"]) 
-    F1 = F[:n,:n] 
-    # Array of constants 
-    C = np.copy(model.linear_model["C"][:n]) 
-    # Matrix of coefficients of shocks 
-    R = model.linear_model["R"][:n] 
-    Q = 0 
-    for i in range(1+model.max_lead_shock-model.min_lag_shock): 
-        R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
-        Q += np.real(R1 @ Qm @ R1.T) 
+    all_parameters = np.copy(params) 
+         
+    if linearized and not model.isLinear: 
+        F,C,R = getMatrices(model=model,n=n,y=steady_state) 
+        F1 = F[:n,:n] 
+        Q = 0 
+        for i in range(1+model.max_lead_shock-model.min_lag_shock): 
+            R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
+            Q += R1 @ Qm @ R1.T 
+            
+    else:
+        model.solved=False 
+        ls.solve(model=model,p=params,steady_state=steady_state,suppress_warnings=True) 
+        # State transition matrix 
+        F = np.copy(model.linear_model["A"]) 
+        F1 = F[:n,:n] 
+        # Array of constants 
+        C = np.copy(model.linear_model["C"][:n]) 
+        # Matrix of coefficients of shocks 
+        R = model.linear_model["R"][:n] 
+        Q = 0 
+        for i in range(1+model.max_lead_shock-model.min_lag_shock): 
+            R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
+            Q += np.real(R1 @ Qm @ R1.T) 
          
     Nd = model.max_lead_shock - model.min_lag_shock 
     # Get starting values of matrix P 
-    if model.PRIOR is None: 
-        Pstar = np.copy(Q) 
-    elif model.PRIOR.value == PriorAssumption.StartingValues.value: 
+    Pstar = np.copy(Q) 
+    if model.PRIOR.value == PriorAssumption.StartingValues.value: 
         Pstar = np.copy(Q) 
     elif model.PRIOR.value == PriorAssumption.Diffuse.value: 
         from snowdrop.src.numeric.filters.utils import compute_Pinf_Pstar 
@@ -463,6 +462,26 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
         from scipy.linalg import solve_discrete_are  
         Pstar = solve_discrete_are(a=F1.T,b=Z.T,q=Q,r=Hm) 
  
+    if debug:
+        import matplotlib.pyplot as plt
+        md = 30
+        for id in range(n):
+            xd = np.zeros(md)
+            yd = np.zeros(md)
+            for jd in range(md):
+                x0 = np.array(initial_values)
+                xd[jd] = lower[id] + (upper[id]-lower[id])*jd/(md-1)
+                x0[id] = xd[jd]
+                yd[jd] = -fobj(x0)
+                # if abs(yd[jd]) > LARGE_NUMBER:
+                #     yd[jd] = np.nan
+            plt.plot(xd,yd)
+            plt.grid(True)
+            plt.title("Objective Function")
+            plt.ylabel("Likelihood")
+            plt.xlabel(var_names[id])
+            plt.show()
+            
     with warnings.catch_warnings(): 
         warnings.simplefilter("ignore") 
          
