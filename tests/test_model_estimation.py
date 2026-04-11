@@ -17,6 +17,7 @@ def test(fname='TOY/Ireland2004.yaml',fmeas='supplements/data/gpr_1948.csv'):
     from snowdrop.src.driver import importModel, estimate
 
     #fname = 'TOY/Ireland2004.yaml' # Ireland NK model example
+    #fmeas='supplements/data/gpr_1980.csv'
     fout = 'output/data/results.csv' # Results are saved in this file
     output_variables = None  # List of variables that will be plotted or displayed
 
@@ -27,12 +28,11 @@ def test(fname='TOY/Ireland2004.yaml',fmeas='supplements/data/gpr_1948.csv'):
     file_path = os.path.abspath(os.path.join(working_dir, 'supplements/models', fname))
 
     # Create model object
-    model = importModel(fname=file_path,Solver="Klein",
-                        Filter="Durbin_Koopman",Smoother="Durbin_Koopman",
-                        Prior="Diffuse",measurement_file_path=meas)
+    model = importModel(fname=file_path,Solver="Klein",Filter="Durbin_Koopman", 
+                        Prior="Equilibrium",measurement_file_path=meas)
     
     # Estimate model parameters
-    estimate(model=model,estimate_ML=True,
+    estimate(model=model,estimate_ML=True,algorithm="L-BFGS-B",
              fout=fout,output_variables=output_variables,
              Output=False,Plot=True)
    
