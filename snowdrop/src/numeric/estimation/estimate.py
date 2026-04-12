@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*- 
 """ 
 Created on Wed Jan 23 12:52:44 2019 
+Nonlinear model are approximated by linearizing them around steady state equilibrium.
  
 @author: AGoumilevski 
 """ 
@@ -18,7 +19,6 @@ os.chdir(working_dir)
 from snowdrop.src.misc.termcolor import cprint 
 from snowdrop.src.numeric.solver.util import getParameters  
 from snowdrop.src.numeric.solver.util import getCovarianceMatrix 
-from snowdrop.src.preprocessor.function import get_function_and_jacobian 
 from snowdrop.src.utils.distributions import getHyperParameters 
 from snowdrop.src.utils.distributions import pdf 
 from snowdrop.src.model.settings import PriorAssumption,FilterAlgorithm
@@ -38,7 +38,7 @@ ESTIMATE_PARAMETERS_STDS = True
 def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
         ind_non_missing=None,fit_data_only=False,
         estimate_Posterior=True,estimate_ML=False,
-        algorithm="SLSQP",linearized=True,debug=False): 
+        algorithm="SLSQP",debug=False): 
     """ 
     Estimates linear/nonlinear model parameters given measurement data. 
      
@@ -63,9 +63,7 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
                          Otherwise, calibrate model by maximizing sum of the prior likelihood of model parameters and the likelihood of model fit to data. 
         :type fit_data_only: bool. 
         :param estimate_ML: If True estimate maximum likelihood only. 
-        :type estimate_ML: bool. 
-        :param linearized: If True model transition matrices are computed at steady state.  Use this option to speed up calculations. 
-        :type linearized: bool. 
+        :type estimate_ML: bool.
         :returns: Numerical solution. 
     """ 
     
@@ -132,262 +130,122 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
             est_shocks_names.append(std_v) 
             est_shocks_std.append(cal[std_v]) 
          
-    def func(ytm,yt,ytp,params): 
-        z = np.vstack((ytm,yt,ytp)) 
-        D,jacob = get_function_and_jacobian(model,params=params,y=z,order=1)   
-        F = jacob[:,0:n] 
-        C = jacob[:,n:2*n] 
-        L = jacob[:,2*n:3*n] 
-        jac = jacob[:,3*n:] 
-        return D,F,C,L,jac 
-                 
-     
-    ################################################### LINEAR MODEL 
-    if model.isLinear or linearized: 
- 
-        # Define objective function 
-        def fobj(obj_parameters): 
-            global it, est_shocks_names 
-            it += 1 
-            K=None; S=None; Sinv=None 
-            # Initialize log-likelihood 
-            log_prior_likelihood = 0; log_posterior_likelihood = 0; res = 0; residual = None 
-            parameters = np.copy(params) 
+    # Define objective function 
+    def fobj(obj_parameters): 
+        global it, est_shocks_names 
+        it += 1 
+        K=None; S=None; Sinv=None 
+        # Initialize log-likelihood 
+        log_prior_likelihood = 0; log_posterior_likelihood = 0; res = 0; residual = None 
+        parameters = np.copy(params) 
+         
+        # Find prior parameters distribution 
+        for i,index in enumerate(param_index): 
+            par = obj_parameters[i] 
+            parameters[index] = par 
+            prior = model.priors[param_names[index]] 
+            distr = prior['distribution'] 
+            pars  = np.copy(prior['parameters']) 
+            lower_bound = float(pars[1]) 
+            upper_bound = float(pars[2]) 
+            #print(par,lower_bound,upper_bound)
+            if par < lower_bound or par > upper_bound: 
+                return  (LARGE_NUMBER + it) 
+            else: 
+                # Get distribution hyperparameters 
+                if not distr.endswith("_hp"): 
+                    pars[3],pars[4] = getHyperParameters(distr=distr,mean=pars[3],std=pars[4]) 
+                x,b   = pdf(distr,par,pars) 
+                if not b:
+                    return  (LARGE_NUMBER + it)
+                log_prior_likelihood += np.log(max(1.e-10,x))
              
-            # Find prior parameters distribution 
-            for i,index in enumerate(param_index): 
-                par = obj_parameters[i] 
-                parameters[index] = par 
-                prior = model.priors[param_names[index]] 
-                distr = prior['distribution'] 
-                pars  = np.copy(prior['parameters']) 
-                lower_bound = float(pars[1]) 
-                upper_bound = float(pars[2]) 
-                #print(par,lower_bound,upper_bound)
-                if par < lower_bound or par > upper_bound: 
-                    return  (LARGE_NUMBER + it) 
-                else: 
-                    # Get distribution hyperparameters 
-                    if not distr.endswith("_hp"): 
-                        pars[3],pars[4] = getHyperParameters(distr=distr,mean=pars[3],std=pars[4]) 
-                    x,b   = pdf(distr,par,pars) 
-                    if not b:
-                        return  (LARGE_NUMBER + it)
-                    log_prior_likelihood += np.log(max(1.e-10,x))
+        # Find standard deviations of shocks  
+        calib = {} 
+        npar = len(param_index) 
+        for i,name in enumerate(est_shocks_names): 
+            par = obj_parameters[i+npar] 
+            calib[name] = obj_parameters[i+npar] 
+            prior = model.priors[name]
+            distr = prior['distribution'] 
+            pars  = np.copy(prior['parameters'])
+            lower_bound = float(pars[1]) 
+            upper_bound = float(pars[2]) 
+            if par < lower_bound or par > upper_bound: 
+                return  (LARGE_NUMBER + it) 
+            else: 
+                # Get distribution hyperparameters 
+                if not distr.endswith("_hp"): 
+                    pars[3],pars[4] = getHyperParameters(distr=distr,mean=pars[3],std=pars[4]) 
+                x,b   = pdf(distr,par,pars)
+                if not b:
+                    return  (LARGE_NUMBER + it)
+                log_prior_likelihood += np.log(max(1.e-10,x))
+          
+        # Set values of covariance matrix 
+        Qm,Hm = getCovarianceMatrix(Qm_,Hm_,calib,shocks,meas_shocks)
+             
+        if np.isnan(log_prior_likelihood) or np.isinf(log_prior_likelihood): 
+            return (LARGE_NUMBER + it) 
+                                  
+        # Solve linear model 
+        try: 
+            model.solved=False 
+            ls.solve(model=model,p=parameters,steady_state=steady_state,suppress_warnings=True) 
+            # State transition matrix 
+            F = np.copy(model.linear_model["A"]) 
+            F1 = F[:n,:n] 
+            # Array of constants 
+            C = np.copy(model.linear_model["C"][:n]) 
+            # Matrix of coefficients of shocks 
+            R = model.linear_model["R"][:n] 
+            # Initialize covariance matrix 
+            P = np.copy(Pstar)
+            Q = 0 
+            for i in range(1+model.max_lead_shock-model.min_lag_shock): 
+                R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
+                Q += np.real(R1 @ Qm @ R1.T) 
+                
+            bUnivariate = False 
+            ft = filtered = np.copy(y0) 
+         
+            for t in range(nt): 
+                if not model.FILTER is None and model.FILTER.value == FilterAlgorithm.Non_Diffuse_Filter.value:
+                    ft,filtered,residual,P,_,K,S,Sinv,bUnivariate,loglk  = \
+                        dk_non_diffuse_filter(x=ft,xtilde=filtered,y=obs[t],T=F1,Z=Z,P=P,Q=Q,H=Hm,C=C,bUnivariate=bUnivariate,ind_non_missing=ind_non_missing[t]) 
+                elif model.FILTER.value == FilterAlgorithm.Durbin_Koopman.value: 
+                    ft,filtered,residual,P,K,S,Sinv,loglk = \
+                        dk_filter(x=ft,xtilde=filtered,y=obs[t],v=residual,T=F1,Z=Z,P=P,H=Hm,Q=Q,K=K,C=C,ind_non_missing=ind_non_missing[t],t=t)
                  
-            # Find standard deviations of shocks  
-            calib = {} 
-            npar = len(param_index) 
-            for i,name in enumerate(est_shocks_names): 
-                par = obj_parameters[i+npar] 
-                calib[name] = obj_parameters[i+npar] 
-                prior = model.priors[name]
-                distr = prior['distribution'] 
-                pars  = np.copy(prior['parameters'])
-                lower_bound = float(pars[1]) 
-                upper_bound = float(pars[2]) 
-                if par < lower_bound or par > upper_bound: 
-                    return  (LARGE_NUMBER + it) 
+                res += np.sum(residual**2) 
+                if np.isnan(loglk): 
+                    return (LARGE_NUMBER + it) 
                 else: 
-                    # Get distribution hyperparameters 
-                    if not distr.endswith("_hp"): 
-                        pars[3],pars[4] = getHyperParameters(distr=distr,mean=pars[3],std=pars[4]) 
-                    x,b   = pdf(distr,par,pars)
-                    if not b:
-                        return  (LARGE_NUMBER + it)
-                    log_prior_likelihood += np.log(max(1.e-10,x))
-              
-            # Set values of covariance matrix 
-            Qm,Hm = getCovarianceMatrix(Qm_,Hm_,calib,shocks,meas_shocks)   
-                 
-            if np.isnan(log_prior_likelihood) or np.isinf(log_prior_likelihood): 
-                return (LARGE_NUMBER + it) 
-                                      
-            # Solve linear model 
-            try: 
-                model.solved=False 
-                ls.solve(model=model,p=parameters,steady_state=steady_state,suppress_warnings=True) 
-                # State transition matrix 
-                F = np.copy(model.linear_model["A"]) 
-                F1 = F[:n,:n] 
-                # Array of constants 
-                C = np.copy(model.linear_model["C"][:n]) 
-                # Matrix of coefficients of shocks 
-                R = model.linear_model["R"][:n] 
-                # Initialize covariance matrix 
-                P = np.copy(Pstar) 
-                Q = 0 
-                for i in range(1+model.max_lead_shock-model.min_lag_shock): 
-                    R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
-                    Q += np.real(R1 @ Qm @ R1.T) 
+                    log_posterior_likelihood += loglk 
                      
-                bUnivariate = False 
-                ft = filtered = np.copy(y0) 
+            # update progress bar 
+            if it%10 == 0: 
+                sys.stdout.write("\b") 
+                sys.stdout.write("..") 
+                sys.stdout.flush() 
+                
+            if fit_data_only: 
+                likelihood = -res  
+            elif estimate_ML: 
+                likelihood = log_posterior_likelihood 
+            elif estimate_Posterior: 
+                likelihood = log_prior_likelihood + log_posterior_likelihood 
+                
+            if it%400 == 0:  
+                cprint(f"\nIteration: {it}, Likelihood: {likelihood:.2f}","blue")
              
-                for t in range(nt): 
-                    if not model.FILTER is None and model.FILTER.value == FilterAlgorithm.Non_Diffuse_Filter.value:
-                        ft,filtered,residual,P,_,K,S,Sinv,bUnivariate,loglk  = \
-                            dk_non_diffuse_filter(x=ft,xtilde=filtered,y=obs[t],T=F1,Z=Z,P=P,Q=Q,H=Hm,C=C,bUnivariate=bUnivariate,ind_non_missing=ind_non_missing[t]) 
-                    elif model.FILTER.value == FilterAlgorithm.Durbin_Koopman.value: 
-                        ft,filtered,residual,P,K,S,Sinv,loglk = \
-                            dk_filter(x=ft,xtilde=filtered,y=obs[t],v=residual,T=F1,Z=Z,P=P,H=Hm,Q=Q,K=K,C=C,ind_non_missing=ind_non_missing[t],t=t)
-                     
-                    res += np.sum(residual**2) 
-                    if np.isnan(loglk): 
-                        return (LARGE_NUMBER + it) 
-                    else: 
-                        log_posterior_likelihood += loglk 
-                         
-                # update progress bar 
-                if it%10 == 0: 
-                    sys.stdout.write("\b") 
-                    sys.stdout.write("..") 
-                    sys.stdout.flush() 
-                    
-                    
-                if fit_data_only: 
-                    likelihood = -res  
-                elif estimate_ML: 
-                    likelihood = log_posterior_likelihood 
-                elif estimate_Posterior: 
-                    likelihood = log_prior_likelihood + log_posterior_likelihood 
-                    
-                if it%400 == 0:  
-                    cprint(f"\nIteration: {it}, Likelihood: {likelihood:.2f}","blue")
-                 
-                #print('prior likelihood: ',-log_prior_likelihood, 'posterior likelihood: ',-log_posterior_likelihood) 
-                return -likelihood 
-             
-            except: 
-                #print(log_posterior,params) 
-                return (LARGE_NUMBER + it) 
+            #print('prior likelihood: ',-log_prior_likelihood, 'posterior likelihood: ',-log_posterior_likelihood) 
+            return -likelihood 
          
-    ################################################### NON-LINEAR MODEL 
-    else: 
+        except: 
+            #print(log_posterior,params) 
+            return (LARGE_NUMBER + it) 
          
-        from numpy.linalg import norm 
-        from snowdrop.src.numeric.solver.BinderPesaran import getMatrices 
-         
-        # Define objective function 
-        def fobj(obj_parameters): 
-            global it,F,C,R,Q,est_shocks_names 
-            it += 1 
-            K=None; S=None; Sinv=None 
-            # Initialize log-likelihood 
-            log_prior_likelihood = 0; log_posterior_likelihood = 0; res = 0; residual = None 
-            parameters = np.copy(params) 
-             
-            # Find prior parameters distribution 
-            for i,index in enumerate(param_index): 
-                par = obj_parameters[i] 
-                parameters[index] = par 
-                prior = model.priors[param_names[index]] 
-                distr = prior['distribution'] 
-                pars  = np.copy(prior['parameters']) 
-                lower_bound = float(pars[1]) 
-                upper_bound = float(pars[2]) 
-                #print(par,lower_bound,upper_bound)
-                if par < lower_bound or par > upper_bound: 
-                    return  (LARGE_NUMBER + it) 
-                else: 
-                    # Get distribution hyperparameters 
-                    if not distr.endswith("_hp"): 
-                        pars[3],pars[4] = getHyperParameters(distr=distr,mean=pars[3],std=pars[4]) 
-                    x,b   = pdf(distr,par,pars) 
-                    if not b:
-                        return  (LARGE_NUMBER + it)
-                    log_prior_likelihood += np.log(max(1.e-10,x))
-                 
-            # Find standard deviations of shocks  
-            calib = {} 
-            npar = len(param_index) 
-            for i,name in enumerate(est_shocks_names): 
-                par = obj_parameters[i+npar] 
-                calib[name] = obj_parameters[i+npar] 
-                prior = model.priors[name]
-                distr = prior['distribution'] 
-                pars  = np.copy(prior['parameters'])
-                lower_bound = float(pars[1]) 
-                upper_bound = float(pars[2]) 
-                if par < lower_bound or par > upper_bound: 
-                    return  (LARGE_NUMBER + it) 
-                else: 
-                    # Get distribution hyperparameters 
-                    if not distr.endswith("_hp"): 
-                        pars[3],pars[4] = getHyperParameters(distr=distr,mean=pars[3],std=pars[4]) 
-                    x,b   = pdf(distr,par,pars)
-                    if not b:
-                        return  (LARGE_NUMBER + it)
-                    log_prior_likelihood += np.log(max(1.e-10,x))
-              
-            # Set values of covariance matrix 
-            Qm,Hm = getCovarianceMatrix(Qm_,Hm_,calib,shocks,meas_shocks)   
-                 
-            if np.isnan(log_prior_likelihood) or np.isinf(log_prior_likelihood): 
-                return (LARGE_NUMBER + it) 
-             
-            count = 0; max_f = 1.0; bUnivariate = False 
-            TOLERANCE = 1.e-6; NITERATIONS = 10
-            y = np.zeros((T+2,n))
-            y[:] = y0; yprev = np.copy(y) 
-             
-            try: 
-                while (max_f > TOLERANCE and count < NITERATIONS): 
-                    count += 1 
-                    filtered = yprev[0]; ft = np.copy(filtered); res = 0 
-                    # Initialize covariance matrix 
-                    P = np.copy(Pstar) 
-                    for t in range(nt): 
-                        if t==0: 
-                            F,C,R = getMatrices(model=model,n=n,y=y0) 
-                            F1 = F[:n,:n] 
-                            Q = 0 
-                            for i in range(1+model.max_lead_shock-model.min_lag_shock): 
-                                R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
-                                Q += R1 @ Qm @ R1.T 
-                            # Compute constant matrix 
-                            #C = yprev[t+1] - F @ yprev[t] + C 
-                        
-                        # Apply Kalman filter to find log-likelyhood 
-                        if not model.FILTER is None and model.FILTER.value == FilterAlgorithm.Non_Diffuse_Filter.value:
-                            ft,filtered,residual,P,_,K,S,Sinv,bUnivariate,loglk  = \
-                                dk_non_diffuse_filter(x=ft,xtilde=filtered,y=obs[t],T=F1,Z=Z,P=P,Q=Q,H=Hm,C=C,bUnivariate=bUnivariate,ind_non_missing=ind_non_missing[t]) 
-                        elif model.FILTER.value == FilterAlgorithm.Durbin_Koopman.value: 
-                            ft,filtered,residual,P,K,S,Sinv,loglk = \
-                                dk_filter(x=ft,xtilde=filtered,y=obs[t],v=residual,T=F1,Z=Z,P=P,H=Hm,Q=Q,K=K,C=C,ind_non_missing=ind_non_missing[t],t=t)
-                         
-                        res += np.sum(residual**2) 
-                        if np.isnan(loglk): 
-                            return (LARGE_NUMBER + it) #np.inf 
-                        else: 
-                            log_posterior_likelihood += loglk 
-                        y[t+1] = filtered 
-                         
-                    max_f = norm(yprev-y)/max(1.e-10,norm(y)) 
-                    yprev = np.copy(y) 
-                         
-                # update progress bar 
-                if it%10 == 0: 
-                    sys.stdout.write("\b") 
-                    sys.stdout.write("..") 
-                    sys.stdout.flush() 
-                         
-                if fit_data_only: 
-                    likelihood = -res  
-                elif estimate_ML: 
-                    likelihood = log_posterior_likelihood 
-                elif estimate_Posterior: 
-                    likelihood = log_prior_likelihood + log_posterior_likelihood 
-                 
-                if it%400 == 0:  
-                    cprint(f"\nIteration: {it}, Likelihood: {likelihood:.2f}","blue")
-                 
-                #print('prior likelihood: ',-log_prior_likelihood, 'posterior likelihood: ',-log_posterior_likelihood) 
-                return -likelihood 
-             
-            except: 
-                #print(log_prior_likelihood,log_likelihood,params) 
-                return (LARGE_NUMBER + it) 
           
     print("\nEstimating model parameters...") 
 
@@ -420,33 +278,26 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
      
     all_parameters = np.copy(params) 
          
-    if linearized and not model.isLinear: 
-        F,C,R = getMatrices(model=model,n=n,y=steady_state) 
-        F1 = F[:n,:n] 
-        Q = 0 
-        for i in range(1+model.max_lead_shock-model.min_lag_shock): 
-            R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
-            Q += R1 @ Qm @ R1.T 
-            
-    else:
-        model.solved=False 
-        ls.solve(model=model,p=params,steady_state=steady_state,suppress_warnings=True) 
-        # State transition matrix 
-        F = np.copy(model.linear_model["A"]) 
-        F1 = F[:n,:n] 
-        # Array of constants 
-        C = np.copy(model.linear_model["C"][:n]) 
-        # Matrix of coefficients of shocks 
-        R = model.linear_model["R"][:n] 
-        Q = 0 
-        for i in range(1+model.max_lead_shock-model.min_lag_shock): 
-            R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
-            Q += np.real(R1 @ Qm @ R1.T) 
-         
+    model.solved=False 
+    ls.solve(model=model,p=params,steady_state=steady_state,suppress_warnings=True) 
+    # State transition matrix 
+    F = np.copy(model.linear_model["A"]) 
+    F1 = F[:n,:n] 
+    # Array of constants 
+    C = np.copy(model.linear_model["C"][:n]) 
+    # Matrix of coefficients of shocks 
+    R = model.linear_model["R"][:n] 
+    Q = 0 
+    for i in range(1+model.max_lead_shock-model.min_lag_shock): 
+        R1 = R[:n,i*n_shocks:(1+i)*n_shocks] 
+        Q += np.real(R1 @ Qm @ R1.T) 
+     
     Nd = model.max_lead_shock - model.min_lag_shock 
     # Get starting values of matrix P 
     Pstar = np.copy(Q) 
-    if model.PRIOR.value == PriorAssumption.StartingValues.value: 
+    if model.PRIOR is None: 
+        Pstar = np.copy(Q) 
+    elif model.PRIOR.value == PriorAssumption.StartingValues.value: 
         Pstar = np.copy(Q) 
     elif model.PRIOR.value == PriorAssumption.Diffuse.value: 
         from snowdrop.src.numeric.filters.utils import compute_Pinf_Pstar 
@@ -493,7 +344,7 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
             #     hess_inv = calibration_results.hess_inv.todense() 
             #     if not np.all(np.linalg.eigvals(hess_inv) > 0):
             #         cprint("The hessian matrix not positive semi-definite: \ntry to change the initial values of the parameters!","red")
-            #     params_std = [np.sqrt(abs(hess_inv[i,i])) if not hess_inv[i,i] == 0 else np.inf for i in range(hess_inv.shape[0])]     
+            #     params_std = [1/np.sqrt(abs(hess_inv[i,i])) if not hess_inv[i,i] == 0 else np.inf for i in range(hess_inv.shape[0])]     
             # 
             # Brute force calculations  
             nc = len(calibration_results.x)
