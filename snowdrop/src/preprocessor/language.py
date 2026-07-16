@@ -17,6 +17,7 @@ functions = {
     'sin':        math.sin,
     'cos':        math.cos,
     'tan':        math.tan,
+    'atan':       math.atan,
     'Max':        Max,
     'Min':        Min,
     'sign':       sign,

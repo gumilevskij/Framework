@@ -8,7 +8,7 @@ import copy
 import ast
 from yaml import ScalarNode
 
-known_functions = ['log','exp','sin','cos','tan','max','min','Max','Min','Heaviside','abs','sign','IfThenElse','IfThen','Positive','Negative','LambertW','myzif']
+known_functions = ['log','exp','sin','cos','tan','atan','max','min','Max','Min','Heaviside','abs','sign','IfThenElse','IfThen','Positive','Negative','LambertW','myzif']
 Expression = ast.Expr
 
 from ast import UnaryOp, UAdd, USub, Name, Load, Call

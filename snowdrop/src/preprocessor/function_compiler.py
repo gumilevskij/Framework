@@ -274,6 +274,7 @@ def compile_higher_order_function(equations,syms,params,syms_exog=[],eq_vars=[],
         txt += """
     import numpy as np
     from numpy import exp, sin, cos, tan, sqrt, sign, log
+    from math import atan
         
 """
     n_syms = len(syms)
@@ -522,7 +523,7 @@ def compile_function(equations,syms,params,syms_exog=[],eq_vars=[],function_name
     if b:
         txt += """
     import jax.numpy as np
-    from jax.numpy import log,exp,sin,cos,tan,sqrt,sign
+    from jax.numpy import log,exp,sin,cos,tan,atan,sqrt,sign
     from jax.numpy import maximum as Max, minimum as Min, abs as Abs
     
 """
@@ -531,6 +532,7 @@ def compile_function(equations,syms,params,syms_exog=[],eq_vars=[],function_name
     import numpy as np
     from numpy import log,exp,sin,cos,tan,sqrt,sign
     from numpy import maximum as Max, minimum as Min, abs as Abs
+    from math import atan
     
 """
     txt += "    # Initialize variables\n"
@@ -659,6 +661,7 @@ Parameters:
     import numpy as np
     from numpy import log,exp,sin,cos,tan,sqrt,sign
     from numpy import maximum as Max, min as Min, abs as Abs
+    from math import atan
      
 """   
     txt += "    # Initialize variables\n"

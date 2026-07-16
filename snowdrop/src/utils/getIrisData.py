@@ -188,8 +188,8 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
     var_labels = []; meas_labels = []; shock_labels = []; param_labels = []
     for txt in [txtEndogVars,txtMeasVar,txtParams,txtShocks]:
         var = []
+        i += 1
         for t in txt:
-            i += 1
             s = t.replace('\t',' ').strip()
             arr = [s for s in re.split(r"[);\W]+", s)]
             if s.startswith("'") or s.startswith('"'):
@@ -197,14 +197,16 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
             else:
                 v = arr[0]
             var.append(v)
-            lbl = t.replace(v,"").replace('"','').replace("'","").strip()
+            lbl = t.replace('\t',' ').replace('\r\n','').replace('\n','').replace('"','').replace("'","").strip()
+            if lbl.endswith(v):
+                lbl = lbl[:-len(v)].strip()
             if lbl.startswith("%"):
                 lbl = lbl[1:].strip()
-            if i <= len(txtEndogVars):
+            if i == 1:
                 var_labels.append(lbl)
-            elif i <= len(txtEndogVars) + len(txtMeasVar):
+            elif i == 2:
                 meas_labels.append(lbl)
-            elif i <= len(txtEndogVars) + len(txtMeasVar) + len(txtParams):
+            elif i == 3:
                 param_labels.append(lbl)
             else:
                 shock_labels.append(lbl)
