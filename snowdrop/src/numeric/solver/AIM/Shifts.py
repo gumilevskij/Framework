@@ -42,7 +42,7 @@ def Shiftright(x,n):
     left  = list(range(0,cols-n))
     right = list(range(n,cols))
     
-    y = np.matrix(np.zeros(shape=((rows,cols))))
+    y = np.zeros(shape=(rows,cols))
     y[np.ix_(list(range(0,rows)),right)] = x[list(range(0,rows)),:][:,left].toarray()
     
     return y

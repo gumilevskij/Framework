@@ -5,7 +5,7 @@ from scipy import linalg as la
 
 def reducedForm(qq,qrows,qcols,bcols,neq,condn):
     """
-    Compute reduced-form coefficient matrix, b.
+    Compute reduced-form coefficient ndarray, b.
     
     Original author: Gary Anderson
     Original file downloaded from:

@@ -115,8 +115,8 @@ def getYamlModel(fpath,calibration={},labels={},options={},use_cache=False,debug
         model : Model.
             Model object.
     """
-    from model.model import Model
-    from model.factory import import_model
+    from snowdrop.src.model.model import Model
+    from snowdrop.src.model.factory import import_model
     
     file_path = os.path.abspath(os.path.join(path,fpath))
     fname, ext = os.path.splitext(file_path)
@@ -125,8 +125,8 @@ def getYamlModel(fpath,calibration={},labels={},options={},use_cache=False,debug
     
     if use_cache and model_file_exist:
         
-        from utils.interface import loadModel
-        from preprocessor.util import updateFiles
+        from snowdrop.src.utils.interface import loadModel
+        from snowdrop.src.preprocessor.util import updateFiles
         
         model = loadModel(model_path)
         updateFiles(model,path+"/../preprocessor")
@@ -184,7 +184,7 @@ def getYamlModel(fpath,calibration={},labels={},options={},use_cache=False,debug
             print("\nParameters:\n{mp}")
         
         # Serialize model into file
-        from utils.interface import saveModel
+        from snowdrop.src.utils.interface import saveModel
         saveModel(model_path,model)
     
     return model

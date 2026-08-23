@@ -27,7 +27,9 @@ At its core, `Snowdrop` is a versatile Python package designed for the analysis 
 
 Each of these applications has its own advantage. The ease of use through a user-friendly interface, combined with the capability to handle a variety of models, has led to the immense popularity of *DYNARE* among general equilibrium modelers. However, *DYNARE* can only handle stationary *DSGE* models and requires users to write models in a stationary format by introducing variable deflators. The *IRIS* macroeconomic toolbox is another excellent tool that has gained popularity among economists for analyzing non-stationary *DSGE* models. *TROLL*, on the other hand, specializes in efficiently solving and simulating large systems of equations. All these applications, however, are either commercial or are relying on commercial software that requires expensive licensing costs. To our knowledge, there is no integrated software package that is flexible enough to handle a wide range of models and available for free under the GNU General Public License agreements. This framework aims to fill that void. 
 
-`Snowdrop` is designed to assist economists and others in developing and analyzing complex economic problems.   Benchmarking this software against the *DYNARE* and *IRIS* toolboxes for small to medium-sized models with several hundred equations demonstrates comparable CPU execution times but a smaller memory footprint, due to the significant memory requirements of *MATLAB*.
+`Snowdrop` is designed to assist economists and others in developing and analyzing complex economic problems.   Benchmarking this software against the *DYNARE* and *IRIS* toolboxes for small to medium-sized models with several hundred equations demonstrates comparable CPU execution times but a smaller memory footprint, due to the significant memory requirements of *MATLAB*. `Snowdrop` implements several methods to solve model equations that have been tested against solutions of *DYNARE* and *IRIS*.
+
+This toolkit is compatible with both CPU and GPU across Windows, macOS, and Linux operating systems. For tasks requiring high computational power, we recommend using GPU machines with the CuPy library installed. This library will be utilized by the platform’s non-linear solver.
 
 
 ## Highlights
@@ -37,7 +39,7 @@ Each of these applications has its own advantage. The ease of use through a user
 - Linear models are solved with *Binder Pesaran's* method, *Anderson and More's* method and two generalized *Schur's* method that reproduce calculations employed in *Dynare* and *Iris*.
 - Non-linear models can be run with time dependent parameters.
 - Goodness of fit of model data can be checked via the *Bayesian* approach to the maximization of likelihood functions.
-- Model parameters can be sampled via the *Markov Chain Monte Carlo* affine invariant ensemble sampler algorithm of Jonathan Goodman and an adaptive Metropolis-Hasting’s algorithms of Paul Miles. The former algorithm is useful for sampling badly scaled distributions of parameters. The later algorithm employs adaptive Metropolis methods that incorporate delayed rejection to stimulate samples’ states mixing.
+- Model parameters can be sampled via the *Markov Chain Monte Carlo* affine invariant ensemble sampler algorithm of Jonathan Goodman and an adaptive Metropolis-Hasting’s algorithms of Paul Miles. The former algorithm is useful for sampling badly scaled distributions of parameters. The latter algorithm employs adaptive Metropolis methods that incorporate delayed rejection to stimulate samples’ states mixing.
 - Finally, `Snowdrop` streamlines the model production process by aiding users with the plotting and model reporting and storage process.
 
 `Snowdrop` model file is essential for conducting simulations and analyses. It is written in *YAML* format in a manner that is familiar to *DYNARE* and *IRIS* users. Running a model involves the following steps:
@@ -54,19 +56,21 @@ For example, the following specifies a simple monetary policy model with lagged 
     name:  Monetary policy model example
     symbols:
       variables: [PDOT,RR,RS,Y]
-      exogenous: [ers]
+      exogenous: [exo]
       shocks: [ey]
       parameters: [g,p1,p2,p3,p4,p5,p6,p7]
       equations:
        - PDOT=p1*PDOT(+1)+(1-p1)*PDOT(-1)+p2*(g^2/(g-Y)-g)+p3*(g^2/(g-Y(-1))-g)
        - RR=RS-p1*PDOT(+1)-(1-p1)*PDOT(-1)
-       - RS=p4*PDOT+Y+ers
+       - RS=p4*PDOT+Y+exo
        - Y=p5*Y(-1)-p6*RR-p7*RR(-1)+ey
       calibration:
        #Parameters
        g: 0.049
-       #Set time varying parameters; the last value will be used for the rest of this array
+       #Set time varying parameters; the last value will be used 
+       #for the rest of this array
        p1: 0.414 #[0.4,0.5,0.6]
+       exo: [0,0,0,0.03,0]
        std: 0.02
     options:
        T: 14
@@ -80,7 +84,7 @@ This toolkit provides users with an integrated Framework to input their models, 
 
 ![Monetary Policy Example\label{fig:1}](Decomposition.png)
 
-Another example illustrates the economic effects of the pandemic. We used the Eichenbaum-Rebelo-Trabandt (ERT) model [@Eichenbaum], which embeds epidemiological concepts into a New Keynesian modeling framework. We assumed that there are two strains of pathogens and employed a Suspected-Infected-Recovered (SIR) epidemiological model. These epidemiological equations were incorporated into the ERT model, consisting of sixty-four equations of macroeconomic variables from sticky and flexible price economies. The macroeconomic variables of these two economies were linked through a Taylor rule equation for the policy interest rate. The model is highly non-linear and is solved using a homotopy method, where parameters are adjusted step-by-step. We assumed that government containment measures were more lenient during the second strain of the virus compared to the first one. Figures 2 and 3 illustrate the forecast of virus transmission and deviations of macroeconomic variables from their steady state.
+Another example illustrates the economic effects of the pandemic. We used the Eichenbaum-Rebelo-Trabandt (ERT) model [@Eichenbaum], which embeds epidemiological concepts into a New Keynesian modeling framework. We assumed that there are two strains of pathogens and employed a Suspected-Infected-Recovered (SIR) epidemiological model. These epidemiological equations were incorporated into the ERT model, consisting of sixty-four equations of macroeconomic variables for sticky and flexible price economies. The macroeconomic variables of these two economies were linked through a Taylor rule equation for the bond interest rate. The model is highly non-linear and is solved using a homotopy method, where parameters are adjusted step-by-step. We assumed that government containment measures were more lenient during the second strain of the virus compared to the first one. Figures 2 and 3 illustrate the forecast of virus transmission and deviations of macroeconomic variables from their steady state.
 
 ![Epidemic Forecast\label{fig:2}](Virus.png)
 

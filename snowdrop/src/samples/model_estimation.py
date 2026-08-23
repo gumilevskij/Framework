@@ -9,7 +9,6 @@ import sys
 
 path = os.path.dirname(os.path.abspath(__file__))
 working_dir = os.path.abspath(path+"/../../..")
-sys.path.append(working_dir)
 os.chdir(working_dir)
 
 def estimate(fname='TOY/Ireland2004.yaml',fmeas='supplements/data/gpr_1948.csv'):

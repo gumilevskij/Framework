@@ -35,3 +35,12 @@ def log(x):
     else:
         return np.log(x)
     
+def re(x):
+    return np.real(x)
+
+def im(x):
+    return np.imag(x)
+
+def Derivative(*x):
+    return np.ones(len(x))
+    

@@ -210,18 +210,33 @@ def getAllShocks(model,periods,n_shocks,Npaths,T):
         if isinstance(shock_values,list) and len(shock_values)==1:
             if isinstance(shock_values[0],list):
                shock_values = shock_values[0] 
+    
     elif "shocks" in model.calibration:
         shock_values = model.calibration["shocks"]
     else:
         shock_values = np.zeros(n_shocks)
     shock_values = np.array(shock_values)
+    shock_names = model.symbols["shocks"]
         
     bPermanent= not "periods" in model.options
     all_shocks=[]
     for path in range(Npaths):
         if bStochastic:
             process = model.options['distribution']
-            shocks = np.squeeze(process.simulate(n_shocks,T+2))
+            shks = process.simulate(n_shocks,T+2)
+            if 'shock_values' in model.options:
+                shocks = np.zeros((shks.shape[0],shks.shape[1]))
+                # For each shock it computes non-diagonal terms and produces N by 2 matrix
+                # Select only diagonal components and produce vector.
+                j = 0
+                for i,sh in enumerate(shock_values):
+                    if np.isnan(sh):
+                        shocks[:,i] = shks[:,i,j]
+                        j += 1
+            else:
+                shocks = np.zeros((shks.shape[0],shks.shape[1]))
+                for i,sh in enumerate(shock_values):
+                    shocks[:,i] = shks[:,i,i]
         else:
             shocks = []
             i = 0
@@ -362,7 +377,8 @@ def getExogenousData(model,t=0):
         exog : List
             Exogenous data at time t.
     """
-    from snowdrop.src.utils.util import getExogenousSeries
+    from snowdrop.src.utils.util import getExogenousSeries 
+    from snowdrop.src.utils.util import findVariableLag, findVariableLead
     
     max_lead_exog = model.max_lead_exog
     min_lag_exog = model.min_lag_exog
@@ -379,6 +395,16 @@ def getExogenousData(model,t=0):
                 if exo in exog_data:
                     ser = exog_data[exo]
                     j = max(0,min(len(ser)-1,tt))
+                    val = ser[j]
+                elif '__m' in exo and exo[:exo.index('__m')] in exog_data:
+                    lag = findVariableLag(exo)
+                    ser = exog_data[exo[:exo.index('__m')]]
+                    j = max(0,min(len(ser)-1,tt+lag))
+                    val = ser[j]
+                elif '__p' in exo and exo[:exo.index('__p')] in exog_data:
+                    lead = findVariableLead(exo)
+                    ser = exog_data[exo[:exo.index('__m')]]
+                    j = max(0,min(len(ser)-1,tt+lead))
                     val = ser[j]
                 else:
                     val = 0
@@ -1999,19 +2025,19 @@ def getMatrices(model,n,y,t=None):
     R = model.linear_model["R"][:n]
     return A,C,R
 
-def getOneVarEqsSolution(lvars,lfunc,largs,leqs,mv,mp,exog_data,T):
+def getOneVarEqsSolution(lvar,lfun,larg,leq,mv,mp,exog_data,T,bHist=False):
     """
     Solve one variable equations.
     
     Parameters:
-        :param lvars: List of equations variables.
-        :type lvars: list.
-        :param lfunc: Compiled functions.
-        :type lfunc: list.
-        :param largs: Functions arguments.
-        :type largs: list.
-        :param leqs: Equations.
-        :type leqs: list.
+        :param lvar: List of equations variables.
+        :type lvar: list.
+        :param lfun: Compiled functions.
+        :type lfun: list.
+        :param larg: Functions arguments.
+        :type larg: list.
+        :param leq: Equations.
+        :type leq: list.
         :param mv: Values of variables.
         :type mv: dictionary.
         :param mp: Parameters.
@@ -2020,6 +2046,8 @@ def getOneVarEqsSolution(lvars,lfunc,largs,leqs,mv,mp,exog_data,T):
         :type exog_data: dictionary.
         :param T: Time span.
         :type T: int.
+        :param bHist: True if history and False if forecast.
+        :type bHist: bool.
         :returns: Dictionary of time series.
 
     """
@@ -2028,12 +2056,12 @@ def getOneVarEqsSolution(lvars,lfunc,largs,leqs,mv,mp,exog_data,T):
     from snowdrop.src.utils.util import findVariableLag
     from snowdrop.src.utils.util import findVariableLead
 
-    m = {}
+    m = {}; start = 0 if bHist else 1
     t0 = time()
-    for x,func,args,eq in zip(lvars,lfunc,largs,leqs):
+    for x,func,args,eq in zip(lvar,lfun,larg,leq):
         arr = []; bSuccess = True
         try:
-            for t in range(1,T):
+            for t in range(start,T):
                 lst = list()
                 for j in range(len(args)):
                     a = args[j]
@@ -2061,12 +2089,15 @@ def getOneVarEqsSolution(lvars,lfunc,largs,leqs,mv,mp,exog_data,T):
         if bSuccess: 
             m[x] = arr
             
-    for k in m:
-        if k in mv:
-            m[k] = [mv[k]] + m[k]
-               
-    elapsed = time() - t0
-    cprint(f"\nOne Variable Equation Solver: elapsed time {elapsed:.2f} (sec.)","blue")
+    if not bHist:
+        for k in m:
+            if k in mv:
+                m[k] = [mv[k]] + m[k]
+            else:
+                m[k] = [m[k][0]] + m[k]
+      
+    #elapsed = time() - t0
+    #cprint(f"\nOne Variable Equation Solver: elapsed time {elapsed:.2f} (sec.)","blue")
     return m
     
 # Original code from  https://yuminlee2.medium.com/union-find-algorithm-ffa9cd7d2dba               

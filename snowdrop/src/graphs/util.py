@@ -5,9 +5,10 @@ Created on Mon Mar  4 14:28:27 2019
 @author: A.Goumilevski
 """
 import os
+import warnings
 import numpy as np
 import pandas as pd
-from mpl_toolkits.mplot3d import Axes3D
+#from mpl_toolkits.mplot3d import Axes3D
 from math import pi, ceil
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -15,7 +16,6 @@ import matplotlib.dates as dates
 import matplotlib.style as style
 from matplotlib import ticker
 from pandas.plotting import register_matplotlib_converters
-import warnings
 from snowdrop.src.misc.termcolor import cprint
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
@@ -123,6 +123,11 @@ def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,perio
     shocks = model.symbols["shocks"]
     exog = model.symbols["exogenous"]
     
+    if not var_labels is None:
+        colors = getColors(n=len(var_labels))
+    else:
+        colors = getColors()
+    
     figs = []
     style.use(STYLE)
     formatter = mtick.PercentFormatter(xmax=1.0,decimals=1) 
@@ -179,7 +184,8 @@ def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,perio
             y = y[:T]
             data,var = decompose(model,y,variables_names,n,T,periods,isKF)
             var = [var_labels[k] if k in var_labels else k for k in var+shocks+exog]
-            colors,m_colors = getColors(var)
+            #colors,m_colors = getColors(var)
+            colors = getColors(n=len(var))
             if len(data) > 0:
                 j = [i for i,val in enumerate(variables_names) if val==n][0]
                 if k%(rows*columns) == 0:
@@ -201,7 +207,7 @@ def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,perio
                 # PLot bar graphs
                 bottomPlus = None
                 bottomMinus = None
-                labels = ["TOTAL"] + [correctLabel(k) for k in data]
+                labels = ["TOTAL"] + [correctLabel(var_labels,k) for k in data]
                 for key in data:
                     z = np.array(data[key])
                     zPlus = 0.5*(z+np.abs(z))
@@ -214,12 +220,12 @@ def plotDecomposition(path_to_dir,model,y,variables_names,decomp_variables,perio
                     # Stacked bar plots
                     if bottomPlus is None and bottomMinus is None:
                         ax.bar(ind, zPlus, width=barWidth, align='center', alpha=alpha, color=color,edgecolor="black")
-                        ax.bar(ind, zMinus, label = correctLabel(key), width=barWidth, align='center', alpha=alpha, color=color,edgecolor="black")
+                        ax.bar(ind, zMinus, label = correctLabel(var_labels,key), width=barWidth, align='center', alpha=alpha, color=color,edgecolor="black")
                         bottomPlus = zPlus
                         bottomMinus = zMinus
                     else:
                         ax.bar(ind, zPlus, bottom=bottomPlus, width=barWidth, align='center', alpha=alpha, color=color,edgecolor="black")
-                        ax.bar(ind, zMinus, label = correctLabel(key), bottom=bottomMinus, width=barWidth,align='center',alpha=alpha,color=colors[c],edgecolor="black")
+                        ax.bar(ind, zMinus, label = correctLabel(var_labels,key), bottom=bottomMinus, width=barWidth,align='center',alpha=alpha,color=colors[c],edgecolor="black")
                         bottomPlus += zPlus
                         bottomMinus += zMinus
                 ax.legend(loc="best",fontsize = 'medium')
@@ -603,10 +609,10 @@ def plot(path_to_dir,data,variable_names,sizes=None,figsize=None,meas_values=Non
         ax = plt.subplot(rows,columns,m)
         ax.tick_params(axis='both', labelsize=12)
         for i in range(Npaths):
-            if Npaths == 1:
-                y = data[-1]
-            else:
+            if np.ndim(data) == 3:
                 y = data[i]
+            else:
+                y = data
             dim1,dim2 = y.shape
             if rng is None:
                 T = min(dim1,Tmax)
@@ -815,14 +821,19 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
     #import matplotlib.gridspec as gridspec
     #from datetime import datetime 
     
+    import itertools
     from matplotlib.ticker import PercentFormatter
     import matplotlib.ticker as mtick
     
     formatter = mtick.PercentFormatter(xmax=100.,decimals=1) 
     
-    
     style.use(STYLE)
-    colors = getColors()
+    
+    if not labels is None:
+        flatten = list(itertools.chain.from_iterable(labels))
+        colors = getColors(n=len(flatten))
+    else:
+        colors = getColors()
     
     if not sizes is None:
         rows, columns = sizes
@@ -852,7 +863,7 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
     n_chunks = int(np.ceil(n_titles/chunk))
     barWidth = 70
     alpha = 1.0
-    e = None
+    e = None; data = {}
     for k in range(n_chunks):
         fig = plt.figure(figsize=fig_sizes)
         _titles = titles[k*chunk:(k+1)*chunk]
@@ -861,7 +872,12 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
             tmin,tmax = None,None
             b = False
             if i < len(_series):
+                b = True
                 entries = _series[i]
+                if not labels is None and i < len(labels):
+                    lbl = labels[i]
+                else:
+                    lbl = None
                 if isinstance(entries,pd.Series):
                     entries = entries.dropna()
                     if tmin is None: 
@@ -874,12 +890,12 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
                         tmax = max(tmax,max(entries.index))
                     if i == 0:
                         plt.title(t,loc='center',wrap=True)
-                        line, = plt.plot(entries,linewidth=3,color='k')
+                        line, = plt.plot(entries,linewidth=3,color='k',label=lbl)
                     else:
-                        line, = plt.plot(entries,linewidth=2,marker='',markersize=3,zorder=1)
+                        line, = plt.plot(entries,linewidth=2,marker='',markersize=3,zorder=1,label=lbl)
                         line.set_dashes([2,2,4,2])
                     if zero_line:
-                        plt.axhline(y=0,color='b',linestyle='-')
+                        plt.axhline(y=0,color='b',linestyle='-',linewidth=0.5)
                         
                 else:
                     if labels is None:
@@ -888,20 +904,8 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
                         lbls = labels[i] if i < len(labels) else []
                     n = len(entries)
                     c = -1
-                    bottomPlus,bottomMinus = 0,0 
-                    # width_ = 0.77/columns
-                    # height_ = 0.6/rows
-                    # left_ = (1-width_*columns)/2 + 0.9*(jj-1)/columns
-                    # bottom_ = min(0.93-height_,0.93-0.9*ii/rows+0.05)
-                    # if jj==columns:
-                    #     jj = 0
-                    #     ii += 1
-                    #print(ii,jj,left_,bottom_)
+                    bottomPlus,bottomMinus = 0,0
                     ax = plt.subplot(rows,columns,1+i)
-                    #pos = ax.get_position()
-                    #print(pos)
-                    #ax.set_position(np.array([left_,bottom_,width_,height_]))
-                    #print([left_,bottom_,width_,height_])
                     ax.set_title(t,loc='center',wrap=True)
                     if bPercent: ax.yaxis.set_major_formatter(formatter)
                     data = {}
@@ -919,6 +923,8 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
                                 tmax = max(e.index)
                             else:
                                 tmax = max(tmax,max(e.index))
+                            if not lbls is None:
+                                colors = getColors(n=len(lbls))
                             if j<len(lbls):
                                 lb = lbls[j]
                                 b = True
@@ -932,7 +938,7 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
                                 if j > 1:
                                     line.set_dashes([2,2,4,2])
                                 if zero_line:
-                                    plt.axhline(y=0,color='k',linestyle='-')
+                                    plt.axhline(y=0,color='k',linestyle='-',linewidth=0.5)
                 
                             else:
                                 data[lb] = e
@@ -965,7 +971,7 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
                                         bottomPlus += zPlus
                                         bottomMinus += zMinus
                                     if zero_line:
-                                        plt.axhline(y=0,color='k',linestyle='-')              
+                                        plt.axhline(y=0,color='k',linestyle='-',linewidth=0.5)              
                                 except Exception as exc:
                                     cprint(f"plotTimeSeries: Series - {lb}, Error - {exc}","red")
                                     
@@ -980,7 +986,7 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
             
             if b: 
                 if len(data)>0:
-                    plt.legend(loc="best",mode="expand",ncol=len(lbls),fontsize='medium')
+                    plt.legend(loc="best",mode="expand",ncol=min(6,len(lbls)),fontsize='medium')
                 else:
                     plt.legend(loc="best",fontsize='medium')
             plt.grid(True)
@@ -996,7 +1002,7 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
                     x1 = highlight[0]
                     x2 = highlight[1]
                 
-                ax.axvspan(x1,x2,color='gray',alpha=0.5) 
+                plt.axvspan(x1,x2,color='lightgray',alpha=0.2) 
     
         if len(titles) > 12:
             fig.autofmt_xdate(bottom=0.1, rotation=45, ha='right', which='major')
@@ -1007,6 +1013,7 @@ def plotTimeSeries(path_to_dir,header,titles,labels,series,sizes=None,fig_sizes=
             plt.show(block=False)
         
         _header = header if k==0 else header+"_"+str(k)
+        _header = _header.replace(":",", ")
         if save:
             if ext is None:
                 fig.savefig(os.path.join(path_to_dir,_header+".pdf"),dpi=600)
@@ -1762,32 +1769,46 @@ def rgb(col):
     
     return (R/255.,G/255.,B/255.)
 
-
-def getColors(variables=[]):
-    """Define RGB colors."""
-    DarkBlue  = rgb('DarkBlue')
-    Blue      = rgb('Blue')
-    Green     = rgb('Green')
-    Brown     = rgb('Brown')
-    Yellow    = rgb('Yellow'),
-    Turque    = rgb('Orange')
-    Pink      = rgb('Pink')
-    Orange    = rgb('Orange')
-    Red       = rgb('Red')
-    Grey      = rgb('Grey')
-    Turque    = rgb('Turque')
-    Purple    = rgb('Purple')
-    White     = rgb('White')
-    Black     = rgb('Black')
+seed = None
+def getColors(variables=[],n=14):
     
-    colors = [Blue,Yellow,Orange,Green,Brown,Pink,Turque,Purple,Red,DarkBlue,Grey,White,Black]
-    n  = len(colors)
-    mp = dict()
-    
-    if len(variables) > 0:    
-        for i,v in enumerate(variables):
-            ii = i%n
-            mp[v] = colors[ii]
-        return colors,mp
-    else:
+    if n > 14:
+        import seaborn as sns
+        global seed 
+        
+        palette = sns.color_palette("hsv",n)
+        if seed is None:
+            seed = np.random.randint(100)
+        rng = np.random.default_rng(seed=seed)
+        sample = np.arange(len(palette))
+        rnd = rng.choice(sample,size=n,replace=False)
+        colors = [palette[i] for i in rnd]
         return colors
+    else:
+        """Define RGB colors."""
+        DarkBlue  = rgb('DarkBlue')
+        Blue      = rgb('Blue')
+        Green     = rgb('Green')
+        Brown     = rgb('Brown')
+        Yellow    = rgb('Yellow')
+        Turque    = rgb('Orange')
+        Pink      = rgb('Pink')
+        Orange    = rgb('Orange')
+        Red       = rgb('Red')
+        Grey      = rgb('Grey')
+        Turque    = rgb('Turque')
+        Purple    = rgb('Purple')
+        White     = rgb('White')
+        Black     = rgb('Black')
+        
+        colors = [Blue,Yellow,Orange,Green,Turque,Purple,Brown,Pink,Red,DarkBlue,Grey,White,Black]
+        n  = len(colors)
+        mp = dict()
+        
+        if len(variables) > 0:    
+            for i,v in enumerate(variables):
+                ii = i%n
+                mp[v] = colors[ii]
+            return colors,mp
+        else:
+            return colors

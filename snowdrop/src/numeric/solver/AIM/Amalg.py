@@ -15,13 +15,13 @@ def Amalg(h,neq,nlag,nlead,condn,uprbnd):
     """  
       Solve a linear perfect foresight model using the matlab eig
       function to find the invariant subspace associated with the big
-      roots.  This procedure will fail if the companion matrix is
+      roots.  This procedure will fail if the companion ndarray is
       defective and does not have a linearly independent set of
       eigenvectors associated with the big roots.
     
       Input arguments:
      
-        h         Structural coefficient matrix (neq,neq*(nlag+1+nlead)).
+        h         Structural coefficient ndarray (neq,neq*(nlag+1+nlead)).
         neq       Number of equations.
         nlag      Number of lags.
         nlead     Number of leads.
@@ -32,9 +32,9 @@ def Amalg(h,neq,nlag,nlead,condn,uprbnd):
     
       Output arguments:
      
-        b         Reduced form coefficient matrix (neq,neq*nlag).
+        b         Reduced form coefficient ndarray (neq,neq*nlag).
         rts       Roots returned by eig.
-        ia        Dimension of companion matrix (number of non-trivial
+        ia        Dimension of companion ndarray (number of non-trivial
                   elements in rts).
         nexact    Number of exact shiftrights.
         nnumeric  Number of numeric shiftrights.
@@ -79,8 +79,8 @@ def Amalg(h,neq,nlag,nlead,condn,uprbnd):
     qrows = neq*nlead
     qcols = neq*(nlag+nlead)
     bcols = neq*nlag
-    qq = np.matrix(np.zeros(shape=((qrows,qcols))))
-    rts = np.matrix(np.zeros(shape=((qcols,1))))
+    qq = np.zeros(shape=((qrows,qcols)))
+    rts = np.zeros(shape=((qcols,1)))
     originalH = h
 
     # Compute the auxiliary initial conditions and store them in q.
@@ -96,7 +96,7 @@ def Amalg(h,neq,nlag,nlead,condn,uprbnd):
         return
 
 
-    #  Build the companion matrix.  Compute the stability conditions, and
+    #  Build the companion ndarray.  Compute the stability conditions, and
     #  combine them with the auxiliary initial conditions in q.  
 
     a, ia, js = buildA(h,qcols,neq)
@@ -142,13 +142,13 @@ if __name__ == '__main__':
     """
     The main program
     """
-    h = np.matrix([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    h = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                    [0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,-.98,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,-0.9702,0,0,0,0,0,0,0,0,0,-.886,0,0,0]])
     lead, lag, neq, condn, upbnd = 4, 4, 4, 0.00000001, 1.00000001
     
-    b, rts, ia, nexact, nnumeric, lgroots, aimcode = Amalg(h,neq,lag,lead,condn,upbnd)
+    b, phi, F, rts, ia, nexact, nnumeric, lgroots, aimcode = Amalg(h,neq,lag,lead,condn,upbnd)
     
     print()
     print("b = ")

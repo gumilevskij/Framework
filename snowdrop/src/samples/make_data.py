@@ -12,7 +12,9 @@ import numpy as np
 from math import ceil
 import matplotlib.pyplot as plt
 from datetime import datetime as dt
-import ruamel.yaml as yaml
+from ruamel.yaml import YAML
+import warnings
+
 
 working_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),"../../.."))
 os.chdir(working_dir)
@@ -23,15 +25,15 @@ from snowdrop.src.numeric.filters.filters import LRXfilter as lrx
 from snowdrop.src.numeric.sa.x13 import x13
 from snowdrop.src.graphs.util import plotTimeSeries
 from snowdrop.src.utils.load import read_file_or_url
- 
 
-bin_dir = os.path.abspath(os.path.join(working_dir,"bin"))
+bin_dir = os.path.abspath(os.path.join(working_dir,"snowdrop/bin"))
 if os.path.exists(bin_dir):
     sys_path = os.environ['PATH'] 
     if not bin_dir in sys_path:
         os.environ['PATH'] += ":" + bin_dir
     os.environ['X13PATH'] = bin_dir
-
+    
+warnings.filterwarnings('ignore')
     
 def makedata(Plot=False,save=False):
     """
@@ -129,13 +131,14 @@ def makedata(Plot=False,save=False):
     fmodel = os.path.abspath(os.path.join(working_dir,"supplements/models/MPAF/model.yaml")) 
      
     txt,_ = read_file_or_url(fmodel)
-    data = yaml.load(txt, yaml.RoundTripLoader)
+    yaml = YAML(typ='rt')
+    data = yaml.load(txt)
     mv = data["symbols"]["measurement_variables"]
     var = [x[4:] for x in mv] 
     
     ## Save the database
     from snowdrop.src.utils.util import saveTimeSeries as dbsave
-    file_path = os.path.abspath(os.path.join(working_dir,"supplements/data/MPAF/history_new.csv"))
+    file_path = os.path.abspath(os.path.join(working_dir,"output/data/MPAF/history.csv"))
     dbsave(fname=file_path,data=d,variables=var,prefix="OBS_") 
 
     # # Compare
@@ -240,7 +243,7 @@ def makedata(Plot=False,save=False):
                 files.append(working_dir+"/graphs/"+f+".pdf")
             merge(outputFile,files)
     
-    print('Done with makedata script !!!')
+    print('Done!')
     return d
 
 

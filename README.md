@@ -5,28 +5,68 @@
 ## What it is:
 This Framework is designed to assist economists in the development and execution of Dynamic Stochastic General Equilibrium (DSGE) models within a Python environment.
 
-## Installation:
+## Installation
 
-Users are advised to create a virtual environment in Python to isolate this installation and its packages from the system-wide Python installation and other virtual environments. There are three options to install the “Snowdrop” package:
+Users are advised to create a **virtual environment** in Python to isolate this installation and its packages from the system-wide Python environment and other virtual environments. There are three ways to install the *Snowdrop* package:
 
-1. Clone this GitHub repository to your local drive. Then install the necessary packages and libraries for this project.
-   The following commands illustrate an example: <br />
-   cd to_your_working_directory <br />
-   git clone https:/github.com/gumilevskij/Framework.git <br />
-   python -m venv env <br />
-   source env/bin/activate <br />
-   pip install -r Framework/requirements.txt
-3. Run the command: pip install snowdrop-1.0.6-py3-none-any.whl --user
-4. Install *Snowdrop* via pip installer: pip install pysnowdrop --upgrade
- 
- ## How to run:
- - Create or modify existing YAML model file in the supplements/models folder.
- - Open tests/test_toy_models.py file and set *fname* to the name of the model file.
- - Run simulations in the Spyder IDE by double-clicking the run button or execute the Python script in a command prompt.
+### 1. Clone the GitHub Repository (Recommended)
 
-## Content:
- - Sample model file (see `<supplements/models/Toy/JLMP98.yaml>`)
- - Documentation (see `<supplements/docs/UserGuide.pdf>`)
+This method gives you full access to the source code and examples, including automated tests. It also allows for easy updates via `git pull`.
+
+cd your_working_directory
+```bash 
+git clone https://github.com/gumilevskij/Framework.git  
+python -m venv env  
+source env/bin/activate  
+pip install -r Framework/requirements.txt
+```
+
+### 2. Install from the Wheel File
+
+The repository includes a pre-built `.whl` (wheel) file in the folder Framework/dist. By copying this file to your local disk, you can install this package directly:
+
+```bash
+pip install snowdrop-1.0.*-py3-none-any.whl --user
+```
+
+This method is useful if you want a simple install from a local file without pulling from PyPI.
+
+### 3. Install via PyPI
+
+You can install the latest version of *Snowdrop* directly from PyPI using pip:
+
+```bash
+pip install pysnowdrop --upgrade
+```
+
+## Quick Start
+
+* Create or modify a YAML model file in the [`supplements/models`](./supplements/models) folder.
+* Open [`tests/test_toy_models.py`](./tests/test_toy_models.py) and set the variable `fname` to the name of your model file.
+* Run simulations using the **Spyder IDE** by clicking the Run button, or execute the script from the command line:
+
+  ```bash
+  python tests/test_toy_models.py
+  ```
+* To run automated tests, use the command:
+
+  ```bash
+  pytest tests
+  ```
+
+## Documentation
+
+Below are useful resources to help you understand the structure and usage of the *Snowdrop* framework:
+
+* Sample model file: [`supplements/models/TOY/JLMP98.yaml`](./supplements/models/TOY/JLMP98.yaml)
+  This file provides a working example of a YAML-based model specification. You can use it as a template to create your own models.
+
+* User guide (PDF): [`supplements/docs/UserGuide.pdf`](./supplements/docs/UserGuide.pdf)
+  The user guide contains detailed instructions on how to configure models, run simulations, and interpret outputs. It also describes supported YAML fields and Python options.
+
+* API documentation: Open [`supplements/api_docs/_build/html/index.html`](./supplements/api_docs/_build/html/index.html) in your web browser.
+  This HTML-based API reference provides an overview of the module structure, key functions, and their expected inputs/outputs.
+
 
 ## Highlights:
 - The Framework is written in Python and utilizes only Python libraries available through the Anaconda distribution.
@@ -46,4 +86,5 @@ Users are advised to create a virtual environment in Python to isolate this inst
 ## DISCLAIMERS:
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14649322.svg)](https://doi.org/10.5281/zenodo.14649322)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.08197/status.svg)](https://doi.org/10.21105/joss.08197)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16730040.svg)](https://doi.org/10.5281/zenodo.16730040)

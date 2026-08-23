@@ -42,10 +42,7 @@ def summary(all_sizes):
     sizes = np.array(sizes)   
     for x in sizes:
         n = sum(all_sizes==x)
-        if n == 1:
-            print(f"{n} component of size {x}")
-        else:
-            print(f"{n} components of size {x}")
+        print(f"{n} component of size {x}")
            
 def getEqsInfo(eqs,variables_names,debug=False):
     """
@@ -91,26 +88,44 @@ def getEqsInfo(eqs,variables_names,debug=False):
             
             
     if debug:
-        sc = [len(c) for c in sorted(nx.strongly_connected_components(G),key=len,reverse=False)]
+        print(f"\nNumber of equations: {len(eqs)} and variables {len(variables_names)}")
+        strongly_connected_components = sorted(nx.strongly_connected_components(G),key=len,reverse=False)
+        sc = [len(c) for c in strongly_connected_components]
         print(f"\nNumber of strongly connected components {len(sc)}")
         summary(sc)
         
-        cn = [len(c) for c in sorted(nx.connected_components(G.to_undirected()),key=len,reverse=False)]
-        print(f"\nNumber of connected components {len(cn)}")  
+        connected_components = sorted(nx.connected_components(G.to_undirected()),key=len,reverse=False)
+        cn = [len(c) for c in connected_components]
+        print(f"\nNumber of connected components {len(cn)}") 
+        #print(f"{connected_nodes}")  
         summary(cn)
+        # # Just checking...
+        # subgraphs = [G.subgraph(c).copy() for c in sorted(nx.connected_components(G.to_undirected()),key=len,reverse=False)]
+        # connected_nodes = [list(subgraphs[i].nodes()) for i in range(len(subgraphs))]
+        # for i in range(len(connected_nodes)):
+        #     for j in range(i+1,len(connected_nodes)):
+        #         common = set(connected_nodes[i]) & set(connected_nodes[j])
+        #         if len(common) > 0:
+        #             print(f"Componets {i} and {j} have {len(common)} elements")
         
-        ac = [len(c) for c in sorted(nx.attracting_components(G),key=len,reverse=False)]
+        attracting_components = sorted(nx.attracting_components(G),key=len,reverse=False)
+        ac = [len(c) for c in attracting_components]
         print(f"\nNumber of attracting components {len(ac)}")
         summary(ac)
         
-        
-        bc = [len(c) for c in sorted(nx.biconnected_components(G.to_undirected()),key=len,reverse=False)]
+        biconnected_components = sorted(nx.biconnected_components(G.to_undirected()),key=len,reverse=False)
+        bc = [len(c) for c in biconnected_components]
         print(f"\nNumber of biconnected components {len(bc)}")
         summary(bc)
         
-        wc = [len(c) for c in sorted(nx.weakly_connected_components(G),key=len,reverse=False)]
+        weakly_connected_components = sorted(nx.weakly_connected_components(G),key=len,reverse=False)
+        wc = [len(c) for c in weakly_connected_components]
         print(f"\nNumber of weekly connected components {len(wc)}")
         summary(wc)
+        
+        isolated_nodes = [node for node,degree in G.degree() if degree == 0]
+        print(f"\nNumber of isolated nodes: {len(isolated_nodes)}")
+        
         
     return G 
 
@@ -213,9 +228,12 @@ def _getData(attr,data,decompress):
             alias = assumption["alias"]
             desc = assumption["desc"]
             sector = assumption["sector"]
-            annual = assumption["data"]["annual"]
-            #monthly = assumption["data"]["monthly"]
-            #quarterly = assumption["data"]["quarterly"] 
+            if "annual" in assumption["data"]: 
+                annual = assumption["data"]["annual"]
+            if "quarterly" in assumption["data"]:
+                quarterly = assumption["data"]["quarterly"] 
+            if "monthly" in assumption["data"]:
+                monthly = assumption["data"]["monthly"]
             periods += annual["periods"]
             values = annual["values"]
             default = annual["default"]
@@ -274,10 +292,12 @@ def get_frequencies(json_path=None,xl_path=None,fpe_file=None):
      
      Returns
      -------
-     A/Q/M frequencies.
+     A/Q/M frequencies and aggregation variables
      
      """
-     mv = {}; m_aggr = {}; aggr_variables = {}
+     from snowdrop.src.utils.equations import aggregateEqs
+     
+     mv = {}
      m = getData(json_path=json_path,xl_path=xl_path,fpe_file=fpe_file)
      df = m["variables"]
      var_aggr = df["aggregation"].to_list()
@@ -299,18 +319,33 @@ def get_frequencies(json_path=None,xl_path=None,fpe_file=None):
          mv[freq] = lst
    
      # Find variables that have multiple frequencies
-     if len(frequencies) > 1:
-         for i in range(1,len(frequencies)):
-               freq = frequencies[i]
-               aggr_freq = frequencies[i-1]
-               var1 = mv[aggr_freq]
-               var2 = mv[freq]
-               aggr_variables[aggr_freq] = [v for v in var1 if v in var2]
+     nf = len(frequencies)
+     aggr_variables = {}; agg_eqs = {}
+     for i in range(nf):
+        aggr_freq = frequencies[i]
+        for j in range(1+i,nf):
+           freq = frequencies[j]
+           var1 = mv[aggr_freq]
+           var2 = mv[freq]
+           common_variables = [v for v in var1 if v in var2]
+           aggr_variables[freq] = common_variables
+           if len(common_variables) > 0:
+               eqs,agg_var = aggregateEqs(variables=common_variables,freq=freq,aggr_freq=aggr_freq,m_aggr=m_aggr)
+               agg_eqs[f"{i},{j}"] = eqs
+           
+        if i == 2:
+           aggr_freq = frequencies[0]
+           var2 = mv[freq]
+           common_variables = [v for v in var1 if v in var2]
+           aggr_variables[freq] = common_variables
+           if len(common_variables) > 0:
+               eqs,agg_var = aggregateEqs(variables=common_variables,freq=freq,aggr_freq=aggr_freq,m_aggr=m_aggr)
+               agg_eqs[f"{i},{j}"] = eqs
         
-     return frequencies,aggr_variables,m_aggr
+     return frequencies,m_aggr,aggr_variables,agg_eqs
 
    
-def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False,freq=None,aggr_freq=None,m_aggr=None,save=False,debug=False):
+def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False,freq=None,save=False,debug=False):
     """
     Read IMFE data required to create model object. 
 
@@ -326,10 +361,6 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
         If True creates model for historic range, otherwise - for forecasting range. The default is False.
     freq : str, optional.
         Frequency (A/Q/M).
-    aggr_freq : str, optional.
-        Aggregation frequency (A/Q/M).
-    m_aggr : dict, optional.
-        Interpolated results of simulations at lower frequency.
     save : bool, optional.
         If set saves exogenous series and model calibration parameters into excel files. The default is False.   
     debug : bool, optional.
@@ -340,10 +371,14 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
     Model specifications
 
     """
-    lfunc=[]; lvars=[]; largs=[]; leqs = []
     
+    #from snowdrop.src.utils.equations import aggregateEqs
     global data_range_start,data_range_end,forecast_range_start,forecast_range_end
+    from snowdrop.src.utils.equations import getExogVarLeadsLags
 
+    lfunc=[]; lvars=[]; largs=[]; leqs = [] #; new_agg_eqs = []; new_agg_var = []
+    delimiters = " ", ",", ";", "*", "/", ":", "+", "-", "^", "{", "}", "(", ")", "="
+    regexPattern = '|'.join(map(re.escape, delimiters))
     
     m = getData(json_path=json_path,xl_path=xl_path,fpe_file=fpe_file,save=save)
     
@@ -368,37 +403,21 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
         param_sector = list()
         #param_labels = dict()
         calib = dict()
-        
+    
     ### Variables
     df = m["variables"]
     var_freq = df["frequencies"].to_list()
     bFreq = [freq in x for x in var_freq]
-    var_freq = df["frequencies"][bFreq].to_list()
-    var_names_alias = df["alias"].to_list()
-    var_alias = df["alias"][bFreq].to_list()
-    #var_code = df["code"][bFreq].to_list()
-    #var_export_code = df["export_code"][bFreq].to_list()
-    var_descr = df["desc"][bFreq].to_list()
-    #var_scale = np.array(df["scale"][bFreq].to_list())
-    #var_title = df["title"][bFreq].to_list()
-    #var_units = df["units"][bFreq].to_list()
-    #var_aggr = df["aggregation"][bFreq].to_list()
-    #var_transform = df["transformation"][bFreq].to_list()
-    #var_interpolation = df["interpolation"][bFreq].to_list()
-    #var_descr = [var_title[i].upper() if x is None else x for i,x in enumerate(var_descr)] 
-    var_labels = dict(zip(var_alias,var_descr))
-    #var_sector = df["sector"].to_list()
-    
+    var_freq = df["frequencies"][bFreq].tolist()
+    var_alias = df["alias"][bFreq].tolist()
+    var_descr = df["desc"][bFreq].tolist()
+    m_labels = dict(zip(var_alias,var_descr))
+
     ### Raw data
     exog_data = dict(); total_range = []; exogenous = []; df_data = None
     if "hard_data" in m:
         df_data = m["hard_data"]
         exogenous = df_data["alias"].to_list()
-        #data_freq = df_data["frequencies"].to_list()
-        #m_data = dict(zip(exogenous,data_freq))
-        #data_code = df_data["code"].to_list()
-        #data_labels = df_data["desc"].to_list()
-        #data_sector = df_data["sector"].to_list()
         columns = df_data.columns
         data = df_data.values
         ind = [i for i,x in enumerate(columns) if x.isdigit()]
@@ -419,29 +438,23 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
         hist_range = [str(x) for x in range(data_range_start,1+data_range_end)]
         
     ### Equations
-    eqs_expressions = list(); eqs_ids = list(); eqs_labels = list(); eqs_sector = list()
+    eqs_expressions = []; eqs_labels = []
     df = m["equations"]
-    eqs_freq = df["frequencies"].to_list()
-    bFreq = [freq in x for x in eqs_freq]
-    eqs_freq = df["frequencies"][bFreq].to_list()
-    ids = df["id"][bFreq].to_list()
-    #m_eqs = dict(zip(ids,eqs_freq))
-    sector = df["sector"][bFreq].to_list()
-    #all_expressions = df["expression"].to_list()
-    expressions = df["expression"][bFreq].to_list()
+    bFreq = [freq in x for x in df["frequencies"]]
+    eqs_freq = df["frequencies"][bFreq].tolist()
+    expressions = df["expression"][bFreq].tolist()
+    
     m_eqs_freq = dict(zip(expressions,eqs_freq))
     for i,eqtn in enumerate(expressions):
         eq = eqtn.replace(" ","")
         if not eq in eqs_expressions:
             new_eq = transformEq(eqtn=eq,var=var_alias,formulas=["pch","pchy"])
             eqs_expressions.append(new_eq)
-            eqs_ids.append(ids[i])
             #eqs_labels.append(df["title"][i])
             eqs_labels.append(1+i)
-            eqs_sector.append(sector[i])
             
     ### Match variables to equations
-    #var_alias = mapVariables(eqs_expressions,var_names_alias,max_match=True)
+    #var_alias = mapVariables(eqs_expressions,var_alias,max_match=True)
         
     ### Assumptions
     assumpt_data = dict(); assumpt_hist_data = dict(); assumpt_forecast_data = dict()
@@ -488,7 +501,7 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
     # Analyze default assumptions
     assumption_default = df["default"]
     b = assumption_default.isna()
-    # check if assumptions data row has a formula or a reference to a cell
+    # Check if assumptions data row has a formula or a reference to a cell
     bf = [any([isinstance(s,float) and not np.isnan(s) for s in x if not s is None]) for x in assumptions]
     
     keys = [assumption_alias[i] for i in range(len(assumption_default)) if not b[i]]
@@ -496,14 +509,6 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
     tmp = [x.replace("{","(").replace("}",")") if isinstance(x,str) else x for x in tmp]
     assumption_default = dict(zip(keys,tmp))
 
-    # Assumption equations
-    assumption_expression = []; assumption_expression2 = []
-    for k in assumptions_all_forecast:
-        eq = f"{k}={assumptions_all_forecast[k]}"
-        new_eq = transformEq(eqtn=eq,var=var_alias,formulas=["pch","pchy"])
-        assumption_expression.append(new_eq)
-        assumption_expression2.append(eq)
-   
     # Update parameters if default assumption specifies numeric value
     if bHist:
         params += [x for i,x in enumerate(assumption_alias) if x in calib and not b[i]]
@@ -526,16 +531,17 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
                 exogenous.remove(k)
                 del exog_data[k]
         elif isinstance(v,str):
-            v = v.replace("{","(").replace("}",")")
-            expressions.append(f"{k}={v}")
-            eqs_expressions.append(f"{k}={v}")
-            m_eqs_freq[f"{k}={v}"] = [freq]
-            arr = re.split(regexPattern,v)
-            arr = list(filter(None,arr))
-            lst = [x for x in arr if x in var_names_alias]
-            var_alias.extend(lst)
             if k in params: 
                 params.remove(k)
+            v = v.replace("{","(").replace("}",")")
+            arr = re.split(regexPattern,v)
+            arr = list(filter(None,arr))
+            lst = [x for x in arr if x in var_alias]
+            if not bHist:
+                var_alias.extend(lst)
+                expressions.append(f"{k}={v}")
+                eqs_expressions.append(f"{k}={v}")
+                m_eqs_freq[f"{k}={v}"] = [freq]
         
     s_var_alias = set(var_alias) 
     s_params = set(params) 
@@ -549,7 +555,6 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
       
     ################################################################# Historic section
     if bHist:
-        cprint("\nHistoric run:","blue")
         
         for k in assumpt_hist_data:
             ser = assumpt_hist_data[k]
@@ -562,15 +567,15 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
                 exog_data[k] = ser
         
         s_exogenous = set(df_data["alias"].to_list()) if not df_data is None else set()
-        s_var = s_var_alias-s_params-s_exogenous-set(assumption_default.keys()) 
+        s_var = s_var_alias-s_params-s_exogenous 
         var = list(s_var)
         #s_exog = s_var_alias.intersection(s_exogenous)
         
         # Build list of all variables in equations
-        variables = list(); var_names = list()
+        variables = list(); var_names = list(); indx = list() # index of one variable equations
         eqs = list();  one_var_eqs = list(); one_var = list()
         i = -1
-        for eq,eq2 in zip(eqs_expressions,expressions):
+        for eq in eqs_expressions:
             i += 1
             arr = re.split(regexPattern,eq)
             arr = list(filter(None,arr))
@@ -581,14 +586,16 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
             for x in arr2:
                 if x in var:
                     break
+            lst = list(set([x for x in arr if x in var]))
             if not x in exogenous and not x in param_names and not x in variables:
-                eqs.append(eq)
+                if not len(lst) == 1:
+                    eqs.append(eq)
                 variables.append(x)
                 var_names.append(x)
-            lst = list(set([x for x in arr if x in var]))
             if len(lst) == 1:
+                indx.append(i)
                 one_var.append(x)
-                eq2 = transformEq(eqtn=eq2,var=var+exogenous,b=True)
+                eq2 = transformEq(eqtn=eq,var=var+exogenous,b=True)
                 if bOneVarEquation:
                     one_var_eqs.append(eq2)
             var_names.extend(lst)
@@ -598,6 +605,9 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
         var_names = list(set(var_names))
         extra_var = list( set(var_names)-set(variables))
 
+            
+        if bOneVarEquation:
+            var_names = [x for x in var_names if not x in one_var]
         #print(len(var_names),len(variables),len(eqs))
         
         #  Set initial values
@@ -605,7 +615,7 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
             if not v in calib:
                 calib[v] = default_value
         
-        new_exog_var = [f" {x} - " + var_labels[x] if x in var_labels and not var_labels[x] is None else " " + x for x in extra_var]
+        new_exog_var = [f" {x} - " + m_labels[x] if x in m_labels and not m_labels[x] is None else " " + x for x in extra_var]
         if len(new_exog_var) > 0:
             cprint(f"The system is underdetermined - {len(new_exog_var)} extra variable(s):","red")
             cprint('\n'.join(new_exog_var[:10]),'blue')
@@ -615,6 +625,10 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
                 if bOneVarEquation:
                     one_var.append(v)
                     one_var_eqs.append(f"{v}={v}__m1_")
+                            
+        exog_var_leads_lags = getExogVarLeadsLags(eqs,exogenous) 
+        exogenous += exog_var_leads_lags
+        
             
         # Replace nan with default value
         calib = {k:default_value if np.isnan(v) and not k in assumption_default else v for k, v in calib.items()}
@@ -654,15 +668,50 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
         # Get one variable functions
         lfunc,lvars,largs,leqs = build_func(var=one_var,exog=exogenous,params=param_names,eqs=one_var_eqs)
                    
+        # Add one equation variables
+        if bOneVarEquation:
+            exogenous += one_var
+        
         return eqs,var_names,param_names,exogenous,exog_data,\
-               None,calib,var_labels,eqs_labels,lfunc,lvars,largs,leqs, \
+               None,calib,m_labels,eqs_labels,lfunc,lvars,largs,leqs, \
                one_var,hist_range,ma
                
     ################################################################# Forecast section
     else:    
-        
-        cprint("\nForecast run:","blue")
-                
+    
+        # Assumption equations
+        assumption_expression = []; assumption_expression2 = []
+        for k in assumptions_all_forecast:
+            eq = f"{k}={assumptions_all_forecast[k]}"
+            new_eq = transformEq(eqtn=eq,var=var_alias,formulas=["pch","pchy"])
+            assumption_expression.append(new_eq)
+            assumption_expression2.append(eq)
+    
+        for k in assumpt_data:
+            ser = assumpt_data[k]
+            ind = (ser != default_value)
+            calib[k] = np.nanmean(ser[ind])
+            
+        for k in assumption_default:
+            v = assumption_default[k]
+            if isinstance(v,int) or isinstance(v,float):
+                calib[k] = v
+                params.append(k)
+                if k in exogenous:
+                    exogenous.remove(k)
+                    del exog_data[k]
+            elif isinstance(v,str):
+                v = v.replace("{","(").replace("}",")")
+                expressions.append(f"{k}={v}")
+                eqs_expressions.append(f"{k}={v}")
+                m_eqs_freq[f"{k}={v}"] = [freq]
+                arr = re.split(regexPattern,v)
+                arr = list(filter(None,arr))
+                lst = [x for x in arr if x in var_alias]
+                var_alias.extend(lst)
+                if k in params: 
+                    params.remove(k)
+                    
         # Ensure exogenous data contain only foreast range
         for k in exog_data:
             ser = exog_data[k]
@@ -711,17 +760,6 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
                     equations.append(eq)
                     eq2 = transformEq(eqtn=eqs2[i],var=var+exogenous,b=True)
                     equations2.append(eq2)
-                    
-        # # Check for duplicate equations
-        # duplicate_eqs = list()
-        # for k in m_dpl:
-        #     arr = m_dpl[k]
-        #     if len(arr) > 1:
-        #         x = [eqs[i] for i in arr]
-        #         duplicate_eqs.append(" -->  ".join(x))
-        # if len(duplicate_eqs) > 0:
-        #     duplicate_eqs = "\n".join(duplicate_eqs)
-        #     cprint(f"Duplicate equations:\n {duplicate_eqs}")
         
         # Build list of all variables in equations
         variables = list(); var_names = list(); indx = list() # index of one variable equations
@@ -752,7 +790,7 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
         
         # Add equations for extra variables
         extra_var = list( set(var_names)-set(variables))
-        new_exog_var = [f" {x} - " + var_labels[x] if x in var_labels and not var_labels[x] is None else " " + x for x in extra_var]
+        new_exog_var = [f" {x} - " + m_labels[x] if x in m_labels and not m_labels[x] is None else " " + x for x in extra_var]
         if len(new_exog_var) > 0:
             cprint(f"The system is underdetermined - {len(new_exog_var)} extra variables:","red")
             cprint('\n'.join(new_exog_var[:10]),'blue')
@@ -777,8 +815,11 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
         # One equation variables are treated as exogenous
         if bOneVarEquation:
             exogenous.extend(extra_var)
+            
+        exog_var_leads_lags = getExogVarLeadsLags(eqs,exogenous) 
+        exogenous += exog_var_leads_lags
         
-        # Replace nans with default value
+        # Replace NANs with default value
         calib = {k:default_value if np.isnan(v) else v for k, v in calib.items()}
         
         # Replace zeros with default value value
@@ -843,10 +884,10 @@ def getModelSpecifications(json_path=None,xl_path=None,fpe_file=None,bHist=False
             
         #exogenous = list(set(exogenous)-set(var_names))  
         return eqs,var_names,param_names,exogenous,exog_data,assumpt_forecast_data, \
-               calib,var_labels,eqs_labels,lfunc,lvars,largs,leqs, \
+               calib,m_labels,eqs_labels,lfunc,lvars,largs,leqs, \
                one_var,forecast_range,None
         
-def get_model(json_path=None,xl_path=None,fpe_file=None,bHist=False,freq=None,aggr_freq=None,m_aggr=None,f_calib=None,bCompileAll=True,debug=False):
+def get_model(json_path=None,xl_path=None,fpe_file=None,bHist=False,freq=None,f_calib=None,bCompileAll=False,debug=False):
     """
     Construct model object.
 
@@ -862,10 +903,6 @@ def get_model(json_path=None,xl_path=None,fpe_file=None,bHist=False,freq=None,ag
         If True creates model for historic range, otherwise - for forecasting range. The default is False.
     freq : str, optional.
         Frequency (A/Q/M).
-    aggr_freq : str, optional.
-        Aggregation frequency (A/Q/M).
-    m_aggr : dict, optional.
-        Results of simulations at lower frequency.
     f_calib : str, optional.
         Path to excel files with containing calibrated parameters.
     bCompileAll : bool, optional
@@ -894,14 +931,14 @@ def get_model(json_path=None,xl_path=None,fpe_file=None,bHist=False,freq=None,ag
     #from snowdrop.src.utils.equations import getRHS
     from snowdrop.src.utils.equations import fixEquations
     from snowdrop.src.utils.equations import getMaxLeadsLags
-    from snowdrop.src.preprocessor.function_compiler_sympy import compile_higher_order_function
+    from snowdrop.src.preprocessor.function_compiler import compile_higher_order_function
  
     
     eqs,var,params,exogenous,exog_data,assumpt_data, \
-    calib,var_labels,eqs_labels,lfunc,lvars,largs,one_var_eqs, \
+    calib,m_labels,eqs_labels,lfunc,lvars,largs,one_var_eqs, \
     one_var,rng,m_assumpt = \
         getModelSpecifications(json_path=json_path,xl_path=xl_path,fpe_file=fpe_file,
-                               bHist=bHist,freq=freq,aggr_freq=aggr_freq,m_aggr=m_aggr,debug=debug)
+                               bHist=bHist,freq=freq,debug=debug)
     
     #Sanity check: mv = dict(zip(var,[calib[x] for x in var])); mp = dict(zip(params,[calib[x] for x in params]))   
     if debug:
@@ -984,13 +1021,13 @@ def get_model(json_path=None,xl_path=None,fpe_file=None,bHist=False,freq=None,ag
         if len(equations) > 0:
             func,_,_,_,_,src = compile_higher_order_function(equations=equations,syms=syms,params=params,syms_exog=syms_exog,
                                                                   eq_vars=eq_vars,order=1,function_name='f_dynamic',
-                                                                  out='f_dynamic',model_name=name)
+                                                                  out=None,model_name=name)
             functions['f_dynamic'] = func 
             functions_src['f_dynamic_src'] = src
           
     model = instantiate_model(name=name,eqs=eqs,var=var,params=params,exogenous=exogenous,
                               exog_data=exog_data,assumpt_data=assumpt_data,calib=calib,
-                              var_labels=var_labels,eqs_labels=eqs_labels,frequency=freq,
+                              m_labels=m_labels,eqs_labels=eqs_labels,frequency=freq,
                               rng=rng,bHist=bHist,bCompileAll=bCompileAll and len(eqs)>0)
     
     if not bCompileAll:
@@ -1037,7 +1074,7 @@ def get_model(json_path=None,xl_path=None,fpe_file=None,bHist=False,freq=None,ag
         
     if debug:
         cprint("\n\nHistoric Periods" if bHist else "\n\nForecast Periods","blue")
-        print(model)
+        #print(model)
     #model.isLinear = False
     
     # var_names = model.symbols["variables"] 
@@ -1045,11 +1082,11 @@ def get_model(json_path=None,xl_path=None,fpe_file=None,bHist=False,freq=None,ag
     # mv = dict(zip(var_names,var_values))
     
     
-    return model,lfunc,lvars,largs,one_var,exogenous,params,one_var_eqs,rng
+    return model,[lfunc,lvars,largs],[one_var,params,one_var_eqs],exogenous,rng
 
 
 def instantiate_model(name,eqs,var,params,exogenous,exog_data,assumpt_data,calib,
-                      var_labels={},eqs_labels=[],frequency="annual",
+                      m_labels={},eqs_labels=[],frequency="annual",
                       rng=None,bHist=False,bCompileAll=False):
     """
     Create model object.
@@ -1072,7 +1109,7 @@ def instantiate_model(name,eqs,var,params,exogenous,exog_data,assumpt_data,calib
         Assumption data.
     calib : dict
         Dictionary of endogenous variables starting values and parameters vaues.
-    var_labels : dict, optional
+    m_labels : dict, optional
         Variables labels. The default is {}.
     eqs_labels : list, optional
         Equations labels. The default is [].
@@ -1090,66 +1127,41 @@ def instantiate_model(name,eqs,var,params,exogenous,exog_data,assumpt_data,calib
 
     """
     if assumpt_data is None:
-        df = pd.DataFrame(exog_data)
         data = exog_data
     else:
-        df = pd.DataFrame(assumpt_data)
         data = {**exog_data,**assumpt_data}
     if frequency == "annual":
-        freq = 0
-        alias = "YS"
-    elif frequency == "quarterly":
-        freq = 1
-        alias = "QS"
-    elif frequency == "monthly":
-        freq = 2
-        alias = "MS"
-    elif frequency == "daily":
-        freq = 3
-        alias = "D"
-    else:
-        freq = 0
-        alias = "Y"
-    if bHist: 
+        freq = 0; alias = "YS"
         data_start = date(year=data_range_start,month=1,day=1)
-        data_end = date(data_range_end,month=10,day=1)
-        if not data_range_start is None and not data_range_end is None:
-            data_rng = pd.date_range(start=data_start,end=data_end,freq=alias)
-            T = 2 + len(data_rng)
-            periods = list(range(1,1+T))
-            rng = [[data_range_start,1,1],[data_range_end,10,1]]
-            options = {"T":T,"periods":periods,"frequency":freq,"range":rng}
-        elif len(df) > 0:
-            dates = df.index if rng is None else rng
-            start = min(dates)
-            end = max(dates)
-            rng = [[max(data_range_start,start.year),start.month,start.day],[min(data_range_end,end.year),end.month,end.day]]
-            T = 3 + max(data_range_start,start.year) - min(data_range_end,end.year)
-            periods = list(range(1,1+T))
-            options = {"T":T,"periods":periods,"frequency":freq,"range":rng}
+    elif frequency == "quarterly":
+        freq = 1; alias = "QS"
+    elif frequency == "monthly":
+        freq = 2; alias = "MS"
+    elif frequency == "daily":
+        freq = 3; alias = "D"
     else:
-        forecast_start = date(year=forecast_range_start,month=1,day=1)
-        forecast_end = date(forecast_range_end,month=10,day=1)
-        if not forecast_range_start is None and not forecast_range_end is None:
-            forecast_rng = pd.date_range(start=forecast_start,end=forecast_end,freq=alias)
-            T = 3 + len(forecast_rng)
-            rng = [[forecast_range_start,1,1],[forecast_range_end+2,10,1]]
-            periods = list(range(1,1+T))
-            options = {"T":T,"periods":periods,"frequency":freq,"range":rng}
-        elif len(df) > 0:
-            dates = df.index if rng is None else rng
-            start = min(dates)
-            end = max(dates)
-            rng = [[max(forecast_range_start,start.year),start.month,start.day],[min(forecast_range_end,end.year),end.month,end.day]]
-            T = 3 + max(forecast_range_start,start.year) - min(forecast_range_end,end.year)
-            periods = list(range(1,1+T))
-            options = {"T":T,"periods":periods,"frequency":freq,"range":rng}
+        freq = 0; alias = "YS"
+    
+    data_start = date(year=data_range_start,month=1,day=1)
+    data_end = date(data_range_end,month=12,day=31)
+    forecast_start = date(year=forecast_range_start,month=1,day=1)
+    forecast_end = date(forecast_range_end,month=12,day=31)
+    if bHist: 
+        data_rng = pd.date_range(start=data_start,end=data_end,freq=alias)
+        T = len(data_rng)
+        rng = [[data_range_start,1,1],[data_range_end,12,31]]
+    else:
+        forecast_rng = pd.date_range(start=forecast_start,end=forecast_end,freq=alias)
+        T = len(forecast_rng)
+        rng = [[forecast_range_start,1,1],[forecast_range_end,12,31]]
+    periods = list(range(1,1+T))
+    options = {"T":T,"periods":periods,"frequency":freq,"range":rng}
         
     # Instantiate model
     model = getModel(name=name,eqs=eqs,variables=var,parameters=params,shocks=[],
-                     exogenous=exogenous,exog_data=data,calibration=calib,var_labels=var_labels,
+                     exogenous=exogenous,exog_data=data,calibration=calib,var_labels=m_labels,
                      eqs_labels=eqs_labels,options=options,return_interface=False,check=False,bCompileAll=bCompileAll)
-    
+  
     model.T = T
     return model
 
@@ -1265,6 +1277,7 @@ def mapVariables(equations,var,max_match=False):
 def getModelHash(json_path=None,xl_path=None,fpe_file=None):
     """
     Build hash of model variables, parameters, equations and hard data.
+    Checks if this hash has been changed.
 
     Parameters
     ----------
@@ -1361,20 +1374,20 @@ default_value = 1.e0
 if __name__ == '__main__':
     """The main program."""
     
-    #xl_path = os.path.join(working_dir,"snowdrop/data/IMFE/xl")
-    #json_path = os.path.join(working_dir,"snowdrop/data/IMFE/json")
-    fpe_file = os.path.join(working_dir,"snowdrop/models/IMFE/GUY.fpe")
-    #fpe_file = os.path.join(working_dir,"snowdrop/models/IMFE/Fin.fpe")
-    #fpe_file = os.path.join(working_dir,"snowdrop/models/IMFE/ALB.fpe")
-    #fpe_file = os.path.join(working_dir,"snowdrop/models/IMFE/Fin.fpe")
+    #xl_path = os.path.join(working_dir,"supplements/data/IMFE/xl")
+    #json_path = os.path.join(working_dir,"supplements/data/IMFE/json")
+    # fpe_file = os.path.join(working_dir,"supplements/models/IMFE/GUY.fpe")
+    fpe_file = os.path.join(working_dir,"supplements/models/IMFE/Fin.fpe")
+    #fpe_file = os.path.join(working_dir,"supplements/models/IMFE/ALB.fpe")
+    #fpe_file = os.path.join(working_dir,"supplements/models/IMFE/Fin.fpe")
                      
-    model,lfunc,lvars,largs,one_var,exog,one_params,one_var_eqs,frcst_rng  =  \
-        get_model(fpe_file=fpe_file,bHist=False,freq="yearly",aggr_freq="quarterly",debug=False)
-        
-    i = 0
-    for var,args,eq in zip(lvars,largs,one_var_eqs):
-        i += 1
-        print(i,": ",eq," \t\t   Equation Arguments: ",args)
+    model,[lfunc,lvars,largs],[one_var,one_params,one_var_eqs],exog,frcst_rng  =  \
+        get_model(fpe_file=fpe_file,bHist=True,freq="annual",debug=False)
+  
+    # i = 0
+    # for var,args,eq in zip(lvars,largs,one_var_eqs):
+    #     i += 1
+    #     print(i,": ",eq," \t\t   function arguments: ",args)
         
 
     

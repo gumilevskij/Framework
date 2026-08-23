@@ -261,6 +261,7 @@ def getMatrices(model,n,y,t=None):
         
     # Find matrices of state-space model.
     if t is None:
+        t = 0
         y1 = y2 = y3 = y
     else:
         y1 = y[max(0,t-1)]; y2 = y[t]; y3 = y[t+1]

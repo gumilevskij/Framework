@@ -44,8 +44,8 @@ def Obstruct(cof,cofb,neq,nlag,nlead):
     # Append the negative identity to cofb
 
     cofb = np.concatenate((cofb.T,-np.eye(neq))).T
-    scof = np.matrix(np.zeros(shape=((neq,neq*(nlag+1)))))
-    qq = np.matrix(np.zeros(shape=((neq*nlead,neq*(nlag+nlead)))))
+    scof = np.zeros(shape=(neq,neq*(nlag+1)))
+    qq = np.zeros(shape=(neq*nlead,neq*(nlag+nlead)))
     rc, cc = cofb.shape
     qs = csr_matrix(qq)
     qs[0:rc,0:cc] = csr_matrix(cofb)

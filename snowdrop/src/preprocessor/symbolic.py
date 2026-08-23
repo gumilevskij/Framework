@@ -8,7 +8,7 @@ import copy
 import ast
 from yaml import ScalarNode
 
-known_functions = ['log','exp','sin','cos','tan','max','min','Max','Min','Heaviside','abs','sign','IfThenElse','IfThen','Positive','Negative','LambertW','myzif']
+known_functions = ['log','exp','sin','cos','tan','atan','max','min','Max','Min','Heaviside','abs','sign','IfThenElse','IfThen','Positive','Negative','LambertW','myzif']
 Expression = ast.Expr
 
 from ast import UnaryOp, UAdd, USub, Name, Load, Call
@@ -459,13 +459,13 @@ def get_names(expr):
 
 def eval_scalar(tree):
     try:
-        if isinstance(tree, ast.Num):
+        if isinstance(tree, ast.Constant): # ast.Num
             return tree.value
         elif isinstance(tree, ast.UnaryOp):
             if isinstance(tree.op, ast.USub):
-                return -tree.operand.n
+                return -tree.operand.value
             if isinstance(tree.op, ast.UAdd):
-                return tree.operand.n
+                return tree.operand.value
         else:
             raise Exception("Don't know how to do that.")
     except:

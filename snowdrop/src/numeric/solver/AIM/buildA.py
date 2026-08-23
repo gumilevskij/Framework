@@ -1,12 +1,11 @@
 # import numpy and scipy packages
 import numpy as np 
-from scipy import *
 from scipy.sparse import lil_matrix
 import scipy.linalg as la
 
 def buildA(h,qcols,neq):
 
-    """ Build the companion matrix, deleting inessential lags.
+    """ Build the companion ndarray, deleting inessential lags.
     Solve for x_{t+nlead} in terms of x_{t+nlag},...,x_{t+nlead-1}.
     
     Original author: Gary Anderson
@@ -42,7 +41,8 @@ def buildA(h,qcols,neq):
     
     #  Build the big transition matrix.
     
-    a = np.matrix(np.zeros(shape=((qcols,qcols))))
+    #a = np.matrix(np.zeros(shape=(qcols,qcols)))
+    a = np.zeros(shape=(qcols,qcols))
     
     if qcols > neq:
         eyerows = range(0,qcols-neq)
@@ -53,13 +53,14 @@ def buildA(h,qcols,neq):
     a[hrows,:] = hs[:,left].toarray()
 
     #  Delete inessential lags and build index array js.  js indexes the
-    #  columns in the big transition matrix that correspond to the
+    #  columns in the big transition ndarray that correspond to the
     #  essential lags in the model.  They are the columns of q that will
     #  get the unstable left eigenvectors. 
     
     js = list(range(0,qcols))
     zerocols = list()
     sumVector = abs(a).sum(axis=0)
+    sumVector = np.atleast_2d(sumVector)
     sumVectorRows, sumVectorCols = sumVector.shape
     for i in range(0,sumVectorCols):
         if sumVector[0,i] == 0:
@@ -72,6 +73,7 @@ def buildA(h,qcols,neq):
         while len(zerocols) > 0:
             zerocols.pop()
         sumVector2 = abs(a).sum(axis=0)
+        sumVector2 = np.atleast_2d(sumVector2)
         sumVector2Rows, sumVector2Cols = sumVector2.shape
         for i in range(0,sumVector2Cols):
             if sumVector2[0,i] == 0:

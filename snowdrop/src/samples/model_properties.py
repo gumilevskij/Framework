@@ -13,7 +13,7 @@ import numpy as np
 working_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),"../../.."))
 os.chdir(working_dir)
 
-from snowdrop.src.driver import run as simulate
+from snowdrop.src.driver import run
 from snowdrop.src.driver import importModel
 from snowdrop.src.graphs.util import plotTimeSeries
 
@@ -30,7 +30,7 @@ def modelproperties(Plot=False,save=True):
     
     var_names = model.symbols["variables"]
     # Set starting values
-    hist = os.path.abspath(working_dir + "/supplements/data/MPAF/history.xlsx")
+    hist = os.path.abspath(working_dir + "/output/data/MPAF/history.csv")
     model.setStartingValues(hist=hist)
     
     path_to_dir = os.path.abspath(os.path.join(working_dir,"graphs"))
@@ -72,7 +72,7 @@ def modelproperties(Plot=False,save=True):
         model.options["shock_values"] = shock_values
         
         # Find solution
-        results,dates = simulate(model=model,irf=True)
+        results,dates = run(model=model,irf=True)
         rows,columns = results.shape
         
         d = {}

@@ -12,8 +12,9 @@ import os
 import pandas as pd
 import numpy as np
 import datetime as dt
-import matplotlib.pyplot as plt
-import glob
+# import matplotlib.pyplot as plt
+# import glob
+import warnings
 
 working_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),"../../.."))
 os.chdir(working_dir)
@@ -24,12 +25,15 @@ from snowdrop.src.graphs.util import plotTimeSeries
 from snowdrop.src.utils.merge import merge
 from snowdrop.src.numeric.solver.util import find_residuals
 from snowdrop.src.utils.util import saveTimeSeries as dbsave
+from snowdrop.src.numeric.filters.utils import historic_decomposition as hd
+
+warnings.filterwarnings('ignore')
 
 
 def kalmanfilter(Plot=False,save=True):
     """Run Kalman filter and smoother."""
     path_to_dir = os.path.join(working_dir,'graphs')
-    meas = os.path.abspath(os.path.join(working_dir,'supplements/data/MPAF/history_new.csv'))
+    meas = os.path.abspath(os.path.join(working_dir,'output/data/MPAF/history.csv'))
     fout = os.path.abspath(os.path.join(working_dir,'output/data/MPAF/results.csv'))     # Results are saved in this file
     fdir = os.path.dirname(fout)
     if not os.path.exists(fdir):
@@ -52,7 +56,10 @@ def kalmanfilter(Plot=False,save=True):
     model = importModel(fname=file_path, Solver="Klein", Filter="Durbin_Koopman",
                         Smoother="Durbin_Koopman", Prior="Equilibrium", measurement_file_path=meas, use_cache=False)
     var_names = model.symbols["variables"]
-    
+    all_labels = model.symbols['variables_labels']
+    shocks = model.symbols['shocks']
+    n_shk = len(shocks)
+
     # Set time range
     simulation_range = [[1997,1,1],[2013,12,1]]
     filter_range = [[1998,1,1],[2013,12,1]]
@@ -71,7 +78,7 @@ def kalmanfilter(Plot=False,save=True):
     model.options['filter_range'] = filter_range
     
     # Set starting values
-    model.setStartingValues(hist=meas,debug=True)
+    model.setStartingValues(hist=meas,TreatMissingObs=False,debug=True)
     
     var_names = model.symbols['variables']
     var_values = np.copy(model.calibration['variables'])
@@ -106,8 +113,6 @@ def kalmanfilter(Plot=False,save=True):
         d[n] = v
         
     # Get shocks and residuals
-    shocks = model.symbols['shocks']
-    n_shk = len(shocks)
     res = find_residuals(model,results)
     if etahat is None:
         for j in range(n_shk):
@@ -116,8 +121,6 @@ def kalmanfilter(Plot=False,save=True):
             m = min(len(dates),len(data))
             ts = pd.Series(data[:m],dates[:m])
             d[n] = ts[start:end]
-            ts2 = pd.Series(np.zeros(m),dates[:m])
-            d[n+"_other"] = ts2[start:end]
     else:
         for j in range(n_shk):
             n = shocks[j]
@@ -131,10 +134,12 @@ def kalmanfilter(Plot=False,save=True):
    
     
     ## Save the database
-    file_path = os.path.abspath(os.path.join(working_dir,'data/MPAF/kalm_his_new.csv'))
+    file_path = os.path.abspath(os.path.join(working_dir,'output/data/MPAF/kalm_hist.csv'))
     dbsave(fname=file_path,data=d)
     
-
+    # Get initial conditions and historic shocks contributions
+    init_conditions,contribution = hd(model,results,etahat,start,end)
+    
     ################################################################### Graphs
     if Plot:
         ### Observed and Trends
@@ -270,6 +275,15 @@ def kalmanfilter(Plot=False,save=True):
         labels=[['RIR gap','RER gap','MCI']]
         plotTimeSeries(path_to_dir=path_to_dir,header=header,titles=titles,labels=labels,series=series,sizes=[2,1],save=save)     
         
+        
+        header = 'Individual Shocks Contributions'
+        titles = ['Output Gap','Real Interest Rate Gap']
+        series = [[init_conditions["L_GDP_GAP"]] + [contribution[shk]["L_GDP_GAP"] for shk in shocks] + [d["L_GDP_GAP"]],
+                  [init_conditions["RR_GAP"]] + [contribution[shk]["RR_GAP"] for shk in shocks] + [d["RR_GAP"]]]
+        labels = [["Initial Conditions"] + [all_labels[shk] for shk in shocks] + ["Total"],
+                  ["Initial Conditions"] + [all_labels[shk] for shk in shocks] + ["Total"]]
+        plotTimeSeries(path_to_dir=path_to_dir,header=header,titles=titles,labels=labels,series=series,sizes=[2,1],save=save,ext="pdf")
+
         if save:
             # image list is the list with all image file names
             lst = ["Observed and Trends","Gaps","Shocks","Interest rate and exchange rate",

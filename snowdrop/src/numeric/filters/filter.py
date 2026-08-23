@@ -16,6 +16,7 @@ from snowdrop.src.numeric.filters.filters import DK_Filter
 from snowdrop.src.numeric.filters.filters import DK_Smoother
 from snowdrop.src.numeric.filters.filters import Durbin_Koopman_Non_Diffuse_Filter as DK_Non_Diffuse_Filter 
 
+NT = 0
 
 def linear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,missing_obs=None,ind_non_missing=None):
     """
@@ -46,17 +47,28 @@ def linear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,miss
     from snowdrop.src.numeric.solver.linear_solver import simulate
     from snowdrop.src.model.settings import FilterAlgorithm, PriorAssumption
     
-    T0 = T
+    T0 = T+NT
     T = int(T*MULT)
+    T += NT
     err = 0.0
     count = 1 
+    
+    # Duplicate the first row
+    duplicate = np.zeros((NT,obs.shape[1]))
+    duplicate[:] = obs[0]
+    obs = np.vstack([duplicate,obs])
+    
+    duplicate = [ind_non_missing[0]]*NT
+    ind_non_missing = duplicate + ind_non_missing
+    
     # Get length of observations
     nt = len(obs)
+    T = max(T,nt)
     t0 = time()  
     
     steady_state = model.steady_state
     if steady_state is None:
-       steady_state = y0
+       steady_state = np.zeros(len(y0))
     
     if nt == 0 or Qm is None or Hm is None or obs is None:
         count,yy,yyIter,err,elapsed = simulate(model=model,T=T,periods=periods,y0=y0,steady_state=steady_state)
@@ -105,7 +117,7 @@ def linear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,miss
         Nd = model.max_lead_shock - model.min_lag_shock
         
         meas_params = model.calibration['measurement_parameters']
-        meas_var = np.zeros(n+nm+n_shocks+n_meas_shocks)
+        meas_var = np.zeros(n+nm+n_meas_shocks)
         if bHasAttr:
             meas_const,meas_jacob = f_measurement.py_func(meas_var,meas_params,order=1)
         else:
@@ -115,7 +127,7 @@ def linear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,miss
         Z = -meas_jacob[:,:n]
             
         # Solve linear model
-        linear_solver.solve(model=model)
+        linear_solver.solve(model=model,steady_state=steady_state)
         if model.SOLVER.value == SolverMethod.Klein.value:
             # State transition matrix
             F1 = model.linear_model["Ta"]
@@ -152,6 +164,7 @@ def linear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,miss
             
         P = np.copy(Q)
         Pstar = np.copy(P)
+        Pinf = 1.e6*np.eye(n)
         
         rowStable,colStable,rowUnstable,colUnstable = getStableUnstableRowsColumns(model,T=F1,K=C)    
 
@@ -168,11 +181,10 @@ def linear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,miss
             Pinf,Pstar = compute_Pinf_Pstar(mf=mf,T=F1,R=R,Q=Qm,N=Nd,n_shocks=n_shocks)            
             P = np.copy(Pstar)
         elif model.PRIOR.value == PriorAssumption.StartingValues.value:
-            Pinf  = 1.e6*np.eye(n) 
+            Pinf = 1.e6*np.eye(n) 
         elif model.PRIOR.value == PriorAssumption.Equilibrium.value:
             # Lyapunov equation for stable part of covariance matrix
             from snowdrop.src.numeric.solver.solvers import lyapunov_solver 
-            Pinf = np.zeros((n,n))
             P = lyapunov_solver(T=F1[np.ix_(rowStable,colStable)],R=R[rowStable],Q=Qm,N=Nd,n_shocks=n_shocks,options="discrete")
             Pstar[np.ix_(rowStable,colStable)] = P
             P = np.copy(Pstar)
@@ -181,7 +193,6 @@ def linear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,miss
             from scipy.linalg import solve_discrete_are 
             Pstar = solve_discrete_are(a=F1.T,b=Z.T,q=Q,r=Hm)
             P = np.copy(Pstar)
-            Pinf = 1.e6*np.eye(n)
                 
         # Make sure covariance matrix is symmetric  
         P = 0.5*(P+P.T)
@@ -196,15 +207,13 @@ def linear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,miss
                 diffuse_filter(T=F1,Z=Z,R=R[:n],Q=Qm,H=Hm,Y=obs,C=C,a0=filtered,pp=nm,mm=n,Ts=nt, \
                                Nd=Nd,n_shocks=n_shocks,data_index=ind_non_missing,Pinf1=Pinf,Pstar1=Pstar, \
                                decomp_flag=False,state_uncertainty_flag=False)                    
-            epsilonhat = epsilonhat.T[:2+T0]
-            etahat = etahat.T[:2+T0]
-            y = np.array(atilde[:n]).T
-            y = y[:2+T0]
+            epsilonhat = epsilonhat.T[:1+T0]
+            etahat = etahat.T[:1+T0]
+            y = atilde.T[:1+T0]
             if model.SMOOTHER is None:
                 yl = np.copy(y)
             else:
-                yl = np.array(alphahat[:n]).T
-                yl = yl[:2+T0]        
+                yl = alphahat.T[:1+T0] 
         
         elif not model.FILTER is None and model.FILTER.value == FilterAlgorithm.Particle.value:
             from snowdrop.src.numeric.filters import kalman
@@ -288,15 +297,12 @@ def linear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,miss
                 epsilonhat = np.array(residuals)[:1+T0]
                 etahat = etahat[::-1]
                 etahat = np.array(etahat)[:1+T0]
-                
-        yy = []
+               
         y = y @ U.T
         if yl is None:
             yl = np.copy(y)
         else:
             yl = yl @ U.T
-        yy.append(y)
-        yy.append(yl)
         
         # Save shock values
         if not model.SMOOTHER is None:
@@ -304,7 +310,7 @@ def linear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,miss
         
         elapsed = time() - t0
             
-        return count,yy,epsilonhat,etahat,err,elapsed
+        return count,(y[NT:],yl[NT:]),epsilonhat[NT:],etahat[NT:],err,elapsed
     
     
 def nonlinear_filter(model,T,periods,y0,Qm=None,Hm=None,obs=None,MULT=1,skip=0,missing_obs=None,ind_non_missing=None):

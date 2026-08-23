@@ -1,4 +1,4 @@
-"""This function calculates the Vartheta matrix used in the AMA algorithm."""
+"""This function calculates the Vartheta ndarray used in the AMA algorithm."""
 
 # import numpy package
 import numpy as np 
@@ -6,9 +6,9 @@ import numpy as np
 
 def makeVartheta(phi, F, psi, upsilon):
 
-    # Ensure that psi and upsilon are in matrix form
-    psi = np.matrix(psi)
-    upsilon = np.matrix(upsilon)
+    # Ensure that psi and upsilon are in ndarray form
+    psi = np.array(psi)
+    upsilon = np.array(upsilon)
 
     # Store the dimensions of phi, F, and psi
     phirows, phicols = phi.shape
@@ -23,7 +23,7 @@ def makeVartheta(phi, F, psi, upsilon):
     productPhiPsi = phi * psi
     bigvec = productPhiPsi.T.reshape((phirows*psicols,1))
     
-    resultProduct = bigun.I * bigvec
+    resultProduct = np.linalg.solve(bigun, bigvec)
     varthetaTranspose = resultProduct.reshape((phirows,psicols))
     vartheta = varthetaTranspose.T
 

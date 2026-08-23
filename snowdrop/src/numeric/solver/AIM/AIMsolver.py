@@ -12,7 +12,7 @@ def AIMsolver(jacobian,c,model,suppress_warnings=False):
       where [fy'-$...  fy'i ... fy'+&]=[H-$...  Hi ... H+&] and fu'= £
      
       INPUTS
-        jacobian   [matrix] 1st order derivatives of the model's equations
+        jacobian   [ndarray] 1st order derivatives of the model's equations
         model      [object] Definition of the model.
      
       OUTPUTS
@@ -69,11 +69,11 @@ def AIMsolver(jacobian,c,model,suppress_warnings=False):
             raise
 
     if aimcode==1: #if OK
-        # Matrix A
+        # ndarray A
         A   = np.asarray(bb)	
         F   = np.asarray(F)	
         phi = np.asarray(phi)		
-		# Build matrix of shocks			 
+		# Build ndarray of shocks			 
         Psi = - jacobian[:,3*neq:] 
         R   = phi @ Psi
         # Find constants

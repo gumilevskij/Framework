@@ -278,11 +278,11 @@ class Model:
             :type self: Model.
             :returns:  List of functions.
         """ 
-        from snowdrop.src.preprocessor.function_compiler_sympy import compile_higher_order_function
-        from snowdrop.src.preprocessor.function_compiler_sympy import compile_function
-        from snowdrop.src.preprocessor.function_compiler_sympy import compile_jacobian
+        from snowdrop.src.preprocessor.function_compiler import compile_higher_order_function
+        from snowdrop.src.preprocessor.function_compiler import compile_function
+        from snowdrop.src.preprocessor.function_compiler import compile_jacobian
         from snowdrop.src.utils.equations import getRHS
-        import snowdrop.src.preprocessor.function_compiler_sympy as fc
+        import snowdrop.src.preprocessor.function_compiler as fc
         
         func = f_jacob = f_hessian = f_tensor = src_dynamic = src_sparse = None
         
@@ -426,7 +426,7 @@ class Model:
             f_dynamic = f_steady = f_sparse = txt_sparse = src_ss = src_ss_jacob = None
             
             if self.bSparse:
-                from snowdrop.src.preprocessor.function_compiler_sympy import get_indices
+                from snowdrop.src.preprocessor.function_compiler import get_indices
                 from snowdrop.src.numeric.solver import LBJax
                 #ind = get_indices(eqs,syms=endog)
                 LBJax.row_ind, LBJax.col_ind = get_indices(eqs,syms=endog)
@@ -1133,7 +1133,7 @@ file: "{filename}\n'''.format(**self.infos)
         return {'equations': res}
     
             
-    def setStartingValues(self,hist,skip_rows=0,bTreatMissingObs=True,debug=False):
+    def setStartingValues(self,hist,skip_rows=0,TreatMissingObs=False,debug=False):
         """
         Set starting values for current and lagged endogenous variables.
             
@@ -1144,8 +1144,8 @@ file: "{filename}\n'''.format(**self.infos)
             :type hist: str or dict.
             :param skip_rows: The number of rows to skip.
             :type skip_rows: int.
-            :param bTreatMissingObs: If True find missing variables values by minimizing residuals of steady state equations given the observations.
-            :type bTreatMissingObs: bool.
+            :param TreatMissingObs: If True find missing variables values by minimizing residuals of steady state equations given the observations.
+            :type TreatMissingObs: bool.
             :param debug: If True print missing variables information.
             :type debug: bool.
         """
@@ -1156,13 +1156,13 @@ file: "{filename}\n'''.format(**self.infos)
         var_names = self.symbols["variables"]
         var_values,calib,missing = getStartingValues(hist=hist,var_names=var_names,orig_var_values=var_values,options=self.options,skip_rows=skip_rows,debug=debug)
         
-        if bTreatMissingObs and len(missing)>0:
-            from snowdrop.src.numeric.filters.utils import getMissingInitialVariables
+        if TreatMissingObs and len(missing)>0:
+            from snowdrop.src.numeric.filters.utils import getMissingVariablesInitialValues
             var = [x for i,x in enumerate(var_names) if not "_plus_" in x and not "_minus_" in x]
             ind1 = [i for i,x in enumerate(var_names) if not "_plus_" in x and not "_minus_" in x]
             x0 = [var_values[i] for i,x in enumerate(var_names) if not "_plus_" in x and not "_minus_" in x]
             ind2 = [i for i,x in enumerate(var) if not x in missing]         
-            values = getMissingInitialVariables(self,ind=ind2,x0=x0)
+            values = getMissingVariablesInitialValues(self,ind=ind2,x0=x0)
             var_values[ind1] = values
             
         self.calibration["variables"] = var_values    

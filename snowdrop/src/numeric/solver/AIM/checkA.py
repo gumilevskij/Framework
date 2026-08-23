@@ -1,5 +1,5 @@
 """
-Functions to check if the matrix a contains any NaN or Inf values
+Functions to check if the ndarray a contains any NaN or Inf values
 
 Created by: Jason Sockin
 Date: September 11, 2013

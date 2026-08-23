@@ -769,29 +769,89 @@ def deleteFiles(path_to_dir, pattern):
                 print(e)
 
 
-def correctLabel(lbl):
+def correctLabel(var_labels,lbl):
     """
     Correct a variable name.
     
     For example, variable name x_minus_1 will be changed to x(-1)
     
     """
-    ind1 = lbl.find("_plus_")
-    ind2 = lbl.find("_minus_")
-    if ind1 == -1 and ind2 == -1:
-        return lbl
-    ind3 = lbl.rfind("_")
-    digit = digit1 = lbl[1+ind3:]
-    if "(" in digit and ")" in digit:
-        ind = digit.index("(")
-        digit2 = digit[:ind]
-        digit3 = digit[1+ind:].replace(")","")
-        digit1 = str(int(digit2) + int(digit3))
+    if "(" in lbl:
+        if "_plus_" in lbl or "_minus_" in lbl:
+            ind1 = lbl.find("_plus_")
+            ind2 = lbl.find("_minus_")
+            ind3 = lbl.rfind("_")
+            digit = digit1 = lbl[1+ind3:]
+            if "(" in digit and ")" in digit:
+                ind = digit.index("(")
+                digit2 = int(digit[:ind])
+                if "_minus_" in lbl:
+                    digit2 = - digit2
+                digit3 = int(digit[1+ind:].replace(")",""))
+                digit1 = str(digit2+digit3)
+                    
+            lbl = lbl.replace("_plus_"+digit,"("+digit1+")")
+            lbl = lbl.replace("_minus_"+digit,"("+digit1+")")
+        
+        ind1 = lbl.index("(")
+        v = lbl[:ind1]
+        if v in var_labels:
+            ind2 = lbl.index(")")
+            nv = int(lbl[ind1+1:ind2])
+            if nv == 1:
+              var_label = "Lead of " + var_labels[v] 
+            elif nv == -1:
+              var_label = "Lag of " + var_labels[v] 
+            elif nv == 2:
+              var_label = "Second Lead of " + var_labels[v] 
+            elif nv == -2:
+              var_label = "Second Lag of " + var_labels[v]  
+            elif nv == 3:
+              var_label = "Third Lead of " + var_labels[v] 
+            elif nv == -3:
+              var_label = "Third Lag of " + var_labels[v]    
+            elif nv > 3:
+              var_label = f"{nv}th Lead of " + var_labels[v] 
+            elif nv < -3:
+              var_label = f"{-nv}th Lag of " + var_labels[v]  
+        else:
+            var_label = lbl
             
-    name = lbl.replace("_plus_"+digit,"("+digit1+")")
-    name = name.replace("_minus_"+digit,"(-"+digit1+")")
+    else:
+        if "_plus_" in lbl or "_minus_" in lbl:
+            ind = lbl.rfind("_")
+            digit = lbl[1+ind:].replace(")","")
+            nv = int(digit)
+            if "_minus_" in lbl:
+                nv = -nv
+            if "_plus_" in lbl:
+                v = lbl[:lbl.index("_plus_")]
+            elif "_minus_" in lbl:
+                v = lbl[:lbl.index("_minus_")]
+            if v in var_labels:
+                if nv == 1:
+                  var_label = "Lead of " + var_labels[v] 
+                elif nv == -1:
+                  var_label = "Lag of " + var_labels[v] 
+                elif nv == 2:
+                  var_label = "Second Lead of " + var_labels[v] 
+                elif nv == -2:
+                  var_label = "Second Lag of " + var_labels[v]  
+                elif nv == 3:
+                  var_label = "Third Lead of " + var_labels[v] 
+                elif nv == -3:
+                  var_label = "Third Lag of " + var_labels[v]    
+                elif nv > 3:
+                  var_label = f"{nv}th Lead of " + var_labels[v] 
+                elif nv < -3:
+                  var_label = f"{-nv}th Lag of " + var_labels[v] 
+            else:    
+                var_label = lbl.replace("_plus_"+digit,"("+digit+")")
+                var_label = var_label.replace("_minus_"+digit,"(-"+digit+")")
+        else:
+            var_label = lbl
     
-    return name
+    return var_label
 
 
 def getMap(file_path):
@@ -938,8 +998,6 @@ def getExogenousSeries(model,debug=False):
                       
     return exog_data
                         
-            
-
 def simulationRange(model,freq=None,T=None):
     """
     Return and set the  date range of simulations.
@@ -1066,7 +1124,9 @@ def getPeriods(model,T,rng=None):
     periods = None
     if 'periods' in model.options:
         per = model.options.get('periods',[])
-        if not per is None and len(per) > 0:
+        if per is None:
+            return periods
+        if len(per) > 0:
             if isinstance(per[0],list):
                 periods = []
                 rngs = rng.to_timestamp()
@@ -1140,13 +1200,13 @@ def findVariableLag(x):
         ind = x.index('_minus_') + len('_minus_')
         x = x[ind:]
         if '(' in x:
-            ind = x.index('(')
+            ind = x.rindex('(')
             s = x[:ind]
         else:
             s = x
         lag -= int(s)
     elif '_m' in x:
-        ind = x.index('_m') + len('_m')
+        ind = x.rindex('_m') + len('_m')
         x = x[ind:]
         if '_' in x:
             ind = x.index('_')
@@ -1177,7 +1237,7 @@ def findVariableLead(x):
     """
     lead = 0
     if '_plus_' in x:
-        ind = x.index('_plus_') + len('_plus_')
+        ind = x.rindex('_plus_') + len('_plus_')
         x = x[ind:]
         if '(' in x:
             ind = x.index('(')
@@ -1186,7 +1246,7 @@ def findVariableLead(x):
             s = x
         lead = int(s)
     elif '_p' in x:
-        ind = x.index('_p') + len('_p')
+        ind = x.rindex('_p') + len('_p')
         x = x[ind:]
         if '_' in x:
             ind = x.index('_')

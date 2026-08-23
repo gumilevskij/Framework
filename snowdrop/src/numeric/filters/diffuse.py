@@ -98,7 +98,7 @@ def diffuse_filter(T,Z,R,Q,H,Y,C,a0,pp,mm,Ts,Nd,n_shocks,data_index,Pinf1,Pstar1
     """
     try:
         from snowdrop.src.numeric.filters.diffuse import missing_obs_diffuse_multivariate_filter
-        alphahat,epsilonhat,etahat,atilde,P1,aK,PK,decomp,V,N,dLIK,log_likelihood = \
+        alphahat,epsilonhat,etahat,atilde,P,aK,PK,decomp,V,N,dLIK,log_likelihood = \
             missing_obs_diffuse_multivariate_filter(T=T,Z=Z,R=R,Q=Q,H=H,Y=Y,C=C,a0=a0,pp=pp,mm=mm,Ts=Ts, \
                                                     Nd=Nd,n_shocks=n_shocks,data_index=data_index, \
                                                     Pinf1=Pinf1,Pstar1=Pstar1,decomp_flag=decomp_flag, \

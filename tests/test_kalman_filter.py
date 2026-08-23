@@ -43,7 +43,7 @@ def test(fname='TOY/Ireland2004.yaml',fmeas='supplements/data/gpr_1948.csv'):
 
     ### Run Kalman filter
     Plot = not 'pytest' in sys.modules
-    model.setStartingValues(hist=meas,bTreatMissingObs=False,debug=False)
+    model.setStartingValues(hist=meas,TreatMissingObs=False,debug=False)
     yy,dates,epsilonhat,etahat = kalman_filter(model=model,meas=meas,fout=fout,Output=True,Plot=Plot)
     
 

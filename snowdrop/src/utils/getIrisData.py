@@ -184,16 +184,36 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
     eqs = [x.replace("\t","").replace(" ","") for x in txtEqs if not "'" in x]
     txtMeasEqs = [x.replace("\t","").replace(" ","") for x in txtMeasEqs if not "'" in x]
     
-    var = []; labels = []
-    for t in txtEndogVars:
-        s = t.replace('\t',' ').strip()
-        arr = [s for s in re.split(r"[);\W]+", s)]
-        v = arr[-1]
-        var.append(v)
-        lbl = t.replace(v,"").replace('"','').replace("'","").strip()
-        labels.append(lbl)
+    labels = []; txts = []; i = 0
+    var_labels = []; meas_labels = []; shock_labels = []; param_labels = []
+    for txt in [txtEndogVars,txtMeasVar,txtParams,txtShocks]:
+        var = []
+        i += 1
+        for t in txt:
+            s = t.replace('\t',' ').strip()
+            arr = [s for s in re.split(r"[);\W]+", s)]
+            if s.startswith("'") or s.startswith('"'):
+                v = arr[-1]
+            else:
+                v = arr[0]
+            var.append(v)
+            lbl = t.replace('\t',' ').replace('\r\n','').replace('\n','').replace('"','').replace("'","").strip()
+            if lbl.endswith(v):
+                lbl = lbl[:-len(v)].strip()
+            if lbl.startswith("%"):
+                lbl = lbl[1:].strip()
+            if i == 1:
+                var_labels.append(lbl)
+            elif i == 2:
+                meas_labels.append(lbl)
+            elif i == 3:
+                param_labels.append(lbl)
+            else:
+                shock_labels.append(lbl)
+            labels.append(lbl)
+        txts.append(var)
         
-    txtEndogVars = var
+    txtEndogVars,txtMeasVar,txtParams,txtShocks = txts
    
     txtEqs = []; ss = {}; eqtn = None
     operators = ["movavg","movsum","diff","difflog"]
@@ -229,11 +249,10 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
     # Append the last one        
     txtEqs.append(eqtn)
     
-    meas_var = []; meas_labels = []
+    meas_var = []
     for t in txtMeasVar:
         if "'" in t:
             ind = t.rindex("'")
-            meas_labels.append(t[:ind])
             t = t[1+ind:]
         t = t.replace(","," ")
         meas_var.append(t)
@@ -260,21 +279,19 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
     meas_shocks = ' '.join(meas_shocks).split(' ')
     txtMeasShocks = [x.strip() for x in meas_shocks if bool(x.strip())]
         
-    shock_var = []; shock_labels = []
+    shock_var = []
     for t in txtShocks:
         if "'" in t:
             ind = t.rindex("'")
-            shock_labels.append(t[:ind])
             t = t[1+ind:]
         shock_var.append(t)
     shock_var = ' '.join(shock_var).split(' ')
     txtShocks = [x.strip() for x in shock_var if bool(x.strip())]
     
-    param_var = []; param_labels = []
+    param_var = []
     for t in txtParams:
         if "'" in t:
             ind = t.rindex("'")
-            param_labels.append(t[:ind])
             t = t[1+ind:]
         if "=" in t:
             ind = t.index("=")
@@ -319,7 +336,7 @@ def readIrisModelFile(file_path,conditions={},bFillValues=True,
         return txtEqs,txtParams,txtParamsRange,txtEndogVars,txtMeasVar,txtShocks,txtRange,txtFreq,txtDescription
     
     else:
-        return txtEqs,txtMeasEqs,txtParams,txtEndogVars,txtMeasVar,txtMeasEqs,txtShocks,txtMeasShocks,ss,labels
+        return txtEqs,txtMeasEqs,txtParams,txtEndogVars,txtMeasVar,txtMeasEqs,txtShocks,txtMeasShocks,ss,var_labels,meas_labels,shock_labels,param_labels
 
 
 def getIrisModel(fpath,calibration={},options={},conditions={},use_cache=False,

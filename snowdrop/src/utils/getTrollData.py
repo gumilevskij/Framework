@@ -1013,8 +1013,8 @@ def getTrollModel(fpath,Solver=None,calibration={},options={},use_cache=False,ch
             elif Solver.upper() == "BINDERPESARAN":
                 model.SOLVER = SolverMethod.BinderPesaran
                 model.isLinear = True
-            elif Solver.upper() == "BENES":
-                model.SOLVER = SolverMethod.Benes
+            elif Solver.upper() == "KLEIN":
+                model.SOLVER = SolverMethod.Klein
                 model.isLinear = True
             elif Solver.upper() == "LBJ":
                 model.SOLVER = SolverMethod.LBJ
