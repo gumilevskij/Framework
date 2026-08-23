@@ -15,7 +15,7 @@ def kahn_topological_sort(num_vertices, edges):
     adj_list = defaultdict(list)
     in_degree = {i: 0 for i in range(num_vertices)}
     
-    # Step 2: Build the graph and calculate in-degrees
+    # Build the graph and calculate in-degrees
     for u, v in edges:
         adj_list[u].append(v)
         in_degree[v] += 1
@@ -24,7 +24,7 @@ def kahn_topological_sort(num_vertices, edges):
     queue = deque([node for node in in_degree if in_degree[node] == 0])
     topo_order = []
     
-    # Step 4: Process the queue
+    # Process the queue
     while queue:
         node = queue.popleft()
         topo_order.append(node)

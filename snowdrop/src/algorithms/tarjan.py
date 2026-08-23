@@ -1,4 +1,5 @@
-# Tarjan's algorithm using an explicit call stack. It avoids recursion limits and can handle massive datasets directly. 
+# This script implements Tarjan's algorithm with an explicit call stack. 
+# It avoids recursion limits and can handle massive datasets directly. 
 
 # Deadlock Detection: If any found SCC contains more than 1 node (or a single node with a self-loop), 
 # you have a cyclic dependency, which implies a deadlock in lock-allocation graphs.

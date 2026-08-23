@@ -86,11 +86,11 @@ def dulmage_mendelsohn_coarse(matrix_or_adj):
     
     The decomposition can be split into two main structural resolutions:
     1. Coarse Decomposition
-    Find a Maximum Matching: Use an algorithm like Hopcroft–Karp to find a maximum cardinality matching in the bipartite graph. [1]
+    Find a Maximum Matching: Use an algorithm like Hopcroft–Karp to find a maximum cardinality matching in the bipartite graph.
     Breadth-First Search (BFS) from Unmatched Nodes:
     Find all vertices reachable via alternating paths starting from unmatched column vertices. This forms the under-determined block.
-    Find all vertices reachable via alternating paths starting from unmatched row vertices. This forms the over-determined block. [1, 2]
-    Isolate the Remainder: Any remaining matched row and column vertices that were not reached form the well-determined (square) block. [1]
+    Find all vertices reachable via alternating paths starting from unmatched row vertices. This forms the over-determined block.
+    Isolate the Remainder: Any remaining matched row and column vertices that were not reached form the well-determined (square) block.
     
     2. Fine Decomposition
     The square/well-determined block can be further refined:
