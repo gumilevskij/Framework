@@ -473,23 +473,38 @@ def run(y0,model,T,Qm=None,Hm=None,obs=None,steady_state=None,
             calibration_results = minimize(fun=fobj,x0=initial_values,method="L-BFGS-B",bounds=bounds,tol=1.e-7,options={'disp':False,'maxiter':100000}) 
             # if hasattr(calibration_results,"hess_inv"):
             #     hess_inv = calibration_results.hess_inv.todense() 
-            #     if not np.all(np.linalg.eigvals(hess_inv) > 0):
-            #         cprint("The hessian matrix not positive semi-definite: \ntry to change the initial values of the parameters!","red")
             #     params_std = [np.sqrt(abs(hess_inv[i,i])) if not hess_inv[i,i] == 0 else np.inf for i in range(hess_inv.shape[0])]     
-            # 
+            
             # Brute force calculations  
             nc = len(calibration_results.x)
-            hess = np.zeros(nc)
-            f = np.zeros(3)
             delta = 1.e-4
+            hess = np.zeros((nc,nc))
+            z = np.copy(calibration_results.x)
             for i in range(nc):
-                x = np.copy(calibration_results.x)
-                xi = x[i]
-                for m in range(3):
-                    x[i] = xi + delta*(m-1)
-                    f[m] = fobj(x)
-                hess[i] = (f[2]-2*f[1]+f[0])/delta**2
-            params_std = [1./np.sqrt(abs(x)) if not x == 0 else np.nan for x in hess]     
+                for j in range(nc):
+                    if i == j:
+                        x   = z.copy()
+                        x_p = z.copy()
+                        x_m = z.copy()
+                        x_p[i] += delta
+                        x_m[i] -= delta
+                        hess[i,i] = (fobj(x_p) - 2*fobj(x) + fobj(x_m)) / (delta**2)
+                    else:
+                        x_pp = z.copy()
+                        x_pm = z.copy()
+                        x_mp = z.copy()
+                        x_mm = z.copy()
+                        x_pp[i] += delta; x_pp[j] += delta
+                        x_pm[i] += delta; x_pm[j] -= delta
+                        x_mp[i] -= delta; x_mp[j] += delta
+                        x_mm[i] -= delta; x_mm[j] -= delta
+                        hess[i,j] = (fobj(x_pp) - fobj(x_pm) - fobj(x_mp) + fobj(x_mm)) / (4 * delta**2)
+            
+            hess_inv = np.linalg.pinv(hess)
+            params_std = [np.sqrt(abs(hess_inv[i,i])) if not hess_inv[i,i] == 0 else np.nan for i in range(nc)]     
+            # if not np.all(np.linalg.eigvals(hess_inv) > 0):
+            #     cprint("\nThe hessian matrix not positive semi-definite: \ntry to change the initial values of the parameters!","red")
+               
                   
         else: 
             # L-BFGS-B, TNC, SLSQP, Powevll, and trust-constr  
